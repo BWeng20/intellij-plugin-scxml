@@ -15,8 +15,19 @@ public class OrderedSet<T>
 {
 	LinkedSet<T> _set = new LinkedSet<>();
 
+
+	/**
+	 * Created a new empty set.
+	 */
+	OrderedSet()
+	{
+	}
+
+
 	/**
 	 * Adds e to the set if it is not already a member
+	 *
+	 * @param e The element to add.
 	 */
 	public void add(T e)
 	{
@@ -25,6 +36,8 @@ public class OrderedSet<T>
 
 	/**
 	 * Deletes e from the set
+	 *
+	 * @param e The element to remove.
 	 */
 	public void delete(T e)
 	{
@@ -33,6 +46,8 @@ public class OrderedSet<T>
 
 	/**
 	 * Adds all members of s that are not already members of the set (s must also be an OrderedSet)
+	 *
+	 * @param s The set to add.
 	 */
 	public void union(OrderedSet<T> s)
 	{
@@ -41,6 +56,9 @@ public class OrderedSet<T>
 
 	/**
 	 * Is e a member of set?
+	 *
+	 * @param e The element to search for.
+	 * @return true if e is in the set.
 	 */
 	public boolean isMember(T e)
 	{
@@ -48,7 +66,10 @@ public class OrderedSet<T>
 	}
 
 	/**
-	 * Returns true if some element in the set satisfies the predicate f.  Returns false for an empty set.
+	 * Checks for predicate.
+	 *
+	 * @param f The predicate to check.
+	 * @return true if some element in the set satisfies the predicate f.  Returns false for an empty set.
 	 */
 	public boolean some(Predicate<T> f)
 	{
@@ -57,7 +78,10 @@ public class OrderedSet<T>
 	}
 
 	/**
-	 * Returns true if every element in the set satisfies the predicate f. Returns true for an empty set.
+	 * Checks for predicate.
+	 *
+	 * @param f The predicate to check.
+	 * @return true if every element in the set satisfies the predicate f. Returns true for an empty set.
 	 */
 	public boolean every(Predicate<T> f)
 	{
@@ -66,7 +90,10 @@ public class OrderedSet<T>
 	}
 
 	/**
-	 * Returns true if this set and  set s have at least one member in common
+	 * Checks for intersection.
+	 *
+	 * @param s The set to check.
+	 * @return true if this set and set s have at least one member in common
 	 */
 	public boolean hasIntersection(OrderedSet<? extends T> s)
 	{
@@ -76,6 +103,8 @@ public class OrderedSet<T>
 
 	/**
 	 * Is the set empty?
+	 *
+	 * @return true if empty
 	 */
 	public boolean isEmpty()
 	{
@@ -95,6 +124,8 @@ public class OrderedSet<T>
 	 * In the case of sets created by intersection, the order of the first set (the one on which the method was called) is used<br>
 	 * In the case of sets created by union, the members of the first set (the one on which union was called) retain their original ordering
 	 * while any members belonging to the second set only are placed after, retaining their ordering in their original set.
+	 *
+	 * @return the created list.
 	 */
 	public List<T> toList()
 	{
