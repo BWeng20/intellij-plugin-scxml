@@ -1,5 +1,8 @@
 package com.bw.modeldrive.model;
 
+/**
+ * Type of events.
+ */
 public enum EventType
 {
 	/**

@@ -12,33 +12,42 @@ package com.bw.modeldrive.model;
 public class GlobalData
 {
 	/**
+	 * Creates any new empty instance.
+	 */
+	public GlobalData()
+	{
+
+	}
+
+	/**
 	 * The list of currently active states.
 	 */
-	public OrderedSet<StateId> configuration;
+	public OrderedSet<StateId> configuration = new OrderedSet<>();
 
 	/**
 	 * The list of states to invoke on next iteration.
 	 */
-	public OrderedSet<StateId> statesToInvoke;
+	public OrderedSet<StateId> statesToInvoke = new OrderedSet<>();
+	;
 
 	/**
 	 * The history for each state.
 	 */
-	public HashTable<StateId, OrderedSet<StateId>> historyValue;
+	public HashTable<StateId, OrderedSet<StateId>> historyValue = new HashTable<>();
 
 	/**
 	 * True if running.
 	 */
-	public boolean running;
+	public boolean running = false;
 
 	/**
 	 * The queue of internal events. All internal events are processed before the next external is handled.
 	 */
-	public Queue<Event> internalQueue;
+	public final Queue<Event> internalQueue = new Queue<>();
 
 	/**
 	 * The queue of external events.
 	 */
-	public BlockingQueue<Event> externalQueue;
+	public final BlockingQueue<Event> externalQueue = new BlockingQueue<>();
 
 }

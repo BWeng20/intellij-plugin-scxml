@@ -6,14 +6,26 @@ package com.bw.modeldrive.model;
 public class Event
 {
 	/**
+	 * Creates a new event with minimal values.
+	 *
+	 * @param name The name
+	 * @param type The type.
+	 */
+	public Event(String name, EventType type)
+	{
+		this.name = name;
+		this.etype = type;
+	}
+
+	/**
 	 * The name of the event.
 	 */
-	public String name;
+	public final String name;
 
 	/**
 	 * The type of the event.
 	 */
-	public EventType etype;
+	public final EventType etype;
 
 	/**
 	 * The send-id of the event.
