@@ -6,6 +6,9 @@ Harel Statecharts are an extended form of Finit-State Machines (FSM). Harel Stat
 
 [SCXML](https://www.w3.org/TR/scxml/) is not only a XML Schema, it specifies also a generic state-machine-based execution environment with an implementation in pseudocode.
 
+This project tries to support graphical editing and execution on different platforms. 
+The SCXML pseudocode from W3C is implemented as re-usable Java-library.
+
 ### === CONSTRUCTION SITE ===
 
 
