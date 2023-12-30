@@ -15,6 +15,6 @@ public class Transition
 	public State source;
 	public final java.util.List<State> target = new ArrayList<>();
 	public TransitionType transitionType;
-	public ExecutableContentId content;
+	public ExecutableContent content;
 
 }

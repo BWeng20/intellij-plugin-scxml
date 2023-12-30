@@ -2,7 +2,8 @@ package com.bw.modeldrive.parser;
 
 import com.bw.modeldrive.ModelDriveBundle;
 import com.bw.modeldrive.model.BindingType;
-import com.bw.modeldrive.model.FinitStateMachine;
+import com.bw.modeldrive.model.ExecutableContent;
+import com.bw.modeldrive.model.FiniteStateMachine;
 import com.bw.modeldrive.model.State;
 import com.bw.modeldrive.model.Transition;
 import com.bw.modeldrive.model.TransitionType;
@@ -22,7 +23,7 @@ public class XmlParser implements ScxmlTags
 	/**
 	 * The fsm the parser is working on.
 	 */
-	protected FinitStateMachine fsm;
+	protected FiniteStateMachine fsm;
 
 	/**
 	 * Creates a new XMLParser.
@@ -41,7 +42,7 @@ public class XmlParser implements ScxmlTags
 	 * @return The created model.
 	 * @throws ParserException in case something was wrong with the file.
 	 */
-	public FinitStateMachine parse(XmlFile xml) throws ParserException
+	public FiniteStateMachine parse(XmlFile xml) throws ParserException
 	{
 		fsm = null;
 
@@ -49,7 +50,7 @@ public class XmlParser implements ScxmlTags
 		if (ScxmlTags.TAG_SCXML.equals(root.getLocalName()))
 		{
 
-			fsm = new FinitStateMachine();
+			fsm = new FiniteStateMachine();
 
 			fsm.name = root.getAttributeValue(ATTR_NAME);
 			fsm.datamodel = root.getAttributeValue(ATTR_DATAMODEL);
@@ -85,8 +86,16 @@ public class XmlParser implements ScxmlTags
 				{
 					switch (xmlChild.getLocalName())
 					{
+						case TAG_ON_ENTRY -> state.onentry = parseExecutableContent(xmlChild);
+						case TAG_ON_EXIT -> parseToDo(xmlChild, state);
+						case TAG_TRANSITION -> parseToDo(xmlChild, state);
+						case TAG_INITIAL -> parseToDo(xmlChild, state);
 						case TAG_STATE -> parseState(xmlChild, false, state);
 						case TAG_PARALLEL -> parseState(xmlChild, true, state);
+						case TAG_FINAL -> parseState(xmlChild, false, state);
+						case TAG_HISTORY -> parseToDo(xmlChild, state);
+						case TAG_DATAMODEL -> parseToDo(xmlChild, state);
+						case TAG_INVOKE -> parseToDo(xmlChild, state);
 						default -> debug("Unsupported tag %s", xmlChild.getLocalName());
 					}
 				}
@@ -95,6 +104,42 @@ public class XmlParser implements ScxmlTags
 		}
 
 		return state;
+	}
+
+	/**
+	 * Parse executable content as in &lt;onentry&gt; or &lt;onexit&gt;.
+	 *
+	 * @param node The parent node of the content.
+	 * @return The content
+	 */
+	protected ExecutableContent parseExecutableContent(XmlTag node)
+	{
+		ExecutableContent c = null;
+
+		PsiElement child = node.getFirstChild();
+		while (child != null)
+		{
+			if (child instanceof XmlTag xmlChild)
+			{
+				if (NS_SCXML.equals(xmlChild.getNamespace()))
+				{
+					switch (xmlChild.getLocalName())
+					{
+						case TAG_RAISE -> parseToDo(xmlChild, null);
+						default -> debug("Unsupported tag %s", xmlChild.getLocalName());
+					}
+				}
+			}
+			child = child.getNextSibling();
+		}
+
+		return c;
+	}
+
+
+	protected void parseToDo(XmlTag tag, State state)
+	{
+
 	}
 
 	/**
@@ -224,13 +269,14 @@ public class XmlParser implements ScxmlTags
 	}
 
 	/**
-	 * Logd a denug message.
+	 * Log a debug message.
 	 *
 	 * @param format Format string. @See {@link String#format(String, Object...)}
 	 * @param args   THe arguments for the format specification.
 	 */
 	protected void debug(String format, Object... args)
 	{
+		/// @TODO: Set this correctly to "debug" if we know how to dump it to host console.
 		log.warn(String.format(format, args));
 	}
 

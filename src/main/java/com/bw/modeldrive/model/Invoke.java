@@ -91,7 +91,7 @@ public class Invoke
 	 * Executable content to massage the data returned from the invoked component. Occurs 0 or 1 times.<br>
 	 * See 6.5 &lt;finalize&gt; for details.
 	 */
-	public ExecutableContentId finalize;
+	public ExecutableContent finalize;
 
 	/**
 	 * Creates a new Invoke instance.
