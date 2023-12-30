@@ -19,6 +19,8 @@ public enum HistoryType
 	 */
 	Deep,
 
-	/** History is not set. */
+	/**
+	 * History is not set.
+	 */
 	None;
 }

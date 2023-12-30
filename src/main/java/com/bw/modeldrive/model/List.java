@@ -25,7 +25,10 @@ public class List<T>
 
 
 	/**
-	 * Returns the head of the list
+	 * Returns the head of the list.
+	 *
+	 * @return The first element.
+	 * @throws java.util.NoSuchElementException if list is empty.
 	 */
 	public T head()
 	{
@@ -34,6 +37,8 @@ public class List<T>
 
 	/**
 	 * Returns the tail of the list (i.e., the rest of the list once the head is removed)
+	 *
+	 * @return A clone of the list without the first element.
 	 */
 	public List<T> tail()
 	{
@@ -44,37 +49,49 @@ public class List<T>
 
 	/**
 	 * Returns the list appended with l
+	 *
+	 * @param l The Element to append.
+	 * @return A clone of the list with the additional element.
 	 */
-	public List<T> append(T e)
+	public List<T> append(T l)
 	{
 		List<T> t = new List<>(this);
-		t._list.add(e);
+		t._list.add(l);
 		return t;
 	}
 
 	/**
 	 * Returns the list appended with l
+	 *
+	 * @param l The list to append.
+	 * @return A clone of the list with all elements from l appended at the end.
 	 */
-	public List<T> append(List<? extends T> e)
+	public List<T> append(List<? extends T> l)
 	{
 		List<T> t = new List<>(this);
-		t._list.addAll(e._list);
+		t._list.addAll(l._list);
 		return t;
 	}
 
 	/**
 	 * Returns the list appended with l
+	 *
+	 * @param l The set to append.
+	 * @return A clone of the list with all elements from l appended at the end.
 	 */
-	public List<T> append(OrderedSet<? extends T> e)
+	public List<T> append(OrderedSet<? extends T> l)
 	{
 		List<T> t = new List<>(this);
-		t._list.addAll(e._set);
+		t._list.addAll(l._set);
 		return t;
 	}
 
 
 	/**
 	 * Returns the list of elements that satisfy the predicate f
+	 *
+	 * @param f The predicate to filter for.
+	 * @return A list with all matching elements.
 	 */
 	public List<T> filter(Predicate<T> f)
 	{
@@ -87,6 +104,9 @@ public class List<T>
 
 	/**
 	 * Returns true if some element in the list satisfies the predicate f.  Returns false for an empty list.
+	 *
+	 * @param f The predicate to search for.
+	 * @return the result.
 	 */
 	public boolean some(Predicate<T> f)
 	{
@@ -96,6 +116,9 @@ public class List<T>
 
 	/**
 	 * Returns true if every element in the list satisfies the predicate f.  Returns true for an e.
+	 *
+	 * @param f The predicate to search for.
+	 * @return the result.
 	 */
 	public boolean every(Predicate<T> f)
 	{

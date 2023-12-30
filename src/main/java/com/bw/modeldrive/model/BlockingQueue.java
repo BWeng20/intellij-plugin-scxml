@@ -1,7 +1,5 @@
 package com.bw.modeldrive.model;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * <p>Implementation of the data-structures and algorithms described in the W3C scxml proposal.<br>
  * As reference each type and method has the w3c description as documentation.<br>
@@ -17,11 +15,13 @@ public class BlockingQueue<T>
 	/**
 	 * Creates a new BlockingQueue.
 	 */
-	public BlockingQueue() {
+	public BlockingQueue()
+	{
 	}
 
 	/**
 	 * Puts e last in the queue
+	 *
 	 * @param e The element to enqueue. Must not be null.
 	 */
 	public void enqueue(T e)
@@ -31,6 +31,7 @@ public class BlockingQueue<T>
 
 	/**
 	 * Removes and returns first element in queue, blocks if queue is empty.
+	 *
 	 * @return The element, null only if machine stops.
 	 */
 	public T dequeue()

@@ -8,7 +8,8 @@ public class DoneData
 	/**
 	 * Creates a new DoneData.
 	 */
-	public DoneData() {
+	public DoneData()
+	{
 
 	}
 

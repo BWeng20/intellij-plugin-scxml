@@ -11,22 +11,34 @@ package com.bw.modeldrive.model;
  */
 public class GlobalData
 {
-	/** The list of currently active states. */
+	/**
+	 * The list of currently active states.
+	 */
 	public OrderedSet<StateId> configuration;
 
-	/** The list of states to invoke on next iteration. */
+	/**
+	 * The list of states to invoke on next iteration.
+	 */
 	public OrderedSet<StateId> statesToInvoke;
 
-	/** The history for each state. */
+	/**
+	 * The history for each state.
+	 */
 	public HashTable<StateId, OrderedSet<StateId>> historyValue;
 
-	/** True if running. */
+	/**
+	 * True if running.
+	 */
 	public boolean running;
 
-	/** The queue of internal events. All internal events are processed before the next external is handled. */
+	/**
+	 * The queue of internal events. All internal events are processed before the next external is handled.
+	 */
 	public Queue<Event> internalQueue;
 
-	/** The queue of external events. */
+	/**
+	 * The queue of external events.
+	 */
 	public BlockingQueue<Event> externalQueue;
 
 }

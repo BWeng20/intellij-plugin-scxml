@@ -4,9 +4,12 @@ import com.intellij.openapi.util.IconLoader;
 
 import javax.swing.Icon;
 
-public class Icons
+/**
+ * Icons used by Plugin.
+ */
+public interface Icons
 {
-	public static final Icon SCXML = IconLoader.getIcon("/icons/scxml.svg", Icons.class);
-	;
+	/** Small icon used for decorators. */
+	Icon SCXML = IconLoader.getIcon("/icons/scxml.svg", Icons.class);
 
 }

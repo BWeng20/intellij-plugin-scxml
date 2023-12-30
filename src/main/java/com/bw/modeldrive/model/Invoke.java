@@ -92,4 +92,11 @@ public class Invoke
 	 * See 6.5 &lt;finalize&gt; for details.
 	 */
 	public ExecutableContentId finalize;
+
+	/**
+	 * Creates a new Invoke instance.
+	 */
+	public Invoke()
+	{
+	}
 }

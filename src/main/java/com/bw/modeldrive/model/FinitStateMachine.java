@@ -9,25 +9,39 @@ import java.util.Timer;
 public class FinitStateMachine
 {
 
-	/** The trace, possibly null. */
+	/**
+	 * The trace, possibly null.
+	 */
 	public Tracer tracer;
 
-	/** The data model type to use. */
+	/**
+	 * The data model type to use.
+	 */
 	public String datamodel;
 
-	/** The binding mode */
+	/**
+	 * The binding mode
+	 */
 	public BindingType binding;
 
-	/** The version */
+	/**
+	 * The version
+	 */
 	public String version;
 
-	/** All states by Id */
+	/**
+	 * All states by Id
+	 */
 	public final HashMap<String, State> states = new HashMap<>();
 
-	/** Executable content */
+	/**
+	 * Executable content
+	 */
 	public final HashMap<ExecutableContentId, List<ExecutableContent>> executableContent = new HashMap<>();
 
-	/** The name of the FSM. */
+	/**
+	 * The name of the FSM.
+	 */
 	public String name;
 
 	/**

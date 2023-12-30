@@ -13,22 +13,34 @@ public class State
 	 */
 	public int docId;
 
-	/** The SCXML id. */
+	/**
+	 * The SCXML id.
+	 */
 	public String name;
 
-	/** The initial transition id (if the state has sub-states). */
+	/**
+	 * The initial transition id (if the state has sub-states).
+	 */
 	public Transition initial;
 
-	/** The sub-states of this state. */
+	/**
+	 * The sub-states of this state.
+	 */
 	public final java.util.List<State> states = new ArrayList<>();
 
-	/** True for "parallel" states */
+	/**
+	 * True for "parallel" states
+	 */
 	public boolean isParallel;
 
-	/** True for "final" states */
+	/**
+	 * True for "final" states
+	 */
 	public boolean isFinal;
 
-	/** The type of hosztory for this state. */
+	/**
+	 * The type of hosztory for this state.
+	 */
 	public HistoryType historyType;
 
 	/**
@@ -36,13 +48,19 @@ public class State
 	 */
 	public ExecutableContent onentry;
 
-	/** The script that is executed if the state is left. See W3c comments for &lt;onexit&gt; above. */
+	/**
+	 * The script that is executed if the state is left. See W3c comments for &lt;onexit&gt; above.
+	 */
 	public ExecutableContent onexit;
 
-	/** All transitions between sub-states. */
+	/**
+	 * All transitions between sub-states.
+	 */
 	public List<TransitionId> transitions;
 
-	/** List of invokes to execute if state is entered. */
+	/**
+	 * List of invokes to execute if state is entered.
+	 */
 	public java.util.List<Invoke> invoke;
 
 	/**
@@ -50,15 +68,23 @@ public class State
 	 */
 	public java.util.List<State> history;
 
-	/** The local datamodel */
+	/**
+	 * The local datamodel
+	 */
 	public DataStore data;
 
-	/** True if state was never entered. */
+	/**
+	 * True if state was never entered.
+	 */
 	public boolean isFirstEntry;
 
-	/** The parent state or null. */
+	/**
+	 * The parent state or null.
+	 */
 	public State parent;
 
-	/** DoneData of final states or null. */
+	/**
+	 * DoneData of final states or null.
+	 */
 	public DoneData donedata;
 }

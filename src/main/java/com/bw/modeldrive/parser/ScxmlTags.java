@@ -2,14 +2,49 @@ package com.bw.modeldrive.parser;
 
 public interface ScxmlTags
 {
+	/**
+	 * SCXML root tag.
+	 */
 	String TAG_SCXML = "scxml";
+
+	/**
+	 * Common attribute to specify the unique name for an element.
+	 */
 	String ATTR_NAME = "name";
+
+	/**
+	 * Attribute to specify the datamodel to use.
+	 */
 	String ATTR_DATAMODEL = "datamodel";
+
+	/**
+	 * Datamodel binding mode.
+	 */
 	String ATTR_BINDING = "binding";
+
+	/**
+	 * Datamodel specification.
+	 */
 	String TAG_DATAMODEL = "datamodel";
+
+	/**
+	 * Data specification.
+	 */
 	String TAG_DATA = "data";
+
+	/**
+	 * Version information.
+	 */
 	String TAG_VERSION = "version";
+
+	/**
+	 * Starts an initial sub-state.
+	 */
 	String TAG_INITIAL = "initial";
+
+	/**
+	 * Common attribute to specify an identification.
+	 */
 	String ATTR_ID = "id";
 
 	/**
@@ -80,16 +115,60 @@ public interface ScxmlTags
 	 * not both. See <em>3.6 &lt;initial&gt;</em> for a discussion of the difference between the two notations.</p>
 	 */
 	String TAG_STATE = "state";
+
+	/**
+	 * Attribute of {@link #TAG_STATE &lt;state&gt;}. The initial sub-states.
+	 */
 	String ATTR_INITIAL = "initial";
+
+	/**
+	 * Child of {@link #TAG_STATE &lt;state&gt;}.
+	 */
 	String TAG_HISTORY = "history";
+
+	/**
+	 * Same as {@link #TAG_STATE &lt;state&gt;} but for parallel states.
+	 */
 	String TAG_PARALLEL = "parallel";
+
+	/**
+	 * Same as {@link #TAG_STATE &lt;state&gt;} but for final states.
+	 */
 	String TAG_FINAL = "final";
+
+	/**
+	 * Child of {@link #TAG_STATE &lt;state&gt;}.
+	 */
 	String TAG_TRANSITION = "transition";
+
+	/**
+	 * Starts a transition condition specification.
+	 */
 	String TAG_COND = "cond";
+
+	/**
+	 * Starts an event specification.
+	 */
 	String TAG_EVENT = "event";
+
+	/**
+	 * Starts a type specification.
+	 */
 	String TAG_TYPE = "type";
+
+	/**
+	 * Child of {@link #TAG_STATE &lt;state&gt;}.
+	 */
 	String TAG_ON_ENTRY = "onentry";
+
+	/**
+	 * Child of {@link #TAG_STATE &lt;state&gt;}.
+	 */
 	String TAG_ON_EXIT = "onexit";
+
+	/**
+	 * Child of {@link #TAG_STATE &lt;state&gt;}.
+	 */
 	String TAG_INVOKE = "invoke";
 	String ATTR_SRCEXPR = "srcexpr";
 	String ATTR_AUTOFORWARD = "autoforward";
@@ -326,36 +405,160 @@ public interface ScxmlTags
 	 * platform was able to dispatch the event.</p>
 	 */
 	String TAG_SEND = "send";
+
+	/**
+	 * Attribute of {@link #TAG_SEND &lt;send&gt;}
+	 */
 	String ATTR_EVENT = "event";
+
+	/**
+	 * Attribute of {@link #TAG_SEND &lt;send&gt;}
+	 */
 	String ATTR_EVENTEXPR = "eventexpr";
+
+	/**
+	 * Attribute of {@link #TAG_SEND &lt;send&gt;}
+	 */
 	String ATTR_TARGET = "target";
+
+	/**
+	 * Attribute of {@link #TAG_SEND &lt;send&gt;}
+	 */
 	String ATTR_TARGETEXPR = "targetexpr";
+
+	/**
+	 * Distinct value for {@link #ATTR_TARGET target}. See {@link #TAG_SEND &lt;send&gt;}
+	 */
 	String TARGET_INTERNAL = "_internal";
+
+	/**
+	 * Attribute of {@link #TAG_SEND &lt;send&gt;}
+	 */
 	String ATTR_TYPE = "type";
+
+	/**
+	 * Attribute of {@link #TAG_SEND &lt;send&gt;}
+	 */
 	String ATTR_TYPEEXPR = "typeexpr";
+
+	/**
+	 * Attribute of {@link #TAG_SEND &lt;send&gt;}
+	 */
 	String ATTR_IDLOCATION = "idlocation";
+
+	/**
+	 * Attribute of {@link #TAG_SEND &lt;send&gt;}
+	 */
 	String ATTR_DELAY = "delay";
+
+	/**
+	 * Attribute of {@link #TAG_SEND &lt;send&gt;}
+	 */
 	String ATTR_DELAYEXPR = "delayexpr";
+
+	/**
+	 * Attribute of {@link #TAG_SEND &lt;send&gt;}
+	 */
 	String ATTR_NAMELIST = "namelist";
+
+	/**
+	 * Starts a param specification.
+	 */
 	String TAG_PARAM = "param";
+
+	/**
+	 * Starts a content specification.
+	 */
 	String TAG_CONTENT = "content";
+
+	/**
+	 * Starts a log specification.
+	 */
 	String TAG_LOG = "log";
+
+	/**
+	 * Starts a script specification.
+	 */
 	String TAG_SCRIPT = "script";
+
+	/**
+	 * Src Attribute.
+	 */
 	String ATTR_SRC = "src";
+
+	/**
+	 * Starts an Assign specification.
+	 */
 	String TAG_ASSIGN = "assign";
+
+	/**
+	 * Location attribute.
+	 */
 	String ATTR_LOCATION = "location";
+
+	/**
+	 * Starts an If specification.
+	 */
 	String TAG_IF = "if";
+
+	/**
+	 * Starts a ForEach specification.
+	 */
 	String TAG_FOR_EACH = "foreach";
+
+	/**
+	 * Array attribute.
+	 */
 	String ATTR_ARRAY = "array";
+
+	/**
+	 * Item attribute.
+	 */
 	String ATTR_ITEM = "item";
+
+	/**
+	 * Index attribute.
+	 */
 	String ATTR_INDEX = "index";
+
+	/**
+	 * Starts a Cancel specification.
+	 */
 	String TAG_CANCEL = "cancel";
+
+	/**
+	 * SendIdExpr attribute.
+	 */
 	String ATTR_SENDIDEXPR = "sendidexpr";
+
+	/**
+	 * SendId attribute.
+	 */
 	String ATTR_SENDID = "sendid";
+
+	/**
+	 * Starts an Else case specification.
+	 */
 	String TAG_ELSE = "else";
+
+	/**
+	 * Starts an ElseIf specification.
+	 */
 	String TAG_ELSEIF = "elseif";
+
+	/**
+	 * Expression attribute.
+	 */
 	String ATTR_EXPR = "expr";
+
+	/**
+	 * Namespace used for include directive.
+	 */
 	String NS_XINCLUDE = "http://www.w3.org/2001/XInclude";
+
+	/**
+	 * Main SCXML Namespace.
+	 */
 	String NS_SCXML = "http://www.w3.org/2005/07/scxml";
 
 }
