@@ -6,8 +6,16 @@ import java.util.Timer;
 /**
  * The implementation of the FSM.
  */
-public class FinitStateMachine
+public class FiniteStateMachine
 {
+
+	/**
+	 * Creates a new empty State Machine.
+	 */
+	public FiniteStateMachine()
+	{
+	}
+
 
 	/**
 	 * The trace, possibly null.
@@ -33,11 +41,6 @@ public class FinitStateMachine
 	 * All states by Id
 	 */
 	public final HashMap<String, State> states = new HashMap<>();
-
-	/**
-	 * Executable content
-	 */
-	public final HashMap<ExecutableContentId, List<ExecutableContent>> executableContent = new HashMap<>();
 
 	/**
 	 * The name of the FSM.
