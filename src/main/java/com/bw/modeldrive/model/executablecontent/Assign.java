@@ -9,6 +9,13 @@ import com.bw.modeldrive.model.FiniteStateMachine;
  */
 public class Assign implements ExecutableContent
 {
+	/**
+	 * Creates a new empty assign operation.
+	 */
+	public Assign()
+	{
+	}
+
 	@Override
 	public void execute(Datamodel datamodel, FiniteStateMachine fsm)
 	{

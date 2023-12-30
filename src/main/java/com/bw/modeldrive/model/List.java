@@ -14,15 +14,22 @@ public class List<T>
 {
 	final LinkedList<T> _list = new LinkedList<>();
 
+	/**
+	 * Creates a new empty list.
+	 */
 	public List()
 	{
 	}
 
-	public List(List<? extends T> list)
+	/**
+	 * Creates a list filled with all elements from l.
+	 *
+	 * @param l The original list to copy.
+	 */
+	public List(List<? extends T> l)
 	{
-		_list.addAll(list._list);
+		_list.addAll(l._list);
 	}
-
 
 	/**
 	 * Returns the head of the list.

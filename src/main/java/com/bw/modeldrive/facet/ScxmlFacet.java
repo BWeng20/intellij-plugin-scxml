@@ -9,7 +9,15 @@ import com.intellij.openapi.module.Module;
  */
 public class ScxmlFacet extends Facet<ScxmlFacetConfiguration>
 {
-
+	/**
+	 * Creates a new facet.
+	 *
+	 * @param facetType       The type
+	 * @param module          The modul
+	 * @param name            The name
+	 * @param configuration   The configuration
+	 * @param underlyingFacet The underlying facet
+	 */
 	public ScxmlFacet(FacetType facetType,
 					  Module module,
 					  String name,

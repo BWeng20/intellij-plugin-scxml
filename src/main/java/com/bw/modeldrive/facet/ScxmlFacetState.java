@@ -10,20 +10,33 @@ public class ScxmlFacetState
 
 	static final String FACET_INIT_PATH = "";
 
+	/**
+	 * Dummy.
+	 */
 	public String pathToSdk;
 
 	ScxmlFacetState()
 	{
-		setDemoFacetState(FACET_INIT_PATH);
+		setScxmlSdkPath(FACET_INIT_PATH);
 	}
 
+	/**
+	 * Currently a Dummy.
+	 *
+	 * @return The state.
+	 */
 	@NotNull
-	public String getDemoFacetState()
+	public String getScxmlSdkPath()
 	{
 		return pathToSdk;
 	}
 
-	public void setDemoFacetState(@NotNull String newPath)
+	/**
+	 * Currently a Dummy.
+	 *
+	 * @param newPath Dummy
+	 */
+	public void setScxmlSdkPath(@NotNull String newPath)
 	{
 		pathToSdk = newPath;
 	}

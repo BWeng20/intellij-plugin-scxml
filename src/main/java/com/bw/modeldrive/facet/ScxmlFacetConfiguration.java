@@ -13,8 +13,18 @@ import org.jetbrains.annotations.Nullable;
  */
 public class ScxmlFacetConfiguration implements FacetConfiguration, PersistentStateComponent<ScxmlFacetState>
 {
+	/**
+	 * Creates a new Configuration
+	 */
+	public ScxmlFacetConfiguration()
+	{
 
-	// Manages the data stored with this facet.
+	}
+
+
+	/**
+	 * Manages the data stored with this facet.
+	 */
 	private ScxmlFacetState facetState = new ScxmlFacetState();
 
 	/**

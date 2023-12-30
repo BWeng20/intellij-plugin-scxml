@@ -1,5 +1,8 @@
 package com.bw.modeldrive.parser;
 
+/**
+ * Static interface to provide static text, in this case the XML tags.
+ */
 public interface ScxmlTags
 {
 	/**
@@ -48,7 +51,7 @@ public interface ScxmlTags
 	String ATTR_ID = "id";
 
 	/**
-	 * #W3C says:
+	 * <strong>W3C says:</strong><br>
 	 * <p>Holds the representation of a state.</p>
 	 *
 	 * <h4>3.3.1 Attribute Details</h4>
@@ -142,9 +145,9 @@ public interface ScxmlTags
 	String TAG_TRANSITION = "transition";
 
 	/**
-	 * Starts a transition condition specification.
+	 * Condition Attribute.
 	 */
-	String TAG_COND = "cond";
+	String ATTR_COND = "cond";
 
 	/**
 	 * Starts an event specification.
@@ -170,16 +173,48 @@ public interface ScxmlTags
 	 * Child of {@link #TAG_STATE &lt;state&gt;}.
 	 */
 	String TAG_INVOKE = "invoke";
+
+	/**
+	 * Expression to return the source.
+	 */
 	String ATTR_SRCEXPR = "srcexpr";
+
+	/**
+	 * <strong>W3C says:</strong><br>
+	 * A flag indicating whether to forward events to the invoked process. See below for details.
+	 */
 	String ATTR_AUTOFORWARD = "autoforward";
 
+	/**
+	 * <strong>W3C says:</strong><br>
+	 * The &lt;finalize&gt; element enables an invoking session to update its data model with data contained in events returned by the invoked session.
+	 * &lt;finalize&gt; contains executable content that is executed whenever the external service returns an event after the &lt;invoke&gt; has been executed.
+	 * This content is applied before the system looks for transitions that match the event. Within the executable content, the system variable '_event'
+	 * can be used to refer to the data contained in the event which is being processed.In the case of parallel states, only the finalize code in the
+	 * original invoking state is executed.
+	 */
 	String TAG_FINALIZE = "finalize";
+
+	/**
+	 * <strong>W3C says:</strong><br>
+	 * A wrapper element holding data to be returned when a &lt;final&gt; state is entered.
+	 */
 	String TAG_DONEDATA = "donedata";
 
+	/**
+	 * XInclude tag to include other scxml files.
+	 */
 	String TAG_INCLUDE = "include";
-	String TAG_HREF = "href";
+
+	/**
+	 * The well known href attribute used in includes.
+	 */
+	String ATTR_HREF = "href";
+
+	/**
+	 * parse mode used in includes.
+	 */
 	String ATTR_PARSE = "parse";
-	String ATTR_XPOINTER = "xpointer";
 
 	/**
 	 * Executable content
@@ -335,7 +370,7 @@ public interface ScxmlTags
 	 *
 	 * <p>SCXML Processors <em >MUST</em> support the following type:</p>
 	 *
-	 * <table class="plain"><caption></caption><tbody>
+	 * <table class="plain"><caption>SCXMLEventProcessor</caption><tbody>
 	 * <tr><th>Value</th><th>Details</th></tr>
 	 * <tr><td>http://www.w3.org/TR/scxml/#SCXMLEventProcessor</td>
 	 * <td>Target is an SCXML session. The transport mechanism is platform-specific.</td>
@@ -349,7 +384,7 @@ public interface ScxmlTags
 	 * support it <em>must</em> use the following value for the "type"
 	 * attribute:</p>
 	 *
-	 * <table class="plain"><caption></caption>
+	 * <table class="plain"><caption>BasicHTTPEventProcessor</caption>
 	 * <tbody><tr><th>Value</th><th>Details</th></tr>
 	 * <tr><td>http://www.w3.org/TR/scxml/#BasicHTTPEventProcessor</td>
 	 * <td>Target is a URL. Data is sent via HTTP POST</td></tr>
@@ -545,6 +580,11 @@ public interface ScxmlTags
 	 * Starts an ElseIf specification.
 	 */
 	String TAG_ELSEIF = "elseif";
+
+	/**
+	 * Label attribute.
+	 */
+	String ATTR_LABEL = "label";
 
 	/**
 	 * Expression attribute.

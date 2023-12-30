@@ -5,5 +5,10 @@ package com.bw.modeldrive.model;
  */
 public interface Executor
 {
+	/**
+	 * Executes on the model.
+	 *
+	 * @param model The model to work on.
+	 */
 	void execute(Datamodel model);
 }

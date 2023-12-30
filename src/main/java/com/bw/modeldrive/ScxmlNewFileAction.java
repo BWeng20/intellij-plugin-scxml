@@ -9,15 +9,27 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.Icon;
 
+/**
+ * Action to create a new empty SCXML file.
+ */
 public class ScxmlNewFileAction extends CreateFileFromTemplateAction
 {
 
+	/**
+	 * Creates the action with values from i18n resources.
+	 */
 	public ScxmlNewFileAction()
 	{
-		// Uses text from i18n resources.
 		this(null, null, null);
 	}
 
+	/**
+	 * Creates the action.
+	 *
+	 * @param description The description
+	 * @param text        The text
+	 * @param icon        The icon
+	 */
 	public ScxmlNewFileAction(@NlsActions.ActionText String text, @NlsActions.ActionDescription String description, Icon icon)
 	{
 		super(text, description, icon);

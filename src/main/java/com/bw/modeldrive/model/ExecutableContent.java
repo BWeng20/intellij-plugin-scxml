@@ -15,6 +15,8 @@ public interface ExecutableContent
 
 	/**
 	 * Get the type name of this content.
+	 *
+	 * @return the type of this content.
 	 */
 	String getType();
 

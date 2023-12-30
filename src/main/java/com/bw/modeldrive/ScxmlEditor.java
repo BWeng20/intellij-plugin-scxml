@@ -20,12 +20,34 @@ import javax.swing.JPanel;
 import java.awt.BorderLayout;
 import java.beans.PropertyChangeListener;
 
+/**
+ * SCXML Editor with two sub-editors for manual XML editor and graphical SCXML editor.
+ */
 public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 {
+	/**
+	 * The editor component containing the two editors.
+	 */
 	JComponent component;
+
+	/**
+	 * The splitter between the editors.
+	 */
 	JBSplitter splitter;
+
+	/**
+	 * Graphical editor.
+	 */
 	FileEditor scxmlEditor;
+
+	/**
+	 * Textual editor.
+	 */
 	TextEditor xmlTextEditor;
+
+	/**
+	 * The file the editor is showing.
+	 */
 	final VirtualFile file;
 
 	@Override
@@ -37,6 +59,12 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 
 	private static final String PROPORTION_KEY = "ScxmlFileEditor.SplitProportion";
 
+	/**
+	 * Creates a new editor.
+	 *
+	 * @param file    The file to show.
+	 * @param project The project.
+	 */
 	public ScxmlEditor(@NotNull VirtualFile file, @NotNull Project project)
 	{
 		this.file = file;

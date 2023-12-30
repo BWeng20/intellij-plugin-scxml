@@ -1,5 +1,6 @@
 package com.bw.modeldrive.model;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Timer;
 
@@ -54,11 +55,24 @@ public class FiniteStateMachine
 	 */
 	public State pseudoRoot;
 
-	public final HashMap<TransitionId, Transition> transitions = new HashMap<>();
+	/**
+	 * Possible outgoing transitions from this state.
+	 */
+	public final java.util.List<Transition> transitions = new ArrayList<>();
 
+	/**
+	 * <strong>W3C says:</strong><br>
+	 * The &lt;script&gt; element adds scripting capability to the state machine.
+	 */
 	public ExecutableContent script;
 
+	/**
+	 * The invoke-id of the caller or null.
+	 */
 	public InvokeId callerInvokeId;
 
+	/**
+	 * Timer used for delays.
+	 */
 	public Timer timer;
 }

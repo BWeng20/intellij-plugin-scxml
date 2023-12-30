@@ -15,13 +15,37 @@ import java.util.HashMap;
  */
 public final class HashTable<K, V>
 {
+	/**
+	 * Creates a new empty hash table.
+	 */
+	public HashTable()
+	{
+
+	}
+
+	/**
+	 * The internal table that hold the data.
+	 */
 	HashMap<K, V> _hashMap = new HashMap<>();
 
+	/**
+	 * Puts a new element.
+	 * A previous mapping for the key is replaced.
+	 *
+	 * @param key   key with which the specified value is to be associated.
+	 * @param value value to be associated with the specified key
+	 */
 	public void put(K key, V value)
 	{
 		_hashMap.put(key, value);
 	}
 
+	/**
+	 * Returns the value to which the specified key is mapped, or null if this map contains no mapping for the key.
+	 *
+	 * @param key the key whose associated value is to be returned.
+	 * @return The mapped value or null.
+	 */
 	public V get(K key)
 	{
 		return _hashMap.get(key);

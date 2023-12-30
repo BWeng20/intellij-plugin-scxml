@@ -7,6 +7,15 @@ import java.util.ArrayList;
  */
 public class State
 {
+
+	/**
+	 * Creates a new state.
+	 */
+	public State()
+	{
+
+	}
+
 	/**
 	 * The unique id, counting in document order.<br>
 	 * "id" is increasing on references to states, not declaration and may not result in correct order.
@@ -56,7 +65,7 @@ public class State
 	/**
 	 * All transitions between sub-states.
 	 */
-	public List<TransitionId> transitions;
+	public List<Transition> transitions;
 
 	/**
 	 * List of invokes to execute if state is entered.

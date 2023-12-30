@@ -16,15 +16,35 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.JComponent;
 import java.beans.PropertyChangeListener;
 
+/**
+ * SCXML Editor.
+ */
 public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 {
+	/**
+	 * The Graphical Editor component.
+	 */
 	final ScxmlGraphPanel component;
+
+	/**
+	 * The file that is shown.
+	 */
 	final VirtualFile file;
+
+	/**
+	 * The XML file that is shown (Psi file for {@link #file}).
+	 */
 	XmlFile xmlFile;
 
 	private static final Logger log = Logger.getInstance(ScxmlGraphEditor.class);
 
 
+	/**
+	 * Creates a new editor.
+	 *
+	 * @param file    The original file
+	 * @param psiFile The matching psi file.
+	 */
 	public ScxmlGraphEditor(@NotNull VirtualFile file, @Nullable PsiFile psiFile)
 	{
 		component = new ScxmlGraphPanel();
@@ -32,6 +52,11 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 		setXmlFile((psiFile instanceof XmlFile) ? ((XmlFile) psiFile) : null);
 	}
 
+	/**
+	 * Sets the XML Psi file.
+	 *
+	 * @param xmlFile The file, can be null.
+	 */
 	public void setXmlFile(XmlFile xmlFile)
 	{
 		this.xmlFile = xmlFile;

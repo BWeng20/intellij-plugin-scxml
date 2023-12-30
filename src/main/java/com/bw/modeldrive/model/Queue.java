@@ -9,10 +9,20 @@ package com.bw.modeldrive.model;
  */
 public class Queue<T>
 {
-	java.util.Deque<T> _queue;
+	java.util.Deque<T> _queue = new java.util.LinkedList<>();
+
+	/**
+	 * Creates a new empty queue.
+	 */
+	public Queue()
+	{
+
+	}
 
 	/**
 	 * Puts e last in the queue.
+	 *
+	 * @param e The element to add.
 	 */
 	public void enqueue(T e)
 	{
@@ -21,6 +31,8 @@ public class Queue<T>
 
 	/**
 	 * Removes and returns first element in queue.
+	 *
+	 * @return The first element or null if empty.
 	 */
 	public T dequeue()
 	{
@@ -29,6 +41,8 @@ public class Queue<T>
 
 	/**
 	 * Is the queue empty?
+	 *
+	 * @return true if empty.
 	 */
 	public boolean isEmpty()
 	{

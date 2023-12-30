@@ -37,7 +37,7 @@ public class ScxmlFacetEditorTab extends FacetEditorTab
 							   @NotNull FacetValidatorsManager validator)
 	{
 		mySettings = state;
-		myPath = new JTextField(state.getDemoFacetState());
+		myPath = new JTextField(state.getScxmlSdkPath());
 	}
 
 	/**
@@ -76,8 +76,8 @@ public class ScxmlFacetEditorTab extends FacetEditorTab
 	@Override
 	public boolean isModified()
 	{
-		return !StringUtil.equals(mySettings.getDemoFacetState(), myPath.getText()
-																		.trim());
+		return !StringUtil.equals(mySettings.getScxmlSdkPath(), myPath.getText()
+																	  .trim());
 	}
 
 	/**
@@ -93,7 +93,7 @@ public class ScxmlFacetEditorTab extends FacetEditorTab
 		try
 		{
 			String newTextContent = myPath.getText();
-			mySettings.setDemoFacetState(newTextContent);
+			mySettings.setScxmlSdkPath(newTextContent);
 		}
 		catch (Exception e)
 		{
@@ -108,7 +108,7 @@ public class ScxmlFacetEditorTab extends FacetEditorTab
 	@Override
 	public void reset()
 	{
-		myPath.setText(mySettings.getDemoFacetState());
+		myPath.setText(mySettings.getScxmlSdkPath());
 	}
 
 }

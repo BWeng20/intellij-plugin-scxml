@@ -18,6 +18,8 @@ public interface Datamodel
 	 * As the datamodel needs access to other global variables and rust doesn't like
 	 * accessing data of parents (Fsm in this case) from inside a member (the actual Datmodel), most global data is
 	 * store in the "GlobalData" struct that is owned by the datamodel.
+	 *
+	 * @return the global data.
 	 */
 	GlobalData global();
 
@@ -31,16 +33,25 @@ public interface Datamodel
 	/**
 	 * Initialize the datamodel for one data-store.
 	 * This method is called for the global data and for the data of each state.
+	 *
+	 * @param fsm   The State Machine to work on.
+	 * @param state The State to initialize.
 	 */
 	void initializeDataModel(FiniteStateMachine fsm, State state);
 
 	/**
 	 * Sets a global variable.
+	 *
+	 * @param name The case-sensitive name of the variable.
+	 * @param data The data.
 	 */
 	void set(String name, Data data);
 
 	/**
 	 * Gets a global variable.
+	 *
+	 * @param name The case-sensitive name of the variable.
+	 * @return the data
 	 */
 	Data get(String name);
 
@@ -51,16 +62,23 @@ public interface Datamodel
 
 	/**
 	 * "log" function, use for &lt;log&gt; content.
+	 *
+	 * @param label The optional label.
+	 * @param msg   The message.
 	 */
-	void log(String msg);
+	void log(String label, String msg);
 
 	/**
 	 * Execute a script.
+	 *
+	 * @param fsm    The State Machine to work on.
+	 * @param script The script to execute
+	 * @return The result value from script.
 	 */
-	void execute(FiniteStateMachine fsm, String script);
+	String execute(FiniteStateMachine fsm, String script);
 
 	/**
-	 * Executges a for-each.
+	 * Executes a for-each.
 	 *
 	 * @param fsm             The State Machine.
 	 * @param arrayExpression The array expressions
@@ -79,9 +97,19 @@ public interface Datamodel
 	 * <strong>Actual Implementation:</strong><br>
 	 * As no side-effects shall occur, this method should be some "const". But we assume that most script-engines have
 	 * no read-only "eval" function and such method may be hard to implement.
+	 *
+	 * @param fsm    The State Machine.
+	 * @param script The script to execute.
+	 * @return true if script returns true.
 	 */
 	boolean executeCondition(FiniteStateMachine fsm, String script);
 
+	/**
+	 * Executes content.
+	 *
+	 * @param fsm     The State Machine.
+	 * @param content The content to execute.
+	 */
 	void executeContent(FiniteStateMachine fsm, ExecutableContent content);
 
 }

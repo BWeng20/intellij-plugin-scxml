@@ -16,4 +16,15 @@ public class ParserException extends Exception
 	{
 		super(message, cause);
 	}
+
+	/**
+	 * Creates a new ParserException
+	 *
+	 * @param message The message.
+	 */
+	public ParserException(String message)
+	{
+		this(message, null);
+	}
+
 }

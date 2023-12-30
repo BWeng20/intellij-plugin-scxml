@@ -1,9 +1,20 @@
 package com.bw.modeldrive.model;
 
+/**
+ * Base class for typesafe identification members.
+ */
 public class Id
 {
+	/**
+	 * The id.
+	 */
 	public final int _id;
 
+	/**
+	 * Creates a new id.
+	 *
+	 * @param id Id value.
+	 */
 	protected Id(int id)
 	{
 		_id = id;

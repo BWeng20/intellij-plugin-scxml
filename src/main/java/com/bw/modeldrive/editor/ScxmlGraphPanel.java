@@ -12,6 +12,9 @@ import java.awt.BorderLayout;
  */
 public class ScxmlGraphPanel extends JPanel implements Disposable
 {
+	/**
+	 * Dummy to show something
+	 */
 	JLabel info;
 
 	@Override
@@ -19,6 +22,9 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	{
 	}
 
+	/**
+	 * Create a new editor panel.
+	 */
 	public ScxmlGraphPanel()
 	{
 		super(new BorderLayout());

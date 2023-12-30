@@ -12,12 +12,29 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.Icon;
 
+/**
+ * Type description of the SCXML facet.
+ */
 public class ScxmlFacetType extends FacetType<ScxmlFacet, ScxmlFacetConfiguration>
 {
+	/**
+	 * Id of this facet
+	 */
 	public static final String FACET_ID = "SCXML_FACET";
+
+	/**
+	 * Name of this facet
+	 */
 	public static final String FACET_NAME = "Scxml Facet";
+
+	/**
+	 * Id of this facet
+	 */
 	public static final FacetTypeId<ScxmlFacet> FACET_TYPE_ID = new FacetTypeId<>(FACET_ID);
 
+	/**
+	 * Creates the new Type instance.
+	 */
 	public ScxmlFacetType()
 	{
 		super(FACET_TYPE_ID, FACET_ID, FACET_NAME);
