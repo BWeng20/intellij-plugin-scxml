@@ -8,10 +8,12 @@ public class ParserException extends Exception
 {
 	/**
 	 * Creates a new ParserException
+	 *
 	 * @param message The message.
-	 * @param cause The cause, can be null.
+	 * @param cause   The cause, can be null.
 	 */
-	public ParserException(String message, Throwable cause) {
-		super(message,cause);
+	public ParserException(String message, Throwable cause)
+	{
+		super(message, cause);
 	}
 }

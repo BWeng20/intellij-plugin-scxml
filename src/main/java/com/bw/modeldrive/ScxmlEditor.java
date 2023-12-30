@@ -118,6 +118,7 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 
 	/**
 	 * Creates the editor component.
+	 *
 	 * @param project The current project.
 	 * @return The UI component for the editor.
 	 */

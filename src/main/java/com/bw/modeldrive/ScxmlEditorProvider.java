@@ -17,7 +17,8 @@ public class ScxmlEditorProvider implements FileEditorProvider, DumbAware
 	/**
 	 * Creates a new editor provider.
 	 */
-	public ScxmlEditorProvider() {
+	public ScxmlEditorProvider()
+	{
 
 	}
 

@@ -43,7 +43,8 @@ public class ScxmlFacetType extends FacetType<ScxmlFacet, ScxmlFacetConfiguratio
 
 	@Nullable
 	@Override
-	public Icon getIcon() {
+	public Icon getIcon()
+	{
 		return Icons.SCXML;
 	}
 }

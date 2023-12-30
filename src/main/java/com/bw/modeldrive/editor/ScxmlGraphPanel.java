@@ -1,7 +1,6 @@
 package com.bw.modeldrive.editor;
 
-import com.bw.modeldrive.model.FinitStateMachine;
-import com.bw.modeldrive.parser.ParserException;
+import com.bw.modeldrive.model.FiniteStateMachine;
 import com.intellij.openapi.Disposable;
 
 import javax.swing.JLabel;
@@ -20,22 +19,25 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	{
 	}
 
-	public ScxmlGraphPanel() {
+	public ScxmlGraphPanel()
+	{
 		super(new BorderLayout());
 		info = new JLabel("SCXML");
-		add( info, BorderLayout.CENTER);
+		add(info, BorderLayout.CENTER);
 	}
 
 	/**
 	 * Sets the FSM to show.
+	 *
 	 * @param fsm The FSM to show.
 	 */
-	public void setStateMachine(FinitStateMachine fsm)
+	public void setStateMachine(FiniteStateMachine fsm)
 	{
 	}
 
 	/**
 	 * In case the FSM could not be loaded, show the cause.
+	 *
 	 * @param cause The error cause, can be null.
 	 */
 	public void setError(Throwable cause)

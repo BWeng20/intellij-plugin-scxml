@@ -9,7 +9,9 @@ import javax.swing.Icon;
  */
 public interface Icons
 {
-	/** Small icon used for decorators. */
+	/**
+	 * Small icon used for decorators.
+	 */
 	Icon SCXML = IconLoader.getIcon("/icons/scxml.svg", Icons.class);
 
 }

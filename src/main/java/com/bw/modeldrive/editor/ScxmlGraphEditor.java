@@ -32,11 +32,14 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 		setXmlFile((psiFile instanceof XmlFile) ? ((XmlFile) psiFile) : null);
 	}
 
-	public void setXmlFile(XmlFile xmlFile) {
+	public void setXmlFile(XmlFile xmlFile)
+	{
 		this.xmlFile = xmlFile;
-		if ( xmlFile == null ) {
+		if (xmlFile == null)
+		{
 			component.setError(null);
-		} else
+		}
+		else
 		{
 			try
 			{
