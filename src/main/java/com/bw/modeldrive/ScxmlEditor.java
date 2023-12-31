@@ -157,6 +157,7 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 
 		scxmlEditor = new ScxmlGraphEditor(file, PsiManager.getInstance(project)
 														   .findFile(file));
+
 		xmlTextEditor = (TextEditor) TextEditorProvider.getInstance()
 													   .createEditor(project, file);
 

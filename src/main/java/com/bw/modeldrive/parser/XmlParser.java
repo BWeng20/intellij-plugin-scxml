@@ -364,18 +364,18 @@ public class XmlParser implements ScxmlTags
 		State state = getOrCreateState(sname, parallel);
 		String initial = node.getAttributeValue(ATTR_INITIAL, NS_SCXML);
 
+		state.docId = ++docIdCounter;
+
 		if (initial != null)
 		{
 			// Create initial-transition with the initial states
 			Transition t = new Transition();
 			t.docId = ++docIdCounter;
 			t.transitionType = TransitionType.Internal;
-			t.source = parent;
+			t.source = state;
 			state.initial = t;
 			parseStateSpecification(initial, t.target);
 		}
-
-		state.docId = ++docIdCounter;
 
 		if (parent != null)
 		{

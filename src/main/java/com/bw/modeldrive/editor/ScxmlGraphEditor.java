@@ -1,12 +1,19 @@
 package com.bw.modeldrive.editor;
 
+import com.bw.modeldrive.model.FiniteStateMachine;
 import com.bw.modeldrive.parser.ParserException;
 import com.bw.modeldrive.parser.XmlParser;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.event.DocumentEvent;
+import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorState;
+import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.util.UserDataHolderBase;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.xml.XmlFile;
 import org.jetbrains.annotations.Nls;
@@ -36,6 +43,68 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	 */
 	XmlFile xmlFile;
 
+	/**
+	 * The document of the xml file.
+	 */
+	Document xmlDocument;
+
+	/**
+	 * Counts reported document changes.
+	 */
+	int documentChanges = 0;
+
+
+	/**
+	 * Listener for document changes.
+	 */
+	com.intellij.openapi.editor.event.DocumentListener documentListener = new DocumentListener()
+	{
+		@Override
+		public void documentChanged(@NotNull DocumentEvent event)
+		{
+			log.warn("Document Event " + event);
+			triggerUpdate();
+		}
+	};
+
+	/**
+	 * Triggers a background update of the graph.
+	 */
+	protected void triggerUpdate()
+	{
+		++documentChanges;
+		// Executes in worker thread with read-lock.
+		ApplicationManager.getApplication()
+						  .executeOnPooledThread(() ->
+								  ApplicationManager.getApplication()
+													.runReadAction(() ->
+													{
+														if (documentChanges > 0 && xmlFile != null)
+														{
+															if (documentChanges > 1)
+															{
+																log.warn("Accumulated document changes " + documentChanges);
+															}
+															documentChanges = 0;
+															try
+															{
+																final FiniteStateMachine fsm = new XmlParser().parse(xmlFile);
+																ApplicationManager.getApplication()
+																				  .invokeLater(() -> component.setStateMachine(fsm));
+															}
+															catch (ProcessCanceledException pce)
+															{
+																throw pce;
+															}
+															catch (ParserException pe)
+															{
+																component.setError(pe);
+															}
+														}
+													})
+						  );
+	}
+
 	private static final Logger log = Logger.getInstance(ScxmlGraphEditor.class);
 
 
@@ -59,6 +128,10 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	 */
 	public void setXmlFile(XmlFile xmlFile)
 	{
+		if (this.xmlDocument != null)
+		{
+			this.xmlDocument.removeDocumentListener(documentListener);
+		}
 		this.xmlFile = xmlFile;
 		if (xmlFile == null)
 		{
@@ -66,15 +139,15 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 		}
 		else
 		{
-			try
+			xmlDocument = PsiDocumentManager.getInstance(xmlFile.getProject())
+											.getDocument(xmlFile);
+			if (xmlDocument != null)
 			{
-				XmlParser parser = new XmlParser();
-				component.setStateMachine(parser.parse(xmlFile));
+				log.warn("Document " + xmlDocument + " " + xmlDocument.getClass()
+																	  .getName());
+				xmlDocument.addDocumentListener(documentListener);
 			}
-			catch (ParserException pe)
-			{
-				component.setError(pe);
-			}
+			triggerUpdate();
 		}
 	}
 
