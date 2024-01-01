@@ -28,6 +28,8 @@ import java.beans.PropertyChangeListener;
  */
 public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 {
+	private static final Logger log = Logger.getInstance(ScxmlGraphEditor.class);
+
 	/**
 	 * The Graphical Editor component.
 	 */
@@ -49,9 +51,9 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	Document xmlDocument;
 
 	/**
-	 * Counts reported document changes.
+	 * True if a update of the graph was triggered.
 	 */
-	int documentChanges = 0;
+	boolean updateTriggered = false;
 
 
 	/**
@@ -72,41 +74,43 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	 */
 	protected void triggerUpdate()
 	{
-		++documentChanges;
-		// Executes in worker thread with read-lock.
-		ApplicationManager.getApplication()
-						  .executeOnPooledThread(() ->
-								  ApplicationManager.getApplication()
-													.runReadAction(() ->
-													{
-														if (documentChanges > 0 && xmlFile != null)
-														{
-															if (documentChanges > 1)
-															{
-																log.warn("Accumulated document changes " + documentChanges);
-															}
-															documentChanges = 0;
-															try
-															{
-																final FiniteStateMachine fsm = new XmlParser().parse(xmlFile);
-																ApplicationManager.getApplication()
-																				  .invokeLater(() -> component.setStateMachine(fsm));
-															}
-															catch (ProcessCanceledException pce)
-															{
-																throw pce;
-															}
-															catch (ParserException pe)
-															{
-																component.setError(pe);
-															}
-														}
-													})
-						  );
+		if (!updateTriggered)
+		{
+			updateTriggered = true;
+			// Executes in worker thread with read-lock.
+			ApplicationManager.getApplication()
+							  .executeOnPooledThread(() -> ApplicationManager.getApplication()
+																			 .runReadAction(() -> runUpdate()));
+		}
 	}
 
-	private static final Logger log = Logger.getInstance(ScxmlGraphEditor.class);
-
+	/**
+	 * This method is synchronized because it is possible that this method is called from different worker threads in parallel.
+	 */
+	private synchronized void runUpdate()
+	{
+		if (updateTriggered)
+		{
+			updateTriggered = false;
+			if (xmlFile != null)
+			{
+				try
+				{
+					final FiniteStateMachine fsm = new XmlParser().parse(xmlFile);
+					ApplicationManager.getApplication()
+									  .invokeLater(() -> component.setStateMachine(fsm));
+				}
+				catch (ProcessCanceledException pce)
+				{
+					throw pce;
+				}
+				catch (ParserException pe)
+				{
+					component.setError(pe);
+				}
+			}
+		}
+	}
 
 	/**
 	 * Creates a new editor.
