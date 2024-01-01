@@ -4,6 +4,7 @@ import com.bw.modeldrive.ModelDriveBundle;
 import com.bw.modeldrive.model.BindingType;
 import com.bw.modeldrive.model.ExecutableContent;
 import com.bw.modeldrive.model.FiniteStateMachine;
+import com.bw.modeldrive.model.Invoke;
 import com.bw.modeldrive.model.State;
 import com.bw.modeldrive.model.Transition;
 import com.bw.modeldrive.model.TransitionType;
@@ -134,13 +135,47 @@ public class XmlParser implements ScxmlTags
 				}
 				case TAG_HISTORY -> parseToDo(xmlChild, state);
 				case TAG_DATAMODEL -> parseToDo(xmlChild, state);
-				case TAG_INVOKE -> parseToDo(xmlChild, state);
+				case TAG_INVOKE -> parseInvoke(xmlChild, state);
 				default -> debug("Unsupported tag %s", xmlChild.getLocalName());
 			}
 		}
 		return state;
 	}
 
+	/**
+	 * Parse an invoke node.
+	 *
+	 * @param node        The node.
+	 * @param sourceState The parent-state
+	 * @throws ParserException in case something was wrong with the file.
+	 */
+	protected void parseInvoke(XmlTag node, State sourceState) throws ParserException
+	{
+		Invoke invoke = new Invoke();
+
+		invoke.typeName = getOptionalAttribute(node, ATTR_TYPE);
+		invoke.typeExpr = getOptionalAttribute(node, ATTR_TYPEEXPR);
+		invoke.src = getOptionalAttribute(node, ATTR_SRC);
+		invoke.srcexpr = getOptionalAttribute(node, ATTR_SRCEXPR);
+		invoke.id = getOptionalAttribute(node, ATTR_ID);
+		invoke.idLocation = getOptionalAttribute(node, ATTR_IDLOCATION);
+		parseSymbolList(getOptionalAttribute(node, ATTR_NAMELIST), invoke.namelist);
+		invoke.autoforward = parseBoolean(getOptionalAttribute(node, ATTR_AUTOFORWARD), false);
+
+		for (ScxmlChildIterator it = new ScxmlChildIterator(node); it.hasNext(); )
+		{
+			XmlTag xmlChild = it.next();
+			switch (xmlChild.getLocalName())
+			{
+				case TAG_PARAM -> parseToDo(node, sourceState);
+				case TAG_FINALIZE -> parseToDo(node, sourceState);
+				case TAG_CONTENT -> parseToDo(node, sourceState);
+				default -> debug("Unsupported tag %s", xmlChild.getLocalName());
+			}
+		}
+
+		sourceState.invoke.add(invoke);
+	}
 
 	/**
 	 * Parse an initial transition node.
@@ -192,7 +227,7 @@ public class XmlParser implements ScxmlTags
 
 		t.docId = ++docIdCounter;
 
-		parseEventSpecification(getOptionalAttribute(node, TAG_EVENT), t.events);
+		parseSymbolList(getOptionalAttribute(node, TAG_EVENT), t.events);
 		t.cond = getOptionalAttribute(node, ATTR_COND);
 		parseStateSpecification(getOptionalAttribute(node, ATTR_TARGET), t.target);
 
@@ -483,7 +518,7 @@ public class XmlParser implements ScxmlTags
 		}
 		else
 		{
-			debug("state %s no parent", state.toString() );
+			debug("state %s no parent", state.toString());
 		}
 		return state;
 	}
@@ -588,14 +623,24 @@ public class XmlParser implements ScxmlTags
 			  .forEach(t -> targets.add(getOrCreateState(t, false)));
 	}
 
+	/**
+	 * Parse a boolean value.
+	 *
+	 * @param value The boolean value.
+	 * @return true if value equals case-insensitive to 'true'
+	 */
+	protected boolean parseBoolean(String value, boolean defaultValue)
+	{
+		return (value == null || value.isEmpty()) ? defaultValue : "true".equalsIgnoreCase(value);
+	}
 
 	/**
-	 * Parse a event-specification, a white-space separated list of stare references.
+	 * Parse a symbol list, a white-space separated list of symbols.
 	 *
-	 * @param eventNames The list of events
-	 * @param events     A list to add the events to.
+	 * @param eventNames The list of symbols
+	 * @param events     A list to add the symbols to.
 	 */
-	protected void parseEventSpecification(String eventNames, java.util.List<String> events)
+	protected void parseSymbolList(String eventNames, java.util.List<String> events)
 	{
 		if (eventNames != null)
 		{

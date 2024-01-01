@@ -45,7 +45,7 @@ public class Event
 	/**
 	 * The invoke-id of the event.
 	 */
-	public InvokeId invokeid;
+	public String invokeid;
 
 	/**
 	 * The DoneData of the final-state that triggered the event.

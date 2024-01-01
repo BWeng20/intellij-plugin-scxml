@@ -12,16 +12,11 @@ public class Invoke
 	public int docId;
 
 	/**
-	 * Platform Internal id
-	 */
-	public InvokeId id;
-
-	/**
 	 * W3c says:<br>
 	 * Attribute 'id':<br>
 	 * A string literal to be used as the identifier for this instance of &lt;invoke&gt;. See 3.14 IDs for details.
 	 */
-	public String externalId;
+	public String id;
 
 	/**
 	 * W3c says:<br>
@@ -30,7 +25,7 @@ public class Invoke
 	 * Any data model expression evaluating to a data model location.<br>
 	 * Must not occur with the 'id' attribute.
 	 */
-	public String externalIdLocation;
+	public String idLocation;
 
 	/**
 	 * W3c says:<br>
@@ -52,7 +47,7 @@ public class Invoke
 	 * W3c says:<br>
 	 * List of valid location expressions
 	 */
-	public List<String> namelist;
+	public java.util.List<String> namelist;
 
 	/**
 	 * W3c says:<br>

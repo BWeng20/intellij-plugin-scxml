@@ -69,7 +69,7 @@ public class FiniteStateMachine
 	/**
 	 * The invoke-id of the caller or null.
 	 */
-	public InvokeId callerInvokeId;
+	public String callerInvokeId;
 
 	/**
 	 * Timer used for delays.
