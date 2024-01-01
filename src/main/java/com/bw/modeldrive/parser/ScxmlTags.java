@@ -145,6 +145,16 @@ public interface ScxmlTags
 	String TAG_TRANSITION = "transition";
 
 	/**
+	 * Possible value for attribute {@link #ATTR_TYPE type} of tag {@link #TAG_TRANSITION &lt;transition&gt;}.
+	 **/
+	String TRANSITION_TYPE_INTERNAL = "internal";
+
+	/**
+	 * Possible value for attribute {@link #ATTR_TYPE type} of tag {@link #TAG_TRANSITION &lt;transition&gt;}.
+	 **/
+	String TRANSITION_TYPE_EXTERNAL = "external";
+
+	/**
 	 * Condition Attribute.
 	 */
 	String ATTR_COND = "cond";
@@ -153,11 +163,6 @@ public interface ScxmlTags
 	 * Starts an event specification.
 	 */
 	String TAG_EVENT = "event";
-
-	/**
-	 * Starts a type specification.
-	 */
-	String TAG_TYPE = "type";
 
 	/**
 	 * Child of {@link #TAG_STATE &lt;state&gt;}.
@@ -467,7 +472,7 @@ public interface ScxmlTags
 	String TARGET_INTERNAL = "_internal";
 
 	/**
-	 * Attribute of {@link #TAG_SEND &lt;send&gt;}
+	 * Attribute of {@link #TAG_SEND &lt;send&gt;} or {@link #TAG_EVENT &lt;event&gt;}
 	 */
 	String ATTR_TYPE = "type";
 

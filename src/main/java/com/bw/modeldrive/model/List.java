@@ -22,6 +22,14 @@ public class List<T>
 	}
 
 	/**
+	 * Adds a element to the list.
+	 */
+	public void add(T l)
+	{
+		_list.add(l);
+	}
+
+	/**
 	 * Creates a list filled with all elements from l.
 	 *
 	 * @param l The original list to copy.

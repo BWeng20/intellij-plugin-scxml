@@ -17,6 +17,7 @@ import com.intellij.psi.xml.XmlTag;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -82,7 +83,6 @@ public class XmlParser implements ScxmlTags
 			while (child != null && !(child instanceof XmlTag xmlTagChild && NS_SCXML.equals(xmlTagChild.getNamespace())))
 			{
 				child = child.getNextSibling();
-				;
 			}
 			this.child = (XmlTag) child;
 		}
@@ -123,11 +123,15 @@ public class XmlParser implements ScxmlTags
 			{
 				case TAG_ON_ENTRY -> state.onentry = parseExecutableContentBlock(xmlChild);
 				case TAG_ON_EXIT -> state.onexit = parseExecutableContentBlock(xmlChild);
-				case TAG_TRANSITION -> parseToDo(xmlChild, state);
-				case TAG_INITIAL -> parseToDo(xmlChild, state);
+				case TAG_TRANSITION -> parseTransition(xmlChild, state);
+				case TAG_INITIAL -> parseInitialTransition(xmlChild, state);
 				case TAG_STATE -> parseState(xmlChild, false, state);
 				case TAG_PARALLEL -> parseState(xmlChild, true, state);
-				case TAG_FINAL -> parseState(xmlChild, false, state);
+				case TAG_FINAL ->
+				{
+					State s = parseState(xmlChild, false, state);
+					s.isFinal = true;
+				}
 				case TAG_HISTORY -> parseToDo(xmlChild, state);
 				case TAG_DATAMODEL -> parseToDo(xmlChild, state);
 				case TAG_INVOKE -> parseToDo(xmlChild, state);
@@ -136,6 +140,97 @@ public class XmlParser implements ScxmlTags
 		}
 		return state;
 	}
+
+
+	/**
+	 * Parse an initial transition node.
+	 *
+	 * @param node        The node.
+	 * @param sourceState The parent-state
+	 * @throws ParserException in case something was wrong with the file.
+	 */
+	protected void parseInitialTransition(XmlTag node, State sourceState) throws ParserException
+	{
+		Transition t = parseTransitionWithAttributes(node);
+
+		if (sourceState.initial != null)
+		{
+			throw new ParserException("<initial> must not be specified if initial-attribute was given");
+		}
+
+		t.source = sourceState;
+		sourceState.initial = t;
+
+		debug(String.format("Initial %s", t));
+	}
+
+	/**
+	 * Parse a transition node.
+	 *
+	 * @param node        The node.
+	 * @param sourceState The parent state.
+	 * @throws ParserException in case something was wrong with the file.
+	 */
+	protected void parseTransition(XmlTag node, State sourceState) throws ParserException
+	{
+		Transition t = parseTransitionWithAttributes(node);
+		t.source = sourceState;
+		sourceState.transitions.add(t);
+		debug(String.format("Transition %s", t));
+	}
+
+	/**
+	 * Common part of parsing some transition node (initial or transition), including attributes and executable content.
+	 *
+	 * @param node The transition node
+	 * @return The transition (not added to state)
+	 * @throws ParserException in case something was wrong with the file.
+	 */
+	protected Transition parseTransitionWithAttributes(XmlTag node) throws ParserException
+	{
+		Transition t = new Transition();
+
+		t.docId = ++docIdCounter;
+
+		parseEventSpecification(getOptionalAttribute(node, TAG_EVENT), t.events);
+		t.cond = getOptionalAttribute(node, ATTR_COND);
+		parseStateSpecification(getOptionalAttribute(node, ATTR_TARGET), t.target);
+
+		t.transitionType = mapTransitionType(getOptionalAttribute(node, ATTR_TYPE));
+		t.content = parseExecutableContentBlock(node);
+
+		return t;
+	}
+
+	/**
+	 * Mapping from transition type name to enum.
+	 */
+	protected static final Map<String, TransitionType> transitionTypeName =
+			Map.of(TRANSITION_TYPE_INTERNAL, TransitionType.Internal,
+					TRANSITION_TYPE_EXTERNAL, TransitionType.External);
+
+
+	/**
+	 * Translates a transition type name.
+	 *
+	 * @param type The name of the type. Can be null.
+	 * @return The Transition type or null if type is null or empty.
+	 * @throws ParserException If type is not empty or null but value is unknown.
+	 */
+	protected TransitionType mapTransitionType(String type) throws ParserException
+	{
+		TransitionType typeValue = null;
+		if (type != null && !type.isEmpty())
+		{
+			typeValue = transitionTypeName.get(type);
+			if (typeValue == null)
+			{
+				throw new ParserException(String.format("Unknown transition type value '%s'", type));
+			}
+		}
+		return typeValue;
+	}
+
 
 	/**
 	 * Parse executable content as in &lt;onentry&gt; or &lt;onexit&gt;.
@@ -380,7 +475,7 @@ public class XmlParser implements ScxmlTags
 		if (parent != null)
 		{
 			state.parent = parent;
-			debug("state %s %sparent %s", state.name, state.isParallel ? "(parallel) " : "", parent.name);
+			debug("state %s parent %s", state.toString(), parent.name);
 			if (!parent.states.contains(state))
 			{
 				parent.states.add(state);
@@ -388,7 +483,7 @@ public class XmlParser implements ScxmlTags
 		}
 		else
 		{
-			debug("state %s %sno parent", state.name, parallel ? "(parallel) " : "");
+			debug("state %s no parent", state.toString() );
 		}
 		return state;
 	}
@@ -493,6 +588,22 @@ public class XmlParser implements ScxmlTags
 			  .forEach(t -> targets.add(getOrCreateState(t, false)));
 	}
 
+
+	/**
+	 * Parse a event-specification, a white-space separated list of stare references.
+	 *
+	 * @param eventNames The list of events
+	 * @param events     A list to add the events to.
+	 */
+	protected void parseEventSpecification(String eventNames, java.util.List<String> events)
+	{
+		if (eventNames != null)
+		{
+			Arrays.stream(eventNames.split("(?U)\s"))
+				  .forEach(events::add);
+		}
+	}
+
 	/**
 	 * Log a debug message.
 	 *
@@ -503,33 +614,6 @@ public class XmlParser implements ScxmlTags
 	{
 		/// @TODO: Set this correctly to "debug" if we know how to dump it to host console.
 		log.warn(String.format(format, args));
-	}
-
-	/**
-	 * Get the tailing ExecutableContent.
-	 *
-	 * @param c The content.
-	 * @return The tailing content.
-	 */
-	protected ExecutableContent getTailingContent(ExecutableContent c)
-	{
-		if (c instanceof Block)
-		{
-			Block block = (Block) c;
-			if (block.content.isEmpty())
-				return block;
-			else
-				return getTailingContent(block.content.get(block.content.size() - 1));
-		}
-		else
-		{
-			// Go through cain of elseif
-			while (c instanceof If ifC && ifC.elseContent != null)
-			{
-				c = ifC.elseContent;
-			}
-		}
-		return c;
 	}
 
 	/**

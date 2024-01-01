@@ -14,4 +14,5 @@ public enum TransitionType
 	 * An external one.
 	 */
 	External;
+
 }

@@ -40,12 +40,12 @@ public class State
 	/**
 	 * True for "parallel" states
 	 */
-	public boolean isParallel;
+	public boolean isParallel = false;
 
 	/**
 	 * True for "final" states
 	 */
-	public boolean isFinal;
+	public boolean isFinal = false;
 
 	/**
 	 * The type of hosztory for this state.
@@ -65,7 +65,7 @@ public class State
 	/**
 	 * All transitions between sub-states.
 	 */
-	public List<Transition> transitions;
+	public List<Transition> transitions = new List<>();
 
 	/**
 	 * List of invokes to execute if state is entered.
@@ -96,4 +96,17 @@ public class State
 	 * DoneData of final states or null.
 	 */
 	public DoneData donedata;
+
+	@Override
+	public String toString()
+	{
+		StringBuilder sb = new StringBuilder(50);
+		sb.append(name);
+		if (isParallel)
+			sb.append("(parallel) ");
+		if (isFinal)
+			sb.append("(final) ");
+		return sb.toString();
+	}
+
 }

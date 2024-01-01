@@ -66,4 +66,35 @@ public class Transition
 	 */
 	public ExecutableContent content;
 
+	@Override
+	public String toString()
+	{
+		StringBuilder sb = new StringBuilder(100);
+		sb.append('[');
+		if (source != null)
+			sb.append(source.name);
+		sb.append(']');
+		if (cond != null)
+			sb.append(" {")
+			  .append(cond)
+			  .append('}');
+		if (transitionType != null)
+			sb.append(" <")
+			  .append(transitionType)
+			  .append('>');
+
+		sb.append(" -> ");
+		boolean first = true;
+		for (State t : target)
+		{
+			if (first)
+				first = false;
+			else
+				sb.append(",");
+			sb.append(t.name);
+		}
+
+		return sb.toString();
+	}
+
 }
