@@ -25,7 +25,7 @@ public class ScxmlFacetType extends FacetType<ScxmlFacet, ScxmlFacetConfiguratio
 	/**
 	 * Name of this facet
 	 */
-	public static final String FACET_NAME = "Scxml Facet";
+	public static final String FACET_NAME = "ScXML";
 
 	/**
 	 * Id of this facet
