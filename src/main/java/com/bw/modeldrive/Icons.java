@@ -14,4 +14,9 @@ public interface Icons
 	 */
 	Icon SCXML = IconLoader.getIcon("/icons/scxml.svg", Icons.class);
 
+	/**
+	 * Small State Machine icon.
+	 */
+	Icon STATE_MACHINE = IconLoader.getIcon("/icons/statemachine.svg", Icons.class);
+
 }

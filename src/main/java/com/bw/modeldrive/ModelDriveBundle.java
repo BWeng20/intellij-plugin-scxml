@@ -11,7 +11,7 @@ import org.jetbrains.annotations.PropertyKey;
 public class ModelDriveBundle extends DynamicBundle
 {
 	private static final ModelDriveBundle INSTANCE = new ModelDriveBundle();
-	private static final String PATH_TO_BUNDLE = "messages.ModelDriveBundle";
+	private static final String PATH_TO_BUNDLE = "messages.ScxmlSdkBundle";
 
 	/**
 	 * Creates the bundle singleton.

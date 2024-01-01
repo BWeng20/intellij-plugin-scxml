@@ -10,14 +10,14 @@ import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.UserDataHolderBase;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiManager;
-import com.intellij.ui.JBSplitter;
+import com.intellij.ui.tabs.JBTabs;
+import com.intellij.ui.tabs.JBTabsFactory;
+import com.intellij.ui.tabs.TabInfo;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.JComponent;
-import javax.swing.JPanel;
-import java.awt.BorderLayout;
 import java.beans.PropertyChangeListener;
 
 /**
@@ -33,7 +33,7 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 	/**
 	 * The splitter between the editors.
 	 */
-	JBSplitter splitter;
+	JBTabs tabs;
 
 	/**
 	 * Graphical editor.
@@ -104,9 +104,6 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 			{
 				// scxmlEditor.setState(compositeState.scxmlEditorState;
 			}
-			if (compositeState.splitterLayout != null)
-			{
-			}
 		}
 
 	}
@@ -152,8 +149,7 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 	 */
 	protected JComponent createComponent(@NotNull Project project)
 	{
-		splitter = new JBSplitter(false, 0.5f, 0.15f, 0.85f);
-		splitter.setSplitterProportionKey(PROPORTION_KEY);
+		tabs = JBTabsFactory.createEditorTabs(project, this);
 
 		scxmlEditor = new ScxmlGraphEditor(file, PsiManager.getInstance(project)
 														   .findFile(file));
@@ -161,16 +157,16 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 		xmlTextEditor = (TextEditor) TextEditorProvider.getInstance()
 													   .createEditor(project, file);
 
-		splitter.setFirstComponent(xmlTextEditor.getComponent());
-		splitter.setSecondComponent(scxmlEditor.getComponent());
+		TabInfo xmlTabInfo = new TabInfo(xmlTextEditor.getComponent());
+		xmlTabInfo.setText("XML");
+		tabs.addTab(xmlTabInfo);
 
-		JPanel toolbar = new JPanel();
+		TabInfo graphTabInfo = new TabInfo(scxmlEditor.getComponent());
+		graphTabInfo.setIcon(Icons.STATE_MACHINE);
 
-		final JPanel result = new JPanel(new BorderLayout());
-		result.add(toolbar, BorderLayout.NORTH);
-		result.add(splitter, BorderLayout.CENTER);
-
-		return result;
+		tabs.addTab(graphTabInfo);
+		tabs.select(graphTabInfo, false);
+		return tabs.getComponent();
 
 	}
 }
