@@ -40,7 +40,7 @@ public class ScxmlNewFileAction extends CreateFileFromTemplateAction
 							   CreateFileFromTemplateDialog.Builder builder)
 	{
 		builder
-				.setTitle("New SCXML File")
+				.setTitle("SCXML File")
 				.addKind("XML", Icons.SCXML, "SCXML.xml");
 	}
 

@@ -12,6 +12,7 @@ repositories {
 }
 
 dependencies {
+    implementation('xerces:xercesImpl:2.12.2')
 }
 
 // Configure Gradle IntelliJ Plugin

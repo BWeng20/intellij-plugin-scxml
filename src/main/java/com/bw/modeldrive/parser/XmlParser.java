@@ -12,10 +12,13 @@ import com.bw.modeldrive.model.executablecontent.Block;
 import com.bw.modeldrive.model.executablecontent.If;
 import com.bw.modeldrive.model.executablecontent.Log;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.xml.XmlFile;
-import com.intellij.psi.xml.XmlTag;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
@@ -48,44 +51,80 @@ public class XmlParser implements ScxmlTags
 	 * @return The created model.
 	 * @throws ParserException in case something was wrong with the file.
 	 */
-	public FiniteStateMachine parse(XmlFile xml) throws ParserException
+	public FiniteStateMachine parse(String xmlFile) throws ParserException
 	{
+		DocumentBuilderFactory spf = DocumentBuilderFactory.newInstance();
+		spf.setNamespaceAware(true);
+		spf.setXIncludeAware(true);
+
+		Document doc;
+		try
+		{
+			DocumentBuilder builder = spf.newDocumentBuilder();
+			doc = builder.parse(xmlFile);
+		}
+		catch (Exception e)
+		{
+			log.error(e);
+			doc = null;
+		}
+
 		fsm = null;
 
-		XmlTag root = xml.getRootTag();
-		if (ScxmlTags.TAG_SCXML.equals(root.getLocalName()))
+		if (doc != null)
 		{
+			Element root = doc.getDocumentElement();
+			if (ScxmlTags.TAG_SCXML.equals(root.getLocalName()))
+			{
 
-			fsm = new FiniteStateMachine();
+				fsm = new FiniteStateMachine();
 
-			fsm.name = root.getAttributeValue(ATTR_NAME);
-			fsm.datamodel = root.getAttributeValue(ATTR_DATAMODEL);
-			fsm.binding = BindingType.valueOf(getAttributeOrDefault(root, ATTR_BINDING, BindingType.Early.name()));
-			fsm.pseudoRoot = parseState(root, false, null);
-		}
-		else
-		{
-			throw new ParserException(ModelDriveBundle.message("parser.error.root_tag_is_not_scxml", root.getLocalName()));
+				fsm.name = getOptionalAttribute(root, ATTR_NAME);
+				fsm.datamodel = getAttributeOrDefault(root, ATTR_DATAMODEL, "Null");
+				fsm.binding = mapBindingType(getAttributeOrDefault(root, ATTR_BINDING, BindingType.Early.name()));
+				fsm.pseudoRoot = parseState(root, false, null);
+				fsm.pseudoRoot.name = getOptionalAttribute( root, ATTR_NAME);
+			}
+			else
+			{
+				throw new ParserException(ModelDriveBundle.message("parser.error.root_tag_is_not_scxml", root.getLocalName()));
+			}
 		}
 		return fsm;
 	}
 
-	static class ScxmlChildIterator implements Iterator<XmlTag>
+	static class ScxmlChildIterator implements Iterator<Element>
 	{
-		XmlTag child;
+		Element child;
 
-		ScxmlChildIterator(XmlTag parent)
+		ScxmlChildIterator(Element parent)
 		{
 			processToScxmlTag(parent.getFirstChild());
 		}
 
-		private void processToScxmlTag(PsiElement child)
+
+		private void processToScxmlTag(Node child)
 		{
-			while (child != null && !(child instanceof XmlTag xmlTagChild && NS_SCXML.equals(xmlTagChild.getNamespace())))
+			while (child != null && !(child instanceof Element xmlTagChild && NS_SCXML.equals(xmlTagChild.getNamespaceURI())))
 			{
+				if (child instanceof Element xmlTagChild)
+				{
+					if (NS_XINCLUDE.equals(xmlTagChild.getNamespaceURI()))
+					{
+						// log.warn(String.format(" skipping Include %s: %s", xmlTagChild.getName(), xmlTagChild.getValue() ));
+					}
+					else
+					{
+						// log.warn(String.format(" skipping %s: %s", xmlTagChild.getName(), xmlTagChild.getValue() ));
+					}
+				}
+				else
+				{
+					// log.warn(String.format(" skipping %s: %s", child.getClass().getSimpleName(), child.getText()));
+				}
 				child = child.getNextSibling();
 			}
-			this.child = (XmlTag) child;
+			this.child = (Element) child;
 		}
 
 		@Override
@@ -95,9 +134,9 @@ public class XmlParser implements ScxmlTags
 		}
 
 		@Override
-		public XmlTag next()
+		public Element next()
 		{
-			XmlTag r = child;
+			Element r = child;
 			if (child != null)
 				processToScxmlTag(child.getNextSibling());
 			return r;
@@ -113,13 +152,13 @@ public class XmlParser implements ScxmlTags
 	 * @return The corresponding state.
 	 * @throws ParserException in case something was wrong with the file.
 	 */
-	protected State parseState(XmlTag node, boolean parallel, State parent) throws ParserException
+	protected State parseState(Element node, boolean parallel, State parent) throws ParserException
 	{
 		State state = getOrCreateStateWithAttributes(node, parallel, parent);
 
 		for (ScxmlChildIterator it = new ScxmlChildIterator(node); it.hasNext(); )
 		{
-			XmlTag xmlChild = it.next();
+			Element xmlChild = it.next();
 			switch (xmlChild.getLocalName())
 			{
 				case TAG_ON_ENTRY -> state.onentry = parseExecutableContentBlock(xmlChild);
@@ -149,7 +188,7 @@ public class XmlParser implements ScxmlTags
 	 * @param sourceState The parent-state
 	 * @throws ParserException in case something was wrong with the file.
 	 */
-	protected void parseInvoke(XmlTag node, State sourceState) throws ParserException
+	protected void parseInvoke(Element node, State sourceState) throws ParserException
 	{
 		Invoke invoke = new Invoke();
 
@@ -164,7 +203,7 @@ public class XmlParser implements ScxmlTags
 
 		for (ScxmlChildIterator it = new ScxmlChildIterator(node); it.hasNext(); )
 		{
-			XmlTag xmlChild = it.next();
+			Element xmlChild = it.next();
 			switch (xmlChild.getLocalName())
 			{
 				case TAG_PARAM -> parseToDo(node, sourceState);
@@ -184,7 +223,7 @@ public class XmlParser implements ScxmlTags
 	 * @param sourceState The parent-state
 	 * @throws ParserException in case something was wrong with the file.
 	 */
-	protected void parseInitialTransition(XmlTag node, State sourceState) throws ParserException
+	protected void parseInitialTransition(Element node, State sourceState) throws ParserException
 	{
 		Transition t = parseTransitionWithAttributes(node);
 
@@ -206,7 +245,7 @@ public class XmlParser implements ScxmlTags
 	 * @param sourceState The parent state.
 	 * @throws ParserException in case something was wrong with the file.
 	 */
-	protected void parseTransition(XmlTag node, State sourceState) throws ParserException
+	protected void parseTransition(Element node, State sourceState) throws ParserException
 	{
 		Transition t = parseTransitionWithAttributes(node);
 		t.source = sourceState;
@@ -221,7 +260,7 @@ public class XmlParser implements ScxmlTags
 	 * @return The transition (not added to state)
 	 * @throws ParserException in case something was wrong with the file.
 	 */
-	protected Transition parseTransitionWithAttributes(XmlTag node) throws ParserException
+	protected Transition parseTransitionWithAttributes(Element node) throws ParserException
 	{
 		Transition t = new Transition();
 
@@ -238,12 +277,41 @@ public class XmlParser implements ScxmlTags
 	}
 
 	/**
+	 * Mapping from binding mode name to enum.
+	 */
+	protected static final Map<String, BindingType> bindingTypeName =
+			Map.of(BINDING_TYPE_LATE, BindingType.Late,
+					BINDING_TYPE_EARLY, BindingType.Early);
+
+
+	/**
+	 * Translates a binding mode name.
+	 *
+	 * @param type The name of the type. Can be null.
+	 * @return The Binding mode or null if mode is null or empty.
+	 * @throws ParserException If the mode is not empty or null but value is unknown.
+	 */
+	protected BindingType mapBindingType(String type) throws ParserException
+	{
+		BindingType typeValue = null;
+		if (type != null && !type.isEmpty())
+		{
+			typeValue = bindingTypeName.get(type);
+			if (typeValue == null)
+			{
+				throw new ParserException(String.format("Unknown binding type value '%s'", type));
+			}
+		}
+		return typeValue;
+	}
+
+
+	/**
 	 * Mapping from transition type name to enum.
 	 */
 	protected static final Map<String, TransitionType> transitionTypeName =
 			Map.of(TRANSITION_TYPE_INTERNAL, TransitionType.Internal,
 					TRANSITION_TYPE_EXTERNAL, TransitionType.External);
-
 
 	/**
 	 * Translates a transition type name.
@@ -274,7 +342,7 @@ public class XmlParser implements ScxmlTags
 	 * @return The content
 	 * @throws ParserException in case something was wrong with the file.
 	 */
-	protected ExecutableContent parseExecutableContentBlock(XmlTag node) throws ParserException
+	protected ExecutableContent parseExecutableContentBlock(Element node) throws ParserException
 	{
 		ExecutableContent c = null;
 
@@ -293,7 +361,7 @@ public class XmlParser implements ScxmlTags
 	 * @return The parsed content.
 	 * @throws ParserException in case something was wrong with the file.
 	 */
-	protected ExecutableContent parseExecutableContentElement(XmlTag xmlChild, ExecutableContent previous) throws ParserException
+	protected ExecutableContent parseExecutableContentElement(Element xmlChild, ExecutableContent previous) throws ParserException
 	{
 		return switch (xmlChild.getLocalName())
 		{
@@ -321,7 +389,7 @@ public class XmlParser implements ScxmlTags
 	 * @param prev The previous content in the current chain.
 	 * @return The executable content.
 	 */
-	protected ExecutableContent parseRaise(XmlTag node, ExecutableContent prev)
+	protected ExecutableContent parseRaise(Element node, ExecutableContent prev)
 	{
 		// @TODO
 		return chainExecutableContent(prev, null);
@@ -335,7 +403,7 @@ public class XmlParser implements ScxmlTags
 	 * @return The executable content.
 	 * @throws ParserException in case something was wrong with the file.
 	 */
-	protected ExecutableContent parseIf(XmlTag node, ExecutableContent prev) throws ParserException
+	protected ExecutableContent parseIf(Element node, ExecutableContent prev) throws ParserException
 	{
 		If ifC = new If(getRequiredAttribute(node, ATTR_COND));
 
@@ -347,7 +415,7 @@ public class XmlParser implements ScxmlTags
 
 		for (ScxmlChildIterator it = new ScxmlChildIterator(node); it.hasNext(); )
 		{
-			XmlTag xmlChild = it.next();
+			Element xmlChild = it.next();
 			switch (xmlChild.getLocalName())
 			{
 				case TAG_ELSE ->
@@ -386,7 +454,7 @@ public class XmlParser implements ScxmlTags
 	 * @param prev The previous content in the current chain.
 	 * @return The executable content.
 	 */
-	protected ExecutableContent parseForEach(XmlTag node, ExecutableContent prev)
+	protected ExecutableContent parseForEach(Element node, ExecutableContent prev)
 	{
 		// @TODO
 		return chainExecutableContent(prev, null);
@@ -400,7 +468,7 @@ public class XmlParser implements ScxmlTags
 	 * @return The executable content.
 	 * @throws ParserException in case something was wrong with the file.
 	 */
-	protected ExecutableContent parseLog(XmlTag node, ExecutableContent prev) throws ParserException
+	protected ExecutableContent parseLog(Element node, ExecutableContent prev) throws ParserException
 	{
 		final Log log = new Log(getAttributeOrDefault(node, ATTR_LABEL, ""), getOptionalAttribute(node, ATTR_EXPR));
 		return chainExecutableContent(prev, log);
@@ -413,7 +481,7 @@ public class XmlParser implements ScxmlTags
 	 * @param prev The previous content in the current chain.
 	 * @return The executable content.
 	 */
-	protected ExecutableContent parseAssign(XmlTag node, ExecutableContent prev)
+	protected ExecutableContent parseAssign(Element node, ExecutableContent prev)
 	{
 		// @TODO
 		return chainExecutableContent(prev, null);
@@ -426,7 +494,7 @@ public class XmlParser implements ScxmlTags
 	 * @param prev The previous content in the current chain.
 	 * @return The executable content.
 	 */
-	protected ExecutableContent parseScript(XmlTag node, ExecutableContent prev)
+	protected ExecutableContent parseScript(Element node, ExecutableContent prev)
 	{
 		// @TODO
 		return chainExecutableContent(prev, null);
@@ -439,7 +507,7 @@ public class XmlParser implements ScxmlTags
 	 * @param prev The previous content in the current chain.
 	 * @return The executable content.
 	 */
-	protected ExecutableContent parseSend(XmlTag node, ExecutableContent prev)
+	protected ExecutableContent parseSend(Element node, ExecutableContent prev)
 	{
 		// @TODO
 		return chainExecutableContent(prev, null);
@@ -452,7 +520,7 @@ public class XmlParser implements ScxmlTags
 	 * @param prev The previous content in the current chain.
 	 * @return The executable content.
 	 */
-	protected ExecutableContent parseCancel(XmlTag node, ExecutableContent prev)
+	protected ExecutableContent parseCancel(Element node, ExecutableContent prev)
 	{
 		// @TODO
 		return chainExecutableContent(prev, null);
@@ -464,7 +532,7 @@ public class XmlParser implements ScxmlTags
 	 * @param tag   The tag that was not handled.
 	 * @param state The state in which this happened.
 	 */
-	protected void parseToDo(XmlTag tag, State state)
+	protected void parseToDo(Element tag, State state)
 	{
 		log.warn(String.format("Not yet handled: %s [state %s]", tag.getLocalName(), state.name));
 	}
@@ -488,11 +556,11 @@ public class XmlParser implements ScxmlTags
 	 * @param parent   The parent state.
 	 * @return The corresponding state.
 	 */
-	protected State getOrCreateStateWithAttributes(XmlTag node, boolean parallel, State parent)
+	protected State getOrCreateStateWithAttributes(Element node, boolean parallel, State parent)
 	{
 		String sname = getAttributeOrCompute(node, ATTR_ID, this::generateId);
 		State state = getOrCreateState(sname, parallel);
-		String initial = node.getAttributeValue(ATTR_INITIAL, NS_SCXML);
+		String initial = getSCXMLAttribute(node, ATTR_INITIAL);
 
 		state.docId = ++docIdCounter;
 
@@ -545,13 +613,25 @@ public class XmlParser implements ScxmlTags
 	}
 
 	/**
+	 * Gets an attribute.
+	 *
+	 * @param tag       The Element to get the attribute from.
+	 * @param attribute The case-sensitive name of the attribute.
+	 * @return The found attribute value or null
+	 */
+	public String getSCXMLAttribute(Element tag, String attribute)
+	{
+		return tag.getAttributeNS(null, attribute);
+	}
+
+	/**
 	 * Gets an optional attribute.
 	 *
 	 * @param tag       The Element to get the attribute from.
 	 * @param attribute The case-sensitive name of the attribute.
 	 * @return The found attribute value or null
 	 */
-	public String getOptionalAttribute(XmlTag tag, String attribute)
+	public String getOptionalAttribute(Element tag, String attribute)
 	{
 		return getAttributeOrDefault(tag, attribute, null);
 	}
@@ -565,9 +645,9 @@ public class XmlParser implements ScxmlTags
 	 * @param defaultValue The default value in case the attribute is missing. Can be null.
 	 * @return The found attribute value or null
 	 */
-	public String getAttributeOrDefault(XmlTag tag, String attribute, String defaultValue)
+	public String getAttributeOrDefault(Element tag, String attribute, String defaultValue)
 	{
-		String value = tag.getAttributeValue(attribute, NS_SCXML);
+		String value = getSCXMLAttribute(tag, attribute);
 		return value == null ? defaultValue : value;
 	}
 
@@ -579,9 +659,9 @@ public class XmlParser implements ScxmlTags
 	 * @param supplier  The supplier for the fallback value in case the attribute is missing. Must be not null.
 	 * @return The found attribute value or null
 	 */
-	public String getAttributeOrCompute(XmlTag tag, String attribute, Supplier<String> supplier)
+	public String getAttributeOrCompute(Element tag, String attribute, Supplier<String> supplier)
 	{
-		String value = tag.getAttributeValue(attribute, NS_SCXML);
+		String value = getSCXMLAttribute(tag, attribute);
 		return value == null ? supplier.get() : value;
 	}
 
@@ -593,9 +673,9 @@ public class XmlParser implements ScxmlTags
 	 * @return The found attribute value.
 	 * @throws ParserException If attribute is missing
 	 */
-	public String getRequiredAttribute(XmlTag tag, String attribute) throws ParserException
+	public String getRequiredAttribute(Element tag, String attribute) throws ParserException
 	{
-		final String value = tag.getAttributeValue(attribute, NS_SCXML);
+		final String value = getSCXMLAttribute(tag, attribute);
 		if (value == null)
 			throw new ParserException(ModelDriveBundle.message("parser.error.missing_attribute", attribute, tag.getLocalName()));
 		return value;

@@ -92,11 +92,11 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 		if (updateTriggered)
 		{
 			updateTriggered = false;
-			if (xmlFile != null)
+			if (file != null)
 			{
 				try
 				{
-					final FiniteStateMachine fsm = new XmlParser().parse(xmlFile);
+					final FiniteStateMachine fsm = new XmlParser().parse(file.getCanonicalPath());
 					ApplicationManager.getApplication()
 									  .invokeLater(() -> component.setStateMachine(fsm));
 				}

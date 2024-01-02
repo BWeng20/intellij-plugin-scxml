@@ -26,6 +26,17 @@ public interface ScxmlTags
 	String ATTR_BINDING = "binding";
 
 	/**
+	 * Possible value for attribute {@link #ATTR_BINDING type}.
+	 **/
+	String BINDING_TYPE_LATE = "late";
+
+	/**
+	 * Possible value for attribute {@link #ATTR_BINDING type}.
+	 **/
+	String BINDING_TYPE_EARLY = "early";
+
+
+	/**
 	 * Datamodel specification.
 	 */
 	String TAG_DATAMODEL = "datamodel";
