@@ -22,7 +22,9 @@ public class List<T>
 	}
 
 	/**
-	 * Adds a element to the list.
+	 * Adds an element to the list.
+	 *
+	 * @param l The element to add.
 	 */
 	public void add(T l)
 	{

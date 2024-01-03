@@ -15,7 +15,6 @@ import com.intellij.openapi.util.UserDataHolderBase;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.xml.XmlFile;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,7 +42,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	/**
 	 * The XML file that is shown (Psi file for {@link #file}).
 	 */
-	XmlFile xmlFile;
+	PsiFile xmlFile;
 
 	/**
 	 * The document of the xml file.
@@ -80,7 +79,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 			// Executes in worker thread with read-lock.
 			ApplicationManager.getApplication()
 							  .executeOnPooledThread(() -> ApplicationManager.getApplication()
-																			 .runReadAction(() -> runUpdate()));
+																			 .runReadAction(this::runUpdate));
 		}
 	}
 
@@ -96,12 +95,13 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 			{
 				try
 				{
-					final FiniteStateMachine fsm = new XmlParser().parse(file.getCanonicalPath());
+					final FiniteStateMachine fsm = new XmlParser().parse(file, xmlDocument.getText());
 					ApplicationManager.getApplication()
 									  .invokeLater(() -> component.setStateMachine(fsm));
 				}
 				catch (ProcessCanceledException pce)
 				{
+					// Shall never be caught
 					throw pce;
 				}
 				catch (ParserException pe)
@@ -122,7 +122,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	{
 		component = new ScxmlGraphPanel();
 		this.file = file;
-		setXmlFile((psiFile instanceof XmlFile) ? ((XmlFile) psiFile) : null);
+		setXmlFile(psiFile);
 	}
 
 	/**
@@ -130,7 +130,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	 *
 	 * @param xmlFile The file, can be null.
 	 */
-	public void setXmlFile(XmlFile xmlFile)
+	public void setXmlFile(PsiFile xmlFile)
 	{
 		if (this.xmlDocument != null)
 		{

@@ -103,9 +103,9 @@ public class State
 		StringBuilder sb = new StringBuilder(50);
 		sb.append(name);
 		if (isParallel)
-			sb.append("(parallel) ");
+			sb.append(" (parallel)");
 		if (isFinal)
-			sb.append("(final) ");
+			sb.append(" (final)");
 		return sb.toString();
 	}
 

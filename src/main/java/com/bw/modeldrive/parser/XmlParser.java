@@ -1,24 +1,27 @@
 package com.bw.modeldrive.parser;
 
 import com.bw.modeldrive.ModelDriveBundle;
-import com.bw.modeldrive.model.BindingType;
-import com.bw.modeldrive.model.ExecutableContent;
-import com.bw.modeldrive.model.FiniteStateMachine;
-import com.bw.modeldrive.model.Invoke;
-import com.bw.modeldrive.model.State;
-import com.bw.modeldrive.model.Transition;
-import com.bw.modeldrive.model.TransitionType;
+import com.bw.modeldrive.model.*;
 import com.bw.modeldrive.model.executablecontent.Block;
 import com.bw.modeldrive.model.executablecontent.If;
 import com.bw.modeldrive.model.executablecontent.Log;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.psi.xml.XmlFile;
+import com.intellij.openapi.vfs.VirtualFile;
+import org.apache.tools.ant.filters.StringInputStream;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
@@ -44,28 +47,89 @@ public class XmlParser implements ScxmlTags
 
 	private static final Logger log = Logger.getInstance(XmlParser.class);
 
+
 	/**
-	 * Parses the SCXML file.
+	 * Resolver that checks that all includes inside the same directory tree as the main file.
+	 */
+	public static class IncludeProtectionResolver implements EntityResolver
+	{
+
+		private String basePathUri;
+
+		/**
+		 * Creates a new resolver that allows only files below the same directory-tree as the main file.
+		 *
+		 * @param mainFile The main xml file that is parsed.
+		 */
+		IncludeProtectionResolver(VirtualFile mainFile)
+		{
+			basePathUri = Paths.get(mainFile.getParent().getCanonicalPath()).toUri().toString();
+		}
+
+		@Override
+		public InputSource resolveEntity(String publicId, String systemId) throws SAXException
+		{
+			if (publicId != null)
+				throw new SAXParseException("Try to access file with publicId '" + publicId + "'.", null);
+			if (!isLocalUri(systemId))
+				throw new SAXParseException("Try to access file outside directory tree  '" + systemId + "'.", null);
+
+			// use the default behaviour
+			return null;
+		}
+
+		private boolean isLocalUri(String systemId)
+		{
+			try
+			{
+				return systemId == null ||
+						new URI(systemId).normalize().toString().startsWith(basePathUri);
+			}
+			catch (URISyntaxException e)
+			{
+				return false;
+			}
+		}
+	}
+
+	/**
+	 * Parses the SCXML file.<br>
+	 * The XML source shall be the current content
+	 * of the document and may yet not be stored in the	file.
 	 *
-	 * @param xml The SCXML file.
+	 * @param file The file of the content. Used to retrieve the location.
+	 * @param xml  The XML content.
 	 * @return The created model.
 	 * @throws ParserException in case something was wrong with the file.
 	 */
-	public FiniteStateMachine parse(String xmlFile) throws ParserException
+	public FiniteStateMachine parse(VirtualFile file, String xml) throws ParserException
 	{
-		DocumentBuilderFactory spf = DocumentBuilderFactory.newInstance();
-		spf.setNamespaceAware(true);
-		spf.setXIncludeAware(true);
+		javax.xml.parsers.DocumentBuilderFactory factory = org.apache.xerces.jaxp.DocumentBuilderFactoryImpl.newInstance();
+		factory.setNamespaceAware(true);
+		factory.setXIncludeAware(true);
+		factory.setIgnoringElementContentWhitespace(true);
 
 		Document doc;
 		try
 		{
-			DocumentBuilder builder = spf.newDocumentBuilder();
-			doc = builder.parse(xmlFile);
+			factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+			factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+			factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+
+			DocumentBuilder builder = factory.newDocumentBuilder();
+
+			// Protect us against XXE or SSRF, restrict any includes.
+			builder.setEntityResolver(new IncludeProtectionResolver(file));
+
+			InputSource is = new InputSource();
+			is.setByteStream(new StringInputStream(xml));
+			is.setSystemId(file.getCanonicalPath());
+
+			doc = builder.parse(is);
 		}
 		catch (Exception e)
 		{
-			log.error(e);
+			log.warn(e);
 			doc = null;
 		}
 
@@ -73,17 +137,20 @@ public class XmlParser implements ScxmlTags
 
 		if (doc != null)
 		{
-			Element root = doc.getDocumentElement();
+			NodeList scxmlElements = doc.getElementsByTagNameNS(NS_SCXML, TAG_SCXML);
+			if (scxmlElements.getLength() != 1)
+			{
+				throw new ParserException("Exactly on <scxml> element expected");
+			}
+			Element root = (Element) scxmlElements.item(0);
 			if (ScxmlTags.TAG_SCXML.equals(root.getLocalName()))
 			{
-
 				fsm = new FiniteStateMachine();
 
 				fsm.name = getOptionalAttribute(root, ATTR_NAME);
 				fsm.datamodel = getAttributeOrDefault(root, ATTR_DATAMODEL, "Null");
 				fsm.binding = mapBindingType(getAttributeOrDefault(root, ATTR_BINDING, BindingType.Early.name()));
 				fsm.pseudoRoot = parseState(root, false, null);
-				fsm.pseudoRoot.name = getOptionalAttribute( root, ATTR_NAME);
 			}
 			else
 			{
@@ -105,22 +172,18 @@ public class XmlParser implements ScxmlTags
 
 		private void processToScxmlTag(Node child)
 		{
-			while (child != null && !(child instanceof Element xmlTagChild && NS_SCXML.equals(xmlTagChild.getNamespaceURI())))
+			while (child != null)
 			{
 				if (child instanceof Element xmlTagChild)
 				{
 					if (NS_XINCLUDE.equals(xmlTagChild.getNamespaceURI()))
 					{
-						// log.warn(String.format(" skipping Include %s: %s", xmlTagChild.getName(), xmlTagChild.getValue() ));
+						log.warn(String.format(" skipping Include %s: %s", xmlTagChild.getTagName(), xmlTagChild.getTextContent()));
 					}
 					else
 					{
-						// log.warn(String.format(" skipping %s: %s", xmlTagChild.getName(), xmlTagChild.getValue() ));
+						break;
 					}
-				}
-				else
-				{
-					// log.warn(String.format(" skipping %s: %s", child.getClass().getSimpleName(), child.getText()));
 				}
 				child = child.getNextSibling();
 			}
@@ -662,7 +725,7 @@ public class XmlParser implements ScxmlTags
 	public String getAttributeOrCompute(Element tag, String attribute, Supplier<String> supplier)
 	{
 		String value = getSCXMLAttribute(tag, attribute);
-		return value == null ? supplier.get() : value;
+		return (value == null || value.isEmpty()) ? supplier.get() : value;
 	}
 
 	/**
@@ -706,7 +769,8 @@ public class XmlParser implements ScxmlTags
 	/**
 	 * Parse a boolean value.
 	 *
-	 * @param value The boolean value.
+	 * @param value        The boolean value.
+	 * @param defaultValue The default in case the value is null or empty.
 	 * @return true if value equals case-insensitive to 'true'
 	 */
 	protected boolean parseBoolean(String value, boolean defaultValue)
