@@ -29,6 +29,7 @@
         <standardResource url="http://www.w3.org/2005/07/scxml" path="xsd/scxml.xsd"/>
         <fileEditorProvider implementation="com.bw.modeldrive.ScxmlEditorProvider"/>
         <facetType implementation="com.bw.modeldrive.facet.ScxmlFacetType"/>
+        <fileType name="XML" extensions="scxml"/>
     </extensions>
 
     <actions>
