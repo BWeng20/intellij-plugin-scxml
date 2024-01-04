@@ -70,12 +70,12 @@ public class Visual
 			for (DrawPrimitive primitive : primitives)
 			{
 				DrawStyle style = highlighted ? context.highlighted : context.normal;
-				Orientation orientation = primitive.getOrientation();
-				if (orientation == null || orientation == Orientation.Left)
+				Alignment alignment = primitive.getAlignment();
+				if (alignment == null || alignment == Alignment.Left)
 				{
 					primitive.draw(g2, position, style);
 				}
-				else if (orientation == Orientation.Center)
+				else if (alignment == Alignment.Center)
 				{
 					Dimension2DFloat dim = primitive.getDimension(g2, style);
 					pt.x = ((x2 + position.x - dim.width) / 2.0f) - primitive.getRelativePosition().x;

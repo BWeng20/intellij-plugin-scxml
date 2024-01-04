@@ -107,14 +107,14 @@ public abstract class DrawPrimitive
 	}
 
 	/**
-	 * Get the orientation.
+	 * Get the alignment.
 	 *
-	 * @return The mode or null.
+	 * @return The alignment-mode or null.
 	 */
-	public Orientation getOrientation()
+	public Alignment getAlignment()
 	{
 		if (style != null)
-			return style.orientation;
+			return style.alignment;
 		return null;
 	}
 
@@ -128,9 +128,11 @@ public abstract class DrawPrimitive
 	protected abstract Dimension2DFloat getDimension(Graphics2D graphics, DrawStyle style);
 
 	/**
-	 * The primitive as SVG element.
+	 * Adds the primitive as SVG element to the string builder.
 	 *
-	 * @return The SVG element. E.g. <code>&lt;circle style='stroke:blue;stroke-with:2' cx='1' cy='1' r=50&gt;</code>
+	 * @param sb          The String Builder to append to.
+	 * @param position    Base position.
+	 * @param parentStyle Style of parent.
 	 */
 	public void toSVG(StringBuilder sb,
 					  Point2D.Float position, DrawStyle parentStyle)
@@ -143,11 +145,25 @@ public abstract class DrawPrimitive
 
 	}
 
+	/**
+	 * Internal implementation from inheritances.
+	 *
+	 * @param sb    The String Builder to append to.
+	 * @param style The resulting style to use.
+	 * @param pos   The calculated position (including the relative position).
+	 */
 	protected abstract void toSVGIntern(StringBuilder sb, DrawStyle style, Point2D.Float pos);
 
 	private final static Locale svgLocale = Locale.ENGLISH;
 	private final float precisionFactor = 10 * 10 * 10;
 
+	/**
+	 * Appends a paint as style value. E.g. "#FFFFFF" for white.<br>
+	 * Currently only {@link Color} is supported.
+	 *
+	 * @param sb    The string builder to append to.
+	 * @param paint The paint to append.
+	 */
 	protected void toSVGColorValue(StringBuilder sb, Paint paint)
 	{
 		if (paint instanceof Color)
@@ -161,6 +177,12 @@ public abstract class DrawPrimitive
 		}
 	}
 
+	/**
+	 * Appends "stroke-width:" with the line width of the given stroke.
+	 *
+	 * @param sb     The string builder to append to.
+	 * @param stroke The stroke.
+	 */
 	protected void toSVGStokeWidth(StringBuilder sb, Stroke stroke)
 	{
 		if (stroke != null)
@@ -178,6 +200,13 @@ public abstract class DrawPrimitive
 		}
 	}
 
+	/**
+	 * Appends the attribute with the paint as value.
+	 *
+	 * @param sb        The string builder to append to.
+	 * @param attribute The name of the attribute (without ':').
+	 * @param paint     The paint.
+	 */
 	protected void toSVGStyle(StringBuilder sb, String attribute, Paint paint)
 	{
 		if (paint != null)
@@ -191,6 +220,12 @@ public abstract class DrawPrimitive
 	}
 
 
+	/**
+	 * Appends a float with restricted precision.
+	 *
+	 * @param sb    The string builder to append to.
+	 * @param value The value.
+	 */
 	protected void toSVG(StringBuilder sb, float value)
 	{
 		value = (float) Math.ceil(0.5f + (value * precisionFactor)) / precisionFactor;

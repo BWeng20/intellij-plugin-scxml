@@ -95,7 +95,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		stateTextStyle.linePaint = stateOutlineStyle.linePaint;
 		stateTextStyle.lineStroke = new BasicStroke(4);
 		stateTextStyle.textPaint = getForeground();
-		stateTextStyle.orientation = Orientation.Center;
+		stateTextStyle.alignment = Alignment.Center;
 		stateTextStyle.font = font;
 		stateTextStyle.fontMetrics = fontMetrics;
 	}
@@ -140,12 +140,13 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 *
 	 * @param x Base X Position
 	 * @param y Base Y Position
+	 * @param radius Radius of circle.
 	 * @return The visual
 	 */
-	protected Visual createStartVisual(float x, float y, float size)
+	protected Visual createStartVisual(float x, float y, float radius)
 	{
 		Visual startNode = new Visual(stateOutlineContext);
-		CirclePrimitive circle = new CirclePrimitive(x, y, startStyle, false, size);
+		CirclePrimitive circle = new CirclePrimitive(x, y, startStyle, false, radius);
 		circle.setFill(true);
 		startNode.addDrawingPrimitive(circle);
 		return startNode;

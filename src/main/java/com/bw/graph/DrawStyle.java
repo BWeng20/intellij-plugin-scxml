@@ -20,7 +20,10 @@ public class DrawStyle
 
 	}
 
-	public Orientation orientation;
+	/**
+	 * The alignment. Can be null.
+	 */
+	public Alignment alignment;
 
 	/**
 	 * True if highlighted.

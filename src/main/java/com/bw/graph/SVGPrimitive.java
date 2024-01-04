@@ -43,6 +43,7 @@ public class SVGPrimitive extends DrawPrimitive
 	 * @param style    The style or null if default style shall be used.
 	 * @param scalable True is user can scale this primitive independent of parent.
 	 * @param svg      SVG source.
+	 * @throws SVGException In case the source has errors.
 	 */
 	public SVGPrimitive(float x, float y,
 						DrawStyle style,
