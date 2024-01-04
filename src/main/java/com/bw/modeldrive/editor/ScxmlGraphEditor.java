@@ -211,5 +211,10 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	@Override
 	public void dispose()
 	{
+		if (xmlDocument != null)
+		{
+			xmlDocument.removeDocumentListener(documentListener);
+			xmlDocument = null;
+		}
 	}
 }

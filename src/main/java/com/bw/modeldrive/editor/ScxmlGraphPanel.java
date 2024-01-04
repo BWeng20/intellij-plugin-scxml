@@ -2,16 +2,14 @@ package com.bw.modeldrive.editor;
 
 import com.bw.graph.*;
 import com.bw.modeldrive.model.FiniteStateMachine;
+import com.bw.modeldrive.model.State;
 import com.intellij.openapi.Disposable;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import java.awt.BasicStroke;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.geom.Point2D;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
 
 /**
  * Panel to show the FSM as Graphical State Machine.
@@ -34,9 +32,20 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	protected DrawStyle stateOutlineStyle = new DrawStyle();
 
 	/**
+	 * Style for start nodes.
+	 */
+	protected DrawStyle startStyle = new DrawStyle();
+
+	/**
 	 * Style for state outline high-lighted.
 	 */
 	protected DrawStyle stateOutlineStyleHighlight = new DrawStyle();
+
+	/**
+	 * Style for state text.
+	 */
+	protected DrawStyle stateTextStyle = new DrawStyle();
+
 
 	/**
 	 * Context for state outline.
@@ -59,23 +68,36 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		add(info, BorderLayout.NORTH);
 		add(new JScrollPane(pane), BorderLayout.CENTER);
 
-		Visual v = new Visual(stateOutlineContext);
-		pane.addVisual(v);
+		Font font = getFont();
+		if (font == null)
+			font = new Font(Font.DIALOG, Font.PLAIN, 12);
+
+		FontMetrics fontMetrics = getFontMetrics(font);
+
+		// @TODO: Make styles configurable.
+
+		startStyle.linePaint = Color.BLACK;
+		startStyle.fillPaint = Color.BLACK;
 
 		stateOutlineStyle.linePaint = Color.BLACK;
+		stateOutlineStyle.fillPaint = Color.GRAY;
 		stateOutlineStyle.lineStroke = new BasicStroke(2);
-		stateOutlineStyle.font = Font.getFont(Font.DIALOG);
-		stateOutlineStyle.textPaint = Color.BLUE;
+		stateOutlineStyle.textPaint = getForeground();
+		stateOutlineStyle.font = font;
+		stateOutlineStyle.fontMetrics = fontMetrics;
 
 		stateOutlineStyleHighlight.linePaint = Color.RED;
 		stateOutlineStyleHighlight.lineStroke = new BasicStroke(4);
-		stateOutlineStyleHighlight.font = Font.getFont(Font.DIALOG);
-		stateOutlineStyleHighlight.textPaint = Color.BLUE;
+		stateOutlineStyleHighlight.textPaint = getForeground();
+		stateOutlineStyleHighlight.font = font;
+		stateOutlineStyleHighlight.fontMetrics = fontMetrics;
 
-		v.addDrawingPrimitive(new RectanglePrimitive(new Point2D.Float(0, 0),
-				null, false, 20, 30));
-
-		v.setPosition(5, 5);
+		stateTextStyle.linePaint = stateOutlineStyle.linePaint;
+		stateTextStyle.lineStroke = new BasicStroke(4);
+		stateTextStyle.textPaint = getForeground();
+		stateTextStyle.orientation = Orientation.Center;
+		stateTextStyle.font = font;
+		stateTextStyle.fontMetrics = fontMetrics;
 	}
 
 	/**
@@ -85,7 +107,80 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 */
 	public void setStateMachine(FiniteStateMachine fsm)
 	{
-		// @TODO
+		pane.removeAllVisuals();
+
+		if (fsm != null && fsm.pseudoRoot != null)
+		{
+			final float grapY = 5;
+
+			Graphics2D g2 = (Graphics2D) pane.getGraphics();
+
+			int fh = stateOutlineStyle.fontMetrics.getHeight();
+
+			int x = fh;
+			int y = fh;
+
+			Visual startNode = createStartVisual(x + fh, y + fh, fh);
+			pane.addVisual(startNode);
+
+			x += 2 * fh;
+
+			for (State initalState : fsm.pseudoRoot.states)
+			{
+				Visual stateVisual = createStateVisual(x, y, initalState, g2);
+				pane.addVisual(stateVisual);
+				stateVisual.updateBounds(g2);
+				y += stateVisual.getBounds2D().height + grapY;
+			}
+		}
+	}
+
+	/**
+	 * Creates a visual for a start-node
+	 *
+	 * @param x Base X Position
+	 * @param y Base Y Position
+	 * @return The visual
+	 */
+	protected Visual createStartVisual(float x, float y, float size)
+	{
+		Visual startNode = new Visual(stateOutlineContext);
+		CirclePrimitive circle = new CirclePrimitive(x, y, startStyle, false, size);
+		circle.setFill(true);
+		startNode.addDrawingPrimitive(circle);
+		return startNode;
+	}
+
+	/**
+	 * Creates a visual for a state
+	 *
+	 * @param x     Base X Position
+	 * @param y     Base Y Position
+	 * @param state State to create the visual for.
+	 * @param g2    Graphics to use for dimension calculations.
+	 * @return The creates visual.
+	 */
+	protected Visual createStateVisual(float x, float y, State state, Graphics2D g2)
+	{
+		Visual v = new Visual(stateOutlineContext);
+		v.setPosition(x, y);
+
+		TextPrimitive label = new TextPrimitive(3, 3,
+				stateTextStyle, false, state.name);
+
+		Rectangle2D stringBounds = stateTextStyle.fontMetrics.getStringBounds(state.name, g2);
+		float height = 5 * stateTextStyle.fontMetrics.getHeight();
+
+		RectanglePrimitive frame = new RectanglePrimitive(
+				0, 0,
+				stateOutlineStyle, false,
+				(float) (stringBounds.getWidth() + 6), height);
+		frame.setFill(true);
+
+		v.addDrawingPrimitive(frame);
+		v.addDrawingPrimitive(label);
+
+		return v;
 	}
 
 	/**

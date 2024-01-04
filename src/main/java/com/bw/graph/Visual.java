@@ -65,9 +65,23 @@ public class Visual
 			if (x2 < 0)
 				updateBounds(g2);
 
+			Point2D.Float pt = new Point2D.Float();
+
 			for (DrawPrimitive primitive : primitives)
 			{
-				primitive.draw(g2, position, highlighted ? context.highlighted : context.normal);
+				DrawStyle style = highlighted ? context.highlighted : context.normal;
+				Orientation orientation = primitive.getOrientation();
+				if (orientation == null || orientation == Orientation.Left)
+				{
+					primitive.draw(g2, position, style);
+				}
+				else if (orientation == Orientation.Center)
+				{
+					Dimension2DFloat dim = primitive.getDimension(g2, style);
+					pt.x = ((x2 + position.x - dim.width) / 2.0f) - primitive.getRelativePosition().x;
+					pt.y = position.y;
+					primitive.draw(g2, pt, style);
+				}
 			}
 		}
 	}
@@ -89,7 +103,7 @@ public class Visual
 	 *
 	 * @param graphics The graphics context to use for calculations.
 	 */
-	protected void updateBounds(Graphics2D graphics)
+	public void updateBounds(Graphics2D graphics)
 	{
 		x2 = position.x;
 		y2 = position.y;

@@ -17,14 +17,15 @@ public class TextPrimitive extends DrawPrimitive
 	/**
 	 * Creates a new Primitive.
 	 *
-	 * @param relativePosition The relative position
-	 * @param style            The style or null if default style shall be used.
-	 * @param scalable         True is user can scale this primitive independent of parent.
-	 * @param text             The text to draw.
+	 * @param x        The relative x-position
+	 * @param y        The relative y-position
+	 * @param style    The style or null if default style shall be used.
+	 * @param scalable True is user can scale this primitive independent of parent.
+	 * @param text     The text to draw.
 	 */
-	protected TextPrimitive(Point2D.Float relativePosition, DrawStyle style, boolean scalable, String text)
+	public TextPrimitive(float x, float y, DrawStyle style, boolean scalable, String text)
 	{
-		super(relativePosition, style, scalable);
+		super(x, y, style, scalable);
 		this.text = text;
 	}
 
@@ -42,6 +43,12 @@ public class TextPrimitive extends DrawPrimitive
 		Rectangle2D r = style.fontMetrics.getStringBounds(text, graphics);
 
 		return new Dimension2DFloat((float) r.getWidth(), (float) r.getHeight());
+	}
+
+	@Override
+	protected void toSVGIntern(StringBuilder sb, DrawStyle style, Point2D.Float pos)
+	{
+		// @TODO
 	}
 
 	/**

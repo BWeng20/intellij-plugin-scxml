@@ -1,6 +1,7 @@
 package com.bw.graph;
 
 import java.awt.geom.Dimension2D;
+import java.awt.geom.Rectangle2D;
 
 /**
  * The class implements Dimension2D via float values.
@@ -27,6 +28,24 @@ public final class Dimension2DFloat extends Dimension2D
 	{
 		this.width = width;
 		this.height = height;
+	}
+
+	/**
+	 * Creates a dimension from Rectangle2D width and height.
+	 *
+	 * @param rect The Rectangle.
+	 */
+	public Dimension2DFloat(Rectangle2D rect)
+	{
+		if (rect == null)
+		{
+			width = height = 0f;
+		}
+		else
+		{
+			width = (float) rect.getWidth();
+			height = (float) rect.getHeight();
+		}
 	}
 
 

@@ -4,6 +4,7 @@ import javax.swing.JComponent;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
@@ -129,6 +130,7 @@ public class GraphPane extends JComponent
 	{
 		Graphics2D g2 = (Graphics2D) g.create();
 		g2.translate(offsetX, offsetY);
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		try
 		{
 			if (isOpaque())
@@ -207,7 +209,6 @@ public class GraphPane extends JComponent
 		}
 		else
 		{
-
 			Rectangle2D.Float bounds = new Rectangle2D.Float(0, 0, 0, 0);
 			float x2 = 0;
 			float y2 = 0;
@@ -223,14 +224,25 @@ public class GraphPane extends JComponent
 						bounds.y = visualBounds.y;
 					t2 = visualBounds.x + visualBounds.width;
 					if (x2 < t2)
-						bounds.width = (x2 = t2) - bounds.x;
+						x2 = t2;
 					t2 = visualBounds.y + visualBounds.height;
 					if (y2 < t2)
-						bounds.height = (y2 = t2) - bounds.y;
+						y2 = t2;
 				}
 			}
+			bounds.height = y2 - bounds.y + 5;
+			bounds.width = x2 - bounds.x + 5;
 			d = new Dimension((int) Math.ceil(bounds.width), (int) Math.ceil(bounds.height));
 		}
 		return d;
+	}
+
+	/**
+	 * Remove all visuals.
+	 */
+	public void removeAllVisuals()
+	{
+		visuals.clear();
+		repaint();
 	}
 }

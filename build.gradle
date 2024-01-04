@@ -12,7 +12,8 @@ repositories {
 }
 
 dependencies {
-    implementation('xerces:xercesImpl:2.12.2')
+    // implementation('xerces:xercesImpl:2.12.2')
+    implementation 'io.github.bweng20:jSVG:1.4'
 }
 
 // Configure Gradle IntelliJ Plugin

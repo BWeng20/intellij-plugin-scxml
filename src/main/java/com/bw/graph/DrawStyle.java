@@ -20,6 +20,7 @@ public class DrawStyle
 
 	}
 
+	public Orientation orientation;
 
 	/**
 	 * True if highlighted.
@@ -30,6 +31,12 @@ public class DrawStyle
 	 * Paint for lines
 	 */
 	public Paint linePaint;
+
+	/**
+	 * Paint for fill
+	 */
+	public Paint fillPaint;
+
 
 	/**
 	 * Paint for text
