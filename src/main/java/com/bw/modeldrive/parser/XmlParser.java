@@ -1,7 +1,13 @@
 package com.bw.modeldrive.parser;
 
 import com.bw.modeldrive.ModelDriveBundle;
-import com.bw.modeldrive.model.*;
+import com.bw.modeldrive.model.BindingType;
+import com.bw.modeldrive.model.ExecutableContent;
+import com.bw.modeldrive.model.FiniteStateMachine;
+import com.bw.modeldrive.model.Invoke;
+import com.bw.modeldrive.model.State;
+import com.bw.modeldrive.model.Transition;
+import com.bw.modeldrive.model.TransitionType;
 import com.bw.modeldrive.model.executablecontent.Block;
 import com.bw.modeldrive.model.executablecontent.If;
 import com.bw.modeldrive.model.executablecontent.Log;
@@ -63,7 +69,10 @@ public class XmlParser implements ScxmlTags
 		 */
 		IncludeProtectionResolver(VirtualFile mainFile)
 		{
-			basePathUri = Paths.get(mainFile.getParent().getCanonicalPath()).toUri().toString();
+			basePathUri = Paths.get(mainFile.getParent()
+											.getCanonicalPath())
+							   .toUri()
+							   .toString();
 		}
 
 		@Override
@@ -83,7 +92,9 @@ public class XmlParser implements ScxmlTags
 			try
 			{
 				return systemId == null ||
-						new URI(systemId).normalize().toString().startsWith(basePathUri);
+						new URI(systemId).normalize()
+										 .toString()
+										 .startsWith(basePathUri);
 			}
 			catch (URISyntaxException e)
 			{

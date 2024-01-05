@@ -62,10 +62,7 @@ public class Visual
 	 */
 	public void draw(Graphics2D g2)
 	{
-		forAllPrimitives(g2,
-				(primitive, g, position, style) -> {
-					primitive.draw(g, position, style);
-				});
+		forAllPrimitives(g2, DrawPrimitive::draw);
 	}
 
 	protected static interface PrimitiveConsumer
@@ -121,7 +118,7 @@ public class Visual
 	 *
 	 * @param graphics The graphics context to use for calculations.
 	 */
-	public void updateBounds(Graphics2D graphics)
+	protected void updateBounds(Graphics2D graphics)
 	{
 		x2 = position.x;
 		y2 = position.y;
@@ -166,12 +163,11 @@ public class Visual
 	 *
 	 * @return The bounds in local coordinates or null.
 	 */
-	public Rectangle2D.Float getBounds2D()
+	public Rectangle2D.Float getBounds2D(Graphics2D g2)
 	{
 		if (x2 < 0)
-			return null;
-		else
-			return new Rectangle2D.Float(position.x, position.y, x2 - position.x, y2 - position.y);
+			updateBounds(g2);
+		return new Rectangle2D.Float(position.x, position.y, x2 - position.x, y2 - position.y);
 	}
 
 	/**
@@ -223,8 +219,6 @@ public class Visual
 	public void toSVG(SVGWriter sw, Graphics2D g2)
 	{
 		forAllPrimitives(g2,
-				(primitive, g, position, style) -> {
-					primitive.toSVG(sw, position, style);
-				});
+				(primitive, g, position, style) -> primitive.toSVG(sw, position, style));
 	}
 }

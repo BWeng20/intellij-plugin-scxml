@@ -1,6 +1,13 @@
 package com.bw.modeldrive.editor;
 
-import com.bw.graph.*;
+import com.bw.graph.Alignment;
+import com.bw.graph.CirclePrimitive;
+import com.bw.graph.DrawContext;
+import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphPane;
+import com.bw.graph.RectanglePrimitive;
+import com.bw.graph.TextPrimitive;
+import com.bw.graph.Visual;
 import com.bw.modeldrive.model.FiniteStateMachine;
 import com.bw.modeldrive.model.State;
 import com.intellij.openapi.Disposable;
@@ -8,7 +15,12 @@ import com.intellij.openapi.Disposable;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 
 /**
@@ -129,8 +141,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 			{
 				Visual stateVisual = createStateVisual(x, y, initalState, g2);
 				pane.addVisual(stateVisual);
-				stateVisual.updateBounds(g2);
-				y += stateVisual.getBounds2D().height + grapY;
+				y += stateVisual.getBounds2D(g2).height + grapY;
 			}
 		}
 	}

@@ -3,9 +3,12 @@ package com.bw.graph;
 import com.bw.svg.SVGWriter;
 
 import javax.swing.JComponent;
+import javax.swing.JViewport;
+import javax.swing.SwingUtilities;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -13,7 +16,6 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Rectangle2D;
 import java.io.StringWriter;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -34,10 +36,8 @@ public class GraphPane extends JComponent
 		/** The visual that is currently dragged or null. */
 		private Visual draggingVisual;
 
-		/** The last X ordinate of a drag-event. */
-		private int lastDragX;
-		/** The last Y ordinate of a drag-event. */
-		private int lastDragY;
+		/** The last coordinate of a drag-event. */
+		private Point lastDragPoint = new Point(0, 0);
 
 		@Override
 		public void mouseClicked(MouseEvent e)
@@ -45,18 +45,19 @@ public class GraphPane extends JComponent
 			setSelectedVisual(getVisualAt(e.getX(), e.getY()));
 		}
 
-
 		@Override
 		public void mousePressed(MouseEvent e)
 		{
-			draggingVisual = getVisualAt(lastDragX = e.getX(), lastDragY = e.getY());
+			draggingVisual = getVisualAt(lastDragPoint.x = e.getX(), lastDragPoint.y = e.getY());
+			SwingUtilities.convertPointToScreen(lastDragPoint, GraphPane.this);
 		}
 
 		@Override
 		public void mouseReleased(MouseEvent e)
 		{
 			draggingVisual = null;
-			lastDragX = lastDragY = 0;
+			lastDragPoint.x = lastDragPoint.y = 0;
+			SwingUtilities.convertPointToScreen(lastDragPoint, GraphPane.this);
 		}
 
 		@Override
@@ -67,14 +68,32 @@ public class GraphPane extends JComponent
 		@Override
 		public void mouseDragged(MouseEvent e)
 		{
+			// Work on global coordinates as the component we are dragging
+			// on will change its location.
+			Point mp = e.getPoint();
+			SwingUtilities.convertPointToScreen(mp, GraphPane.this);
+
+			final int xd = mp.x - lastDragPoint.x;
+			final int yd = mp.y - lastDragPoint.y;
+
 			if (draggingVisual != null)
 			{
-				draggingVisual.moveBy(e.getX() - lastDragX, e.getY() - lastDragY);
-				lastDragX = e.getX();
-				lastDragY = e.getY();
+				draggingVisual.moveBy(xd, yd);
 				revalidate();
 				repaint();
 			}
+			else
+			{
+				JViewport viewPort = (JViewport) SwingUtilities.getAncestorOfClass(JViewport.class, GraphPane.this);
+				if (viewPort != null)
+				{
+					Point p = viewPort.getViewPosition();
+					p.x -= xd;
+					p.y -= yd;
+					viewPort.setViewPosition(p);
+				}
+			}
+			lastDragPoint.setLocation(mp);
 		}
 	};
 
@@ -98,8 +117,9 @@ public class GraphPane extends JComponent
 	{
 		x -= offsetX;
 		y -= offsetY;
-		for (Visual v : visuals)
+		for (var it = visuals.listIterator(visuals.size()); it.hasPrevious(); )
 		{
+			final Visual v = it.previous();
 			if (v.containsPoint(x, y))
 			{
 				return v;
@@ -111,7 +131,7 @@ public class GraphPane extends JComponent
 	/**
 	 * List of visuals.
 	 */
-	protected List<Visual> visuals = new LinkedList<>();
+	protected LinkedList<Visual> visuals = new LinkedList<>();
 
 	/**
 	 * Drawing X-offset.
@@ -157,15 +177,13 @@ public class GraphPane extends JComponent
 		StringWriter ssw = new StringWriter();
 		SVGWriter sw = new SVGWriter(ssw);
 
-		for (Visual visual : visuals)
-			visual.updateBounds(g2);
-
 		Rectangle2D.Float bounds = getBounds2D();
 		sw.startSVG(bounds, null);
 		for (Visual v : visuals)
 			v.toSVG(sw, g2);
 		sw.endSVG();
-		return ssw.getBuffer().toString();
+		return ssw.getBuffer()
+				  .toString();
 	}
 
 
@@ -245,14 +263,14 @@ public class GraphPane extends JComponent
 	 */
 	public Rectangle2D.Float getBounds2D()
 	{
-
 		Rectangle2D.Float bounds = new Rectangle2D.Float(0, 0, 0, 0);
 		float x2 = 0;
 		float y2 = 0;
 		float t2;
+		final Graphics2D g2 = (Graphics2D) getGraphics();
 		for (Visual visual : visuals)
 		{
-			Rectangle2D.Float visualBounds = visual.getBounds2D();
+			Rectangle2D.Float visualBounds = visual.getBounds2D(g2);
 			if (visualBounds != null)
 			{
 				if (bounds.x > visualBounds.x)
