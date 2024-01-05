@@ -289,6 +289,12 @@ public class SVGWriter extends PrintWriter
 		writeAttributeEpilog();
 	}
 
+	/**
+	 * Write XML escaped Text. Escapes &lt;, &gt; and &amp;.
+	 * For attribute-values use {@link #writeEscapedAttributeValue(CharSequence)}
+	 *
+	 * @param text The unescaped text.
+	 */
 	public void writeEscaped(CharSequence text)
 	{
 		final int N = text.length();
@@ -305,6 +311,12 @@ public class SVGWriter extends PrintWriter
 		}
 	}
 
+	/**
+	 * Writes an escaped attribute value. Only ' will be escaped as all attributes are enclosed with it.
+	 * For content text use {@link #writeEscaped(CharSequence)}.
+	 *
+	 * @param text The unescaped attribute text.
+	 */
 	public void writeEscapedAttributeValue(CharSequence text)
 	{
 		final int N = text.length();

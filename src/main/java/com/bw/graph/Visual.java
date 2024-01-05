@@ -65,15 +65,32 @@ public class Visual
 		forAllPrimitives(g2, DrawPrimitive::draw);
 	}
 
+	/**
+	 * Consumer used for {@link #forAllPrimitives(Graphics2D, PrimitiveConsumer)}
+	 */
 	protected static interface PrimitiveConsumer
 	{
 
+		/**
+		 * Called for each primitive.
+		 *
+		 * @param primitive The primitive.
+		 * @param g2        The graphics context to use.
+		 * @param position  The calculated effective position.
+		 * @param style     The effective style to use.
+		 */
 		void consume(DrawPrimitive primitive,
 					 Graphics2D g2, Point2D.Float position, DrawStyle style);
 
 	}
 
 
+	/**
+	 * Calls a function on all primitives.
+	 *
+	 * @param g2       The graphics context.
+	 * @param consumer The consumer to call.
+	 */
 	protected void forAllPrimitives(Graphics2D g2, PrimitiveConsumer consumer)
 	{
 		if (position != null)
@@ -161,6 +178,7 @@ public class Visual
 	/**
 	 * Gets bounds if available.
 	 *
+	 * @param g2 The Graphic context to use for calculations. Will not be modified.
 	 * @return The bounds in local coordinates or null.
 	 */
 	public Rectangle2D.Float getBounds2D(Graphics2D g2)
@@ -216,6 +234,12 @@ public class Visual
 		position.y = y;
 	}
 
+	/**
+	 * Writes the visual as SVG to the writer.
+	 *
+	 * @param sw The Writer to write to.
+	 * @param g2 The graphics context - only for calculation. Must not be modified in any way.
+	 */
 	public void toSVG(SVGWriter sw, Graphics2D g2)
 	{
 		forAllPrimitives(g2,
