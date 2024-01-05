@@ -1,5 +1,7 @@
 package com.bw.graph;
 
+import com.bw.svg.SVGWriter;
+
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 
@@ -68,22 +70,19 @@ public class RectanglePrimitive extends DrawPrimitive
 	}
 
 	@Override
-	protected void toSVGIntern(StringBuilder sb, DrawStyle style, Point2D.Float pos)
+	protected void toSVGIntern(SVGWriter sw, DrawStyle style, Point2D.Float pos)
 	{
-		sb.append("<rect x='");
-		toSVG(sb, pos.x);
-		sb.append("' y='");
-		toSVG(sb, pos.y);
-		sb.append("' width='");
-		toSVG(sb, width);
-		sb.append("' height='");
-		toSVG(sb, height);
-		sb.append("' style='");
+		sw.startElement("rect");
+		sw.writeAttribute("x", pos.x);
+		sw.writeAttribute("y", pos.y);
+		sw.writeAttribute("width", width);
+		sw.writeAttribute("height", height);
+		sw.startStyle();
 		if (fill)
-			toSVGStyle(sb, "fill", style.fillPaint);
-		toSVGStyle(sb, "stroke", style.linePaint);
-		toSVGStokeWidth(sb, style.lineStroke);
-		sb.append("'/>");
+			sw.writeAttribute("fill", style.fillPaint);
+		sw.writeAttribute("stroke", style.linePaint);
+		sw.writeStrokeWith(style.lineStroke);
+		sw.endElement();
 	}
 
 }

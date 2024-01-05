@@ -4,6 +4,7 @@ import com.bw.jtools.shape.AbstractShape;
 import com.bw.jtools.shape.ShapePainter;
 import com.bw.jtools.svg.SVGConverter;
 import com.bw.jtools.svg.SVGException;
+import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
@@ -78,10 +79,12 @@ public class SVGPrimitive extends DrawPrimitive
 	}
 
 	@Override
-	protected void toSVGIntern(StringBuilder sb, DrawStyle style, Point2D.Float pos)
+	protected void toSVGIntern(SVGWriter sw, DrawStyle style, Point2D.Float pos)
 	{
 		if (svgSource != null)
-			sb.append(svgSource);
+		{
+			sw.write(svgSource);
+		}
 	}
 
 }

@@ -1,5 +1,7 @@
 package com.bw.graph;
 
+import com.bw.svg.SVGWriter;
+
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -46,9 +48,17 @@ public class TextPrimitive extends DrawPrimitive
 	}
 
 	@Override
-	protected void toSVGIntern(StringBuilder sb, DrawStyle style, Point2D.Float pos)
+	protected void toSVGIntern(SVGWriter sw, DrawStyle style, Point2D.Float pos)
 	{
-		// @TODO
+		sw.startElement("text");
+		sw.writeAttribute("x", pos.x);
+		sw.writeAttribute("y", pos.y + +style.fontMetrics.getAscent());
+		sw.startStyle();
+		sw.writeAttribute("font-family", style.font.getFamily());
+		sw.writeAttribute("font-size", style.font.getSize2D());
+		sw.startContent();
+		sw.writeEscaped(text);
+		sw.endElement();
 	}
 
 	/**

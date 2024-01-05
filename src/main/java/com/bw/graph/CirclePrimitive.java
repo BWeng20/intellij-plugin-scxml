@@ -1,5 +1,7 @@
 package com.bw.graph;
 
+import com.bw.svg.SVGWriter;
+
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 
@@ -49,7 +51,7 @@ public class CirclePrimitive extends DrawPrimitive
 	protected void drawIntern(Graphics2D g2, DrawStyle style, Point2D.Float pos)
 	{
 
-		final int radiusInt = (int) (radius + 0.5);
+		final int radiusInt = (int) (2f * radius + 0.5f);
 		if (fill)
 		{
 			g2.setPaint(style.fillPaint);
@@ -68,20 +70,18 @@ public class CirclePrimitive extends DrawPrimitive
 	}
 
 	@Override
-	protected void toSVGIntern(StringBuilder sb, DrawStyle style, Point2D.Float pos)
+	protected void toSVGIntern(SVGWriter sw, DrawStyle style, Point2D.Float pos)
 	{
-		sb.append("<circle cx='");
-		toSVG(sb, pos.x + radius);
-		sb.append("' cy='");
-		toSVG(sb, pos.y + radius);
-		sb.append("' r='");
-		toSVG(sb, radius);
-		sb.append("' style='");
+		sw.startElement("circle");
+		sw.writeAttribute("cx", pos.x + radius);
+		sw.writeAttribute("cy", pos.y + radius);
+		sw.writeAttribute("r", radius);
+		sw.startStyle();
 		if (fill)
-			toSVGStyle(sb, "fill", style.fillPaint);
-		toSVGStyle(sb, "stroke", style.linePaint);
-		toSVGStokeWidth(sb, style.lineStroke);
-		sb.append("'/>");
+			sw.writeAttribute("fill", style.fillPaint);
+		sw.writeAttribute("stroke", style.linePaint);
+		sw.writeStrokeWith(style.lineStroke);
+		sw.endElement();
 	}
 
 }

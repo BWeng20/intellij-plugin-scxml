@@ -1,5 +1,7 @@
 package com.bw.graph;
 
+import com.bw.svg.SVGWriter;
+
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -60,27 +62,43 @@ public class Visual
 	 */
 	public void draw(Graphics2D g2)
 	{
+		forAllPrimitives(g2,
+				(primitive, g, position, style) -> {
+					primitive.draw(g, position, style);
+				});
+	}
+
+	protected static interface PrimitiveConsumer
+	{
+
+		void consume(DrawPrimitive primitive,
+					 Graphics2D g2, Point2D.Float position, DrawStyle style);
+
+	}
+
+
+	protected void forAllPrimitives(Graphics2D g2, PrimitiveConsumer consumer)
+	{
 		if (position != null)
 		{
 			if (x2 < 0)
 				updateBounds(g2);
 
 			Point2D.Float pt = new Point2D.Float();
-
 			for (DrawPrimitive primitive : primitives)
 			{
 				DrawStyle style = highlighted ? context.highlighted : context.normal;
 				Alignment alignment = primitive.getAlignment();
 				if (alignment == null || alignment == Alignment.Left)
 				{
-					primitive.draw(g2, position, style);
+					consumer.consume(primitive, g2, position, style);
 				}
 				else if (alignment == Alignment.Center)
 				{
 					Dimension2DFloat dim = primitive.getDimension(g2, style);
 					pt.x = ((x2 + position.x - dim.width) / 2.0f) - primitive.getRelativePosition().x;
 					pt.y = position.y;
-					primitive.draw(g2, pt, style);
+					consumer.consume(primitive, g2, pt, style);
 				}
 			}
 		}
@@ -200,5 +218,13 @@ public class Visual
 	{
 		position.x = x;
 		position.y = y;
+	}
+
+	public void toSVG(SVGWriter sw, Graphics2D g2)
+	{
+		forAllPrimitives(g2,
+				(primitive, g, position, style) -> {
+					primitive.toSVG(sw, position, style);
+				});
 	}
 }

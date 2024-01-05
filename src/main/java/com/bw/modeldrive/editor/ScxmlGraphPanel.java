@@ -120,7 +120,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 			int x = fh;
 			int y = fh;
 
-			Visual startNode = createStartVisual(x + fh, y + fh, fh);
+			Visual startNode = createStartVisual(x + fh, y + fh, fh / 2);
 			pane.addVisual(startNode);
 
 			x += 2 * fh;
@@ -138,8 +138,8 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	/**
 	 * Creates a visual for a start-node
 	 *
-	 * @param x Base X Position
-	 * @param y Base Y Position
+	 * @param x      Base X Position
+	 * @param y      Base Y Position
 	 * @param radius Radius of circle.
 	 * @return The visual
 	 */

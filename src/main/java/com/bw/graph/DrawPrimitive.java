@@ -1,9 +1,10 @@
 package com.bw.graph;
 
-import java.awt.*;
+import com.bw.svg.SVGWriter;
+
+import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.util.Locale;
 
 /**
  * A draw primitive.<br>
@@ -130,16 +131,16 @@ public abstract class DrawPrimitive
 	/**
 	 * Adds the primitive as SVG element to the string builder.
 	 *
-	 * @param sb          The String Builder to append to.
+	 * @param sw          The Writer to write to.
 	 * @param position    Base position.
 	 * @param parentStyle Style of parent.
 	 */
-	public void toSVG(StringBuilder sb,
+	public void toSVG(SVGWriter sw,
 					  Point2D.Float position, DrawStyle parentStyle)
 	{
 		tempPosition.x = position.x + relativePosition.x;
 		tempPosition.y = position.y + relativePosition.y;
-		toSVGIntern(sb,
+		toSVGIntern(sw,
 				style == null ? parentStyle : style,
 				tempPosition);
 
@@ -148,87 +149,11 @@ public abstract class DrawPrimitive
 	/**
 	 * Internal implementation from inheritances.
 	 *
-	 * @param sb    The String Builder to append to.
+	 * @param sw    The Writer to write to.
 	 * @param style The resulting style to use.
 	 * @param pos   The calculated position (including the relative position).
 	 */
-	protected abstract void toSVGIntern(StringBuilder sb, DrawStyle style, Point2D.Float pos);
-
-	private final static Locale svgLocale = Locale.ENGLISH;
-	private final float precisionFactor = 10 * 10 * 10;
-
-	/**
-	 * Appends a paint as style value. E.g. "#FFFFFF" for white.<br>
-	 * Currently only {@link Color} is supported.
-	 *
-	 * @param sb    The string builder to append to.
-	 * @param paint The paint to append.
-	 */
-	protected void toSVGColorValue(StringBuilder sb, Paint paint)
-	{
-		if (paint instanceof Color)
-		{
-			sb.append('#').append(((Color) paint).getRGB());
-		}
-		else
-		{
-			// @TODO Handle for more complex paints via defs
-			sb.append("black");
-		}
-	}
-
-	/**
-	 * Appends "stroke-width:" with the line width of the given stroke.
-	 *
-	 * @param sb     The string builder to append to.
-	 * @param stroke The stroke.
-	 */
-	protected void toSVGStokeWidth(StringBuilder sb, Stroke stroke)
-	{
-		if (stroke != null)
-		{
-			sb.append("stroke-width:");
-			if (stroke instanceof BasicStroke)
-			{
-				toSVG(sb, ((BasicStroke) stroke).getLineWidth());
-			}
-			else
-			{
-				// Any other implementation to support?
-				toSVG(sb, '1');
-			}
-		}
-	}
-
-	/**
-	 * Appends the attribute with the paint as value.
-	 *
-	 * @param sb        The string builder to append to.
-	 * @param attribute The name of the attribute (without ':').
-	 * @param paint     The paint.
-	 */
-	protected void toSVGStyle(StringBuilder sb, String attribute, Paint paint)
-	{
-		if (paint != null)
-		{
-			sb.append(attribute);
-			sb.append(':');
-			toSVGColorValue(sb, paint);
-			sb.append(';');
-		}
-
-	}
+	protected abstract void toSVGIntern(SVGWriter sw, DrawStyle style, Point2D.Float pos);
 
 
-	/**
-	 * Appends a float with restricted precision.
-	 *
-	 * @param sb    The string builder to append to.
-	 * @param value The value.
-	 */
-	protected void toSVG(StringBuilder sb, float value)
-	{
-		value = (float) Math.ceil(0.5f + (value * precisionFactor)) / precisionFactor;
-		sb.append(value);
-	}
 }

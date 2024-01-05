@@ -1,5 +1,7 @@
 package com.bw.graph;
 
+import com.bw.svg.SVGWriter;
+
 import javax.swing.JComponent;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -9,6 +11,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Rectangle2D;
+import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -148,6 +151,24 @@ public class GraphPane extends JComponent
 		}
 	}
 
+	public String toSVG()
+	{
+		Graphics2D g2 = (Graphics2D) getGraphics();
+		StringWriter ssw = new StringWriter();
+		SVGWriter sw = new SVGWriter(ssw);
+
+		for (Visual visual : visuals)
+			visual.updateBounds(g2);
+
+		Rectangle2D.Float bounds = getBounds2D();
+		sw.startSVG(bounds, null);
+		for (Visual v : visuals)
+			v.toSVG(sw, g2);
+		sw.endSVG();
+		return ssw.getBuffer().toString();
+	}
+
+
 	/**
 	 * Adds a new visual to the graph.
 	 *
@@ -161,6 +182,8 @@ public class GraphPane extends JComponent
 			visuals.add(v);
 			repaint();
 		}
+
+		log.warning(toSVG());
 	}
 
 	/**
@@ -209,32 +232,45 @@ public class GraphPane extends JComponent
 		}
 		else
 		{
-			Rectangle2D.Float bounds = new Rectangle2D.Float(0, 0, 0, 0);
-			float x2 = 0;
-			float y2 = 0;
-			float t2;
-			for (Visual visual : visuals)
-			{
-				Rectangle2D.Float visualBounds = visual.getBounds2D();
-				if (visualBounds != null)
-				{
-					if (bounds.x > visualBounds.x)
-						bounds.x = visualBounds.x;
-					if (bounds.y > visualBounds.y)
-						bounds.y = visualBounds.y;
-					t2 = visualBounds.x + visualBounds.width;
-					if (x2 < t2)
-						x2 = t2;
-					t2 = visualBounds.y + visualBounds.height;
-					if (y2 < t2)
-						y2 = t2;
-				}
-			}
-			bounds.height = y2 - bounds.y + 5;
-			bounds.width = x2 - bounds.x + 5;
+			Rectangle2D.Float bounds = getBounds2D();
 			d = new Dimension((int) Math.ceil(bounds.width), (int) Math.ceil(bounds.height));
 		}
 		return d;
+	}
+
+	/**
+	 * Calculate the bounds of the graph.
+	 *
+	 * @return The bounds, containing all elements.
+	 */
+	public Rectangle2D.Float getBounds2D()
+	{
+
+		Rectangle2D.Float bounds = new Rectangle2D.Float(0, 0, 0, 0);
+		float x2 = 0;
+		float y2 = 0;
+		float t2;
+		for (Visual visual : visuals)
+		{
+			Rectangle2D.Float visualBounds = visual.getBounds2D();
+			if (visualBounds != null)
+			{
+				if (bounds.x > visualBounds.x)
+					bounds.x = visualBounds.x;
+				if (bounds.y > visualBounds.y)
+					bounds.y = visualBounds.y;
+				t2 = visualBounds.x + visualBounds.width;
+				if (x2 < t2)
+					x2 = t2;
+				t2 = visualBounds.y + visualBounds.height;
+				if (y2 < t2)
+					y2 = t2;
+			}
+		}
+		bounds.height = y2 - bounds.y + 5;
+		bounds.width = x2 - bounds.x + 5;
+
+		return bounds;
 	}
 
 	/**
