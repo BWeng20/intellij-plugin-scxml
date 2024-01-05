@@ -90,6 +90,10 @@ public class GraphPane extends JComponent
 					Point p = viewPort.getViewPosition();
 					p.x -= xd;
 					p.y -= yd;
+					if (p.x < 0)
+						p.x = 0;
+					if (p.y < 0)
+						p.y = 0;
 					viewPort.setViewPosition(p);
 				}
 			}
@@ -171,6 +175,11 @@ public class GraphPane extends JComponent
 		}
 	}
 
+	/**
+	 * Created SVG from the graph.
+	 *
+	 * @return The generated SVG source code.
+	 */
 	public String toSVG()
 	{
 		Graphics2D g2 = (Graphics2D) getGraphics();
