@@ -28,7 +28,13 @@
     <extensions defaultExtensionNs="com.intellij">
         <standardResource url="http://www.w3.org/2005/07/scxml" path="xsd/scxml.xsd"/>
         <fileEditorProvider implementation="com.bw.modeldrive.ScxmlEditorProvider"/>
-        <facetType implementation="com.bw.modeldrive.facet.ScxmlFacetType"/>
+        <projectConfigurable
+            parentId="language"
+            instance="com.bw.modeldrive.settings.ProjectSettingsConfigurable"
+            id="com.bw.idea.scxml.settings"
+            displayName="ScXML SDK"
+            nonDefaultProject="true"/>
+        />
         <fileType name="XML" extensions="scxml"/>
     </extensions>
 

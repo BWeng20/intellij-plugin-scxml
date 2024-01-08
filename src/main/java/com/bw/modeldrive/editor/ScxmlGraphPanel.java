@@ -10,11 +10,17 @@ import com.bw.graph.TextPrimitive;
 import com.bw.graph.Visual;
 import com.bw.modeldrive.model.FiniteStateMachine;
 import com.bw.modeldrive.model.State;
+import com.bw.modeldrive.settings.ChangeConfigurationNotifier;
+import com.bw.modeldrive.settings.Configuration;
+import com.bw.modeldrive.settings.PersistenceService;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.project.Project;
+import com.intellij.util.messages.MessageBusConnection;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -64,18 +70,56 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 */
 	protected DrawContext stateOutlineContext = new DrawContext(stateOutlineStyle, stateOutlineStyleHighlight);
 
+	/**
+	 * The project of the file.
+	 */
+	protected Project theProject;
+
+	/**
+	 * Message bus for change notification.
+	 */
+	private MessageBusConnection mbCon;
+
+
 	@Override
 	public void dispose()
 	{
+		mbCon.dispose();
 		pane.dispose();
 	}
 
 	/**
-	 * Create a new editor panel.
+	 * Sets the configuration.
+	 *
+	 * @param config The config to use.
 	 */
-	public ScxmlGraphPanel()
+	protected void setConfiguration(Configuration config)
+	{
+		if (config != null)
+		{
+			var graphConfig = pane.getGraphConfiguration();
+			if (graphConfig.doubleBuffered != config.doublebuffered ||
+					graphConfig.antialiasing != config.antialiasing)
+			{
+				graphConfig.doubleBuffered = config.doublebuffered;
+				graphConfig.antialiasing = config.antialiasing;
+				SwingUtilities.invokeLater(() -> {
+					pane.invalidate();
+					pane.repaint();
+				});
+			}
+		}
+	}
+
+	/**
+	 * Create a new editor panel.
+	 *
+	 * @param theProject The project of the file to show.
+	 */
+	public ScxmlGraphPanel(Project theProject)
 	{
 		super(new BorderLayout());
+		this.theProject = theProject;
 		info = new JLabel("SCXML");
 		add(info, BorderLayout.NORTH);
 		add(new JScrollPane(pane), BorderLayout.CENTER);
@@ -110,6 +154,15 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		stateTextStyle.alignment = Alignment.Center;
 		stateTextStyle.font = font;
 		stateTextStyle.fontMetrics = fontMetrics;
+
+		mbCon = theProject.getMessageBus().connect();
+		mbCon.subscribe(ChangeConfigurationNotifier.CHANGE_CONFIG_TOPIC, (ChangeConfigurationNotifier) this::setConfiguration);
+
+		PersistenceService persistenceService = theProject.getService(PersistenceService.class);
+		if (persistenceService != null)
+		{
+			setConfiguration(persistenceService.getState());
+		}
 	}
 
 	/**
@@ -127,10 +180,10 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 
 			Graphics2D g2 = (Graphics2D) pane.getGraphics();
 
-			int fh = stateOutlineStyle.fontMetrics.getHeight();
+			float fh = stateOutlineStyle.fontMetrics.getHeight();
 
-			int x = fh;
-			int y = fh;
+			float x = fh;
+			float y = fh;
 
 			Visual startNode = createStartVisual(x + fh, y + fh, fh / 2);
 			pane.addVisual(startNode);
@@ -157,7 +210,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	protected Visual createStartVisual(float x, float y, float radius)
 	{
 		Visual startNode = new Visual(stateOutlineContext);
-		CirclePrimitive circle = new CirclePrimitive(x, y, startStyle, false, radius);
+		CirclePrimitive circle = new CirclePrimitive(x, y, pane.getGraphConfiguration(), startStyle, false, radius);
 		circle.setFill(true);
 		startNode.addDrawingPrimitive(circle);
 		return startNode;
@@ -177,14 +230,14 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		Visual v = new Visual(stateOutlineContext);
 		v.setPosition(x, y);
 
-		TextPrimitive label = new TextPrimitive(3, 3,
+		TextPrimitive label = new TextPrimitive(3, 3, pane.getGraphConfiguration(),
 				stateTextStyle, false, state.name);
 
 		Rectangle2D stringBounds = stateTextStyle.fontMetrics.getStringBounds(state.name, g2);
 		float height = 5 * stateTextStyle.fontMetrics.getHeight();
 
 		RectanglePrimitive frame = new RectanglePrimitive(
-				0, 0,
+				0, 0, pane.getGraphConfiguration(),
 				stateOutlineStyle, false,
 				(float) (stringBounds.getWidth() + 6), height);
 		frame.setFill(true);

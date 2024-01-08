@@ -3,8 +3,12 @@ package com.bw.graph;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.RenderingHints;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 
 /**
  * A draw primitive.<br>
@@ -15,22 +19,36 @@ public abstract class DrawPrimitive
 	private final boolean scalable;
 	private final DrawStyle style;
 	private final Point2D.Float relativePosition;
-
 	private final Point2D.Float tempPosition = new Point2D.Float();
+
+	private BufferedImage buffer;
+	private boolean redrawNeeded = true;
+
+	/**
+	 * Graph configuration to usr.
+	 */
+	protected GraphConfiguration config;
+
+	/**
+	 * Static (0,0) coordinate for re-use.
+	 */
+	protected static final Point2D.Float zeroPoint2D = new Point2D.Float(0, 0);
 
 	/**
 	 * Creates a new Primitive.
 	 *
 	 * @param x        The relative x-position
 	 * @param y        The relative y-position
+	 * @param config   The configuration to use.
 	 * @param style    The local style or null if parent style shall be used.
 	 * @param scalable True is user can scale this primitive independent of parent.
 	 */
-	protected DrawPrimitive(float x, float y, DrawStyle style, boolean scalable)
+	protected DrawPrimitive(float x, float y, GraphConfiguration config, DrawStyle style, boolean scalable)
 	{
 		this.style = style;
 		this.relativePosition = new Point2D.Float(x, y);
 		this.scalable = scalable;
+		this.config = config;
 	}
 
 	/**
@@ -46,9 +64,33 @@ public abstract class DrawPrimitive
 	{
 		tempPosition.x = position.x + relativePosition.x;
 		tempPosition.y = position.y + relativePosition.y;
-		drawIntern(g2,
-				style == null ? parentStyle : style,
-				tempPosition);
+
+		final DrawStyle actualStyle = style == null ? parentStyle : style;
+
+		final GraphicsConfiguration cfg = g2.getDeviceConfiguration();
+
+		if (config.doubleBuffered && cfg.getDevice().getType() != GraphicsDevice.TYPE_PRINTER)
+		{
+			if (buffer == null || redrawNeeded)
+			{
+
+				if (buffer == null)
+				{
+					Dimension2DFloat dim = getDimension(g2, actualStyle);
+					buffer = ImageUtil.createCompotibleImage(cfg, dim.width, dim.height);
+				}
+				redrawNeeded = false;
+				Graphics2D g2Buffered = buffer.createGraphics();
+				if (config.antialiasing)
+					g2Buffered.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+				drawIntern(g2Buffered, actualStyle, zeroPoint2D);
+			}
+			g2.drawImage(buffer, null, (int) tempPosition.x, (int) tempPosition.y);
+
+			return;
+		}
+		// Draw unbuffered
+		drawIntern(g2, actualStyle, tempPosition);
 	}
 
 	/**
@@ -155,5 +197,12 @@ public abstract class DrawPrimitive
 	 */
 	protected abstract void toSVGIntern(SVGWriter sw, DrawStyle style, Point2D.Float pos);
 
+	/**
+	 * Mark the primitive to redraw.
+	 */
+	public void redraw()
+	{
+		redrawNeeded = true;
+	}
 
 }

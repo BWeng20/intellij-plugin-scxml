@@ -120,7 +120,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	 */
 	public ScxmlGraphEditor(@NotNull VirtualFile file, @Nullable PsiFile psiFile)
 	{
-		component = new ScxmlGraphPanel();
+		component = new ScxmlGraphPanel(psiFile == null ? null : psiFile.getProject());
 		this.file = file;
 		setXmlFile(psiFile);
 	}

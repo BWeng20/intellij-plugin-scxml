@@ -20,16 +20,18 @@ public class RectanglePrimitive extends DrawPrimitive
 	 *
 	 * @param x        The relative x-position
 	 * @param y        The relative y-position
+	 * @param config   The configuration to use.
 	 * @param style    The style or null if default style shall be used.
 	 * @param scalable True is user can scale this primitive independent of parent.
 	 * @param width    Width in pixel.
 	 * @param height   Height in pixel
 	 */
 	public RectanglePrimitive(float x, float y,
+							  GraphConfiguration config,
 							  DrawStyle style,
 							  boolean scalable, float width, float height)
 	{
-		super(x, y, style, scalable);
+		super(x, y, config, style, scalable);
 		this.width = width;
 		this.height = height;
 		this.fill = false;

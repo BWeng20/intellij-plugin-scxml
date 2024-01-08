@@ -24,6 +24,11 @@ import java.util.logging.Logger;
 public class GraphPane extends JComponent
 {
 	/**
+	 * Graph configuration
+	 */
+	GraphConfiguration configuration = new GraphConfiguration();
+
+	/**
 	 * Logger of this class.
 	 */
 	static final Logger log = Logger.getLogger(GraphPane.class.getName());
@@ -49,6 +54,13 @@ public class GraphPane extends JComponent
 		public void mousePressed(MouseEvent e)
 		{
 			draggingVisual = getVisualAt(lastDragPoint.x = e.getX(), lastDragPoint.y = e.getY());
+
+			if (draggingVisual != null)
+			{
+				visuals.remove(draggingVisual);
+				visuals.add(draggingVisual);
+			}
+
 			SwingUtilities.convertPointToScreen(lastDragPoint, GraphPane.this);
 		}
 
@@ -157,7 +169,9 @@ public class GraphPane extends JComponent
 	{
 		Graphics2D g2 = (Graphics2D) g.create();
 		g2.translate(offsetX, offsetY);
-		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+		if (configuration.antialiasing)
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		try
 		{
 			if (isOpaque())
@@ -233,8 +247,16 @@ public class GraphPane extends JComponent
 			visual.setHighlighted(true);
 			triggerRepaint = true;
 		}
+		if (selectedVisual != null && visuals.indexOf(selectedVisual) != (visuals.size() - 1))
+		{
+			visuals.remove(selectedVisual);
+			visuals.add(selectedVisual);
+			triggerRepaint = true;
+		}
 		if (triggerRepaint)
+		{
 			repaint();
+		}
 	}
 
 	/**
@@ -307,5 +329,15 @@ public class GraphPane extends JComponent
 	{
 		visuals.clear();
 		repaint();
+	}
+
+	/**
+	 * Gets the graph configuration.
+	 *
+	 * @return The getGraphConfiguration, never null.
+	 */
+	public GraphConfiguration getGraphConfiguration()
+	{
+		return configuration;
 	}
 }

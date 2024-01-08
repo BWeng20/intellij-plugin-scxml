@@ -339,7 +339,7 @@ public class SVGWriter extends PrintWriter
 	{
 		value = (float) Math.floor(0.5f + (value * precisionFactor)) / precisionFactor;
 		write((value == Math.ceil(value))
-				? Long.toString((long) value) : Float.toString(value));
+			  ? Long.toString((long) value) : Float.toString(value));
 	}
 
 	private void writeAttributeProlog()

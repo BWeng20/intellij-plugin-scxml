@@ -23,15 +23,17 @@ public class SVGPrimitive extends DrawPrimitive
 	 *
 	 * @param x        The relative x-position
 	 * @param y        The relative y-position
+	 * @param config   The configuration to use.
 	 * @param style    The style or null if default style shall be used.
 	 * @param scalable True is user can scale this primitive independent of parent.
 	 * @param shape    SVG Shape
 	 */
 	public SVGPrimitive(float x, float y,
+						GraphConfiguration config,
 						DrawStyle style,
 						boolean scalable, AbstractShape shape)
 	{
-		super(x, y, style, scalable);
+		super(x, y, config, style, scalable);
 		this.painter = new ShapePainter(shape);
 		this.gray = false;
 	}
@@ -41,16 +43,17 @@ public class SVGPrimitive extends DrawPrimitive
 	 *
 	 * @param x        The relative x-position
 	 * @param y        The relative y-position
+	 * @param config   The configuration to use.
 	 * @param style    The style or null if default style shall be used.
 	 * @param scalable True is user can scale this primitive independent of parent.
 	 * @param svg      SVG source.
 	 * @throws SVGException In case the source has errors.
 	 */
-	public SVGPrimitive(float x, float y,
+	public SVGPrimitive(float x, float y, GraphConfiguration config,
 						DrawStyle style,
 						boolean scalable, String svg) throws SVGException
 	{
-		this(x, y, style, scalable, SVGConverter.convert(svg));
+		this(x, y, config, style, scalable, SVGConverter.convert(svg));
 		this.svgSource = svg;
 	}
 

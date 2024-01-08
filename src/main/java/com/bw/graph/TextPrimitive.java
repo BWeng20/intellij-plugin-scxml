@@ -21,13 +21,14 @@ public class TextPrimitive extends DrawPrimitive
 	 *
 	 * @param x        The relative x-position
 	 * @param y        The relative y-position
+	 * @param config   The configuration to use.
 	 * @param style    The style or null if default style shall be used.
 	 * @param scalable True is user can scale this primitive independent of parent.
 	 * @param text     The text to draw.
 	 */
-	public TextPrimitive(float x, float y, DrawStyle style, boolean scalable, String text)
+	public TextPrimitive(float x, float y, GraphConfiguration config, DrawStyle style, boolean scalable, String text)
 	{
-		super(x, y, style, scalable);
+		super(x, y, config, style, scalable);
 		this.text = text;
 	}
 
@@ -53,7 +54,7 @@ public class TextPrimitive extends DrawPrimitive
 	{
 		sw.startElement("text");
 		sw.writeAttribute("x", pos.x);
-		sw.writeAttribute("y", pos.y + +style.fontMetrics.getAscent());
+		sw.writeAttribute("y", pos.y + style.fontMetrics.getAscent());
 		sw.startStyle();
 		sw.writeAttribute("font-family", style.font.getFamily());
 		sw.writeAttribute("font-size", style.font.getSize2D());

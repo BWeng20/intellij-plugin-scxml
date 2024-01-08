@@ -21,15 +21,17 @@ public class CirclePrimitive extends DrawPrimitive
 	 *
 	 * @param cx       The relative center x-position
 	 * @param cy       The relative center y-position
+	 * @param config   The configuration to use.
 	 * @param style    The style or null if default style shall be used.
 	 * @param scalable True is user can scale this primitive independent of parent.
 	 * @param radius   Radius in pixel.
 	 */
 	public CirclePrimitive(float cx, float cy,
+						   GraphConfiguration config,
 						   DrawStyle style,
 						   boolean scalable, float radius)
 	{
-		super(cx - radius, cy - radius, style, scalable);
+		super(cx - radius, cy - radius, config, style, scalable);
 		this.centerX = cx;
 		this.centerY = cy;
 		this.radius = radius;
