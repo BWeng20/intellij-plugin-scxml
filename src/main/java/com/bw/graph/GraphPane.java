@@ -178,6 +178,11 @@ public class GraphPane extends JComponent
 	protected LinkedList<Visual> visuals = new LinkedList<>();
 
 	/**
+	 * List of Edges.
+	 */
+	protected LinkedList<Edge> edges = new LinkedList<>();
+
+	/**
 	 * Drawing X-offset.
 	 */
 	protected float offsetX = 0;
@@ -209,6 +214,9 @@ public class GraphPane extends JComponent
 			}
 
 			g2.scale(configuration.scale, configuration.scale);
+
+			for (Edge e : edges)
+				e.draw(g2);
 
 			for (Visual v : visuals)
 				v.draw(g2);
@@ -254,7 +262,21 @@ public class GraphPane extends JComponent
 			repaint();
 		}
 
-		log.warning(toSVG());
+		// log.warning(toSVG());
+	}
+
+	/**
+	 * Adds a new Edge.
+	 *
+	 * @param edge The new edge.
+	 */
+	public void addEdge(Edge edge)
+	{
+		if (edge != null)
+		{
+			edges.add(edge);
+			repaint();
+		}
 	}
 
 	/**
@@ -360,8 +382,10 @@ public class GraphPane extends JComponent
 	public void removeAllVisuals()
 	{
 		visuals.clear();
+		edges.clear();
 		repaint();
 	}
+
 
 	/**
 	 * Gets the graph configuration.
@@ -372,4 +396,5 @@ public class GraphPane extends JComponent
 	{
 		return configuration;
 	}
+
 }

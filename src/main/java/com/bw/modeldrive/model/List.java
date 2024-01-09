@@ -1,5 +1,6 @@
 package com.bw.modeldrive.model;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.function.Predicate;
 
@@ -19,6 +20,16 @@ public class List<T>
 	 */
 	public List()
 	{
+	}
+
+	/**
+	 * This list as unmodifiable {@link java.util.List}.
+	 *
+	 * @return The list.
+	 */
+	public java.util.List<T> asList()
+	{
+		return Collections.unmodifiableList(_list);
 	}
 
 	/**

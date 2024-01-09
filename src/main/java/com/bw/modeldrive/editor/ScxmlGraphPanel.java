@@ -1,22 +1,16 @@
 package com.bw.modeldrive.editor;
 
-import com.bw.graph.Alignment;
-import com.bw.graph.CirclePrimitive;
-import com.bw.graph.DrawContext;
-import com.bw.graph.DrawStyle;
-import com.bw.graph.GraphPane;
-import com.bw.graph.LinePrimitive;
-import com.bw.graph.RectanglePrimitive;
-import com.bw.graph.TextPrimitive;
-import com.bw.graph.Visual;
+import com.bw.graph.*;
 import com.bw.modeldrive.model.FiniteStateMachine;
 import com.bw.modeldrive.model.State;
+import com.bw.modeldrive.model.Transition;
 import com.bw.modeldrive.settings.ChangeConfigurationNotifier;
 import com.bw.modeldrive.settings.Configuration;
 import com.bw.modeldrive.settings.PersistenceService;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.messages.MessageBusConnection;
+import org.apache.commons.collections.map.HashedMap;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -29,6 +23,7 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
+import java.util.LinkedList;
 
 /**
  * Panel to show the FSM as Graphical State Machine.
@@ -75,6 +70,12 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 * Context for state outline.
 	 */
 	protected DrawContext stateOutlineContext = new DrawContext(pane.getGraphConfiguration(), stateOutlineStyle, stateOutlineStyleHighlight);
+
+	/**
+	 * Context for edges.
+	 */
+	protected DrawContext edgeContext = new DrawContext(pane.getGraphConfiguration(), stateInlineStyle, stateInlineStyle);
+
 
 	/**
 	 * The project of the file.
@@ -192,25 +193,59 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 
 		if (fsm != null && fsm.pseudoRoot != null)
 		{
+			java.util.Map<String, Visual> stateVisuals = new HashedMap();
+			java.util.Queue<State> states = new LinkedList<>(fsm.pseudoRoot.states);
+
 			final float gapY = 5;
-
 			Graphics2D g2 = (Graphics2D) pane.getGraphics();
-
 			float fh = stateOutlineStyle.fontMetrics.getHeight();
-
 			float x = fh;
 			float y = fh;
-
 			Visual startNode = createStartVisual(x + fh / 2, y + fh, fh / 2);
 			pane.addVisual(startNode);
 
 			x += 2 * fh;
-
-			for (State initalState : fsm.pseudoRoot.states)
+			float maxWidth = 0;
+			java.util.Map<Integer, Transition> transitions = new HashedMap();
+			while (!states.isEmpty())
 			{
-				Visual stateVisual = createStateVisual(x, y, initalState, g2);
-				pane.addVisual(stateVisual);
-				y += stateVisual.getBounds2D(g2).height + gapY;
+				State state = states.poll();
+				if (!stateVisuals.containsKey(state.name))
+				{
+					Visual stateVisual = createStateVisual(x, y, state, g2);
+					Rectangle2D.Float bounds = stateVisual.getBounds2D(g2);
+					y += bounds.height + gapY;
+					if (bounds.width > maxWidth)
+						maxWidth = bounds.width;
+					if (y > 600)
+					{
+						x += maxWidth + fh;
+						y = fh;
+						maxWidth = 0;
+					}
+					pane.addVisual(stateVisual);
+					stateVisuals.put(state.name, stateVisual);
+
+					states.addAll(state.states);
+					for (Transition t : state.transitions.asList())
+					{
+						states.addAll(t.target);
+						transitions.put(t.docId, t);
+					}
+				}
+			}
+
+			if (fsm.pseudoRoot.initial != null)
+				for (State s : fsm.pseudoRoot.initial.target)
+					pane.addEdge(new Edge(startNode, stateVisuals.get(s.name), edgeContext));
+
+			for (Transition t : transitions.values())
+			{
+				Visual startV = stateVisuals.get(t.source.name);
+				for (State target : t.target)
+				{
+					pane.addEdge(new Edge(startV, stateVisuals.get(target.name), edgeContext));
+				}
 			}
 		}
 	}
