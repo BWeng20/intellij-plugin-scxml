@@ -29,11 +29,11 @@
         <standardResource url="http://www.w3.org/2005/07/scxml" path="xsd/scxml.xsd"/>
         <fileEditorProvider implementation="com.bw.modeldrive.ScxmlEditorProvider"/>
         <projectConfigurable
-            parentId="language"
-            instance="com.bw.modeldrive.settings.ProjectSettingsConfigurable"
-            id="com.bw.idea.scxml.settings"
-            displayName="ScXML SDK"
-            nonDefaultProject="true"/>
+                parentId="language"
+                instance="com.bw.modeldrive.settings.ProjectSettingsConfigurable"
+                id="com.bw.idea.scxml.settings"
+                displayName="ScXML SDK"
+                nonDefaultProject="true"/>
         />
         <fileType name="XML" extensions="scxml"/>
     </extensions>
@@ -43,7 +43,6 @@
             <add-to-group group-id="NewGroup"/>
         </action>
     </actions>
-
 
 
 </idea-plugin>
