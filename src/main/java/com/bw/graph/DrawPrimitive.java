@@ -3,12 +3,9 @@ package com.bw.graph;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsDevice;
-import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 
 /**
  * A draw primitive.<br>
@@ -21,18 +18,27 @@ public abstract class DrawPrimitive
 	private final Point2D.Float relativePosition;
 	private final Point2D.Float tempPosition = new Point2D.Float();
 
-	private BufferedImage buffer;
-	private boolean redrawNeeded = true;
+	/**
+	 * The insets of the component.
+	 */
+	private InsetsFloat insets = DEFAULT_INSERTS;
 
 	/**
-	 * Graph configuration to usr.
+	 * Shared default insets instance.
+	 */
+	public static final InsetsFloat DEFAULT_INSERTS = new InsetsFloat(0, 0, 0, 0);
+
+
+	/**
+	 * Graph configuration to use.
 	 */
 	protected GraphConfiguration config;
 
 	/**
-	 * Static (0,0) coordinate for re-use.
+	 * The default alignment.
 	 */
-	protected static final Point2D.Float zeroPoint2D = new Point2D.Float(0, 0);
+	// @TODO: Shall be configured from system defaults.
+	public static Alignment DEFAULT_ALIGNMENT = Alignment.Left;
 
 	/**
 	 * Creates a new Primitive.
@@ -53,7 +59,7 @@ public abstract class DrawPrimitive
 
 	/**
 	 * Draws for given context.<br>
-	 * This method calls {@link #drawIntern(Graphics2D, DrawStyle, Point2D.Float)}
+	 * This method calls {@link #drawIntern(Graphics2D, DrawStyle)}
 	 * with adapted position and DrawStyle.
 	 *
 	 * @param g2          The graphics context
@@ -62,45 +68,30 @@ public abstract class DrawPrimitive
 	 */
 	public void draw(Graphics2D g2, Point2D.Float position, DrawStyle parentStyle)
 	{
-		tempPosition.x = position.x + relativePosition.x;
-		tempPosition.y = position.y + relativePosition.y;
-
 		final DrawStyle actualStyle = style == null ? parentStyle : style;
 
-		final GraphicsConfiguration cfg = g2.getDeviceConfiguration();
+		tempPosition.x = position.x + relativePosition.x + insets.left;
+		tempPosition.y = position.y + relativePosition.y + insets.top;
 
-		if (config.doubleBuffered && cfg.getDevice().getType() != GraphicsDevice.TYPE_PRINTER)
+		AffineTransform orgTransform = g2.getTransform();
+		try
 		{
-			if (buffer == null || redrawNeeded)
-			{
-
-				if (buffer == null)
-				{
-					Dimension2DFloat dim = getDimension(g2, actualStyle);
-					buffer = ImageUtil.createCompotibleImage(cfg, dim.width, dim.height);
-				}
-				redrawNeeded = false;
-				Graphics2D g2Buffered = buffer.createGraphics();
-				if (config.antialiasing)
-					g2Buffered.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				drawIntern(g2Buffered, actualStyle, zeroPoint2D);
-			}
-			g2.drawImage(buffer, null, (int) tempPosition.x, (int) tempPosition.y);
-
-			return;
+			g2.translate(tempPosition.x, tempPosition.y);
+			drawIntern(g2, actualStyle);
 		}
-		// Draw unbuffered
-		drawIntern(g2, actualStyle, tempPosition);
+		finally
+		{
+			g2.setTransform(orgTransform);
+		}
 	}
 
 	/**
 	 * Draws at given absolute position.
 	 *
-	 * @param g2    The graphics context
+	 * @param g2    The graphics context, with (0,0) at final position.
 	 * @param style The style to use.
-	 * @param pos   Absolute position.
 	 */
-	protected abstract void drawIntern(Graphics2D g2, DrawStyle style, Point2D.Float pos);
+	protected abstract void drawIntern(Graphics2D g2, DrawStyle style);
 
 	/**
 	 * Check if primitive can be scaled independent of parent.
@@ -133,7 +124,7 @@ public abstract class DrawPrimitive
 	}
 
 	/**
-	 * Gets the bounds of the primitive.
+	 * Gets the bounds of the primitive, including space for insets.
 	 *
 	 * @param basePosition The absolute base position
 	 * @param graphics     The graphics context to use for calculations.
@@ -145,30 +136,44 @@ public abstract class DrawPrimitive
 		final Dimension2DFloat dim = getDimension(graphics, style == null ? parentStyle : style);
 		return new Rectangle2D.Float(
 				basePosition.x + relativePosition.x,
-				basePosition.y + relativePosition.y,
-				dim.width, dim.height);
+				basePosition.y + relativePosition.y, dim.width, dim.height);
 	}
 
 	/**
 	 * Get the alignment.
 	 *
-	 * @return The alignment-mode or null.
+	 * @return The alignment-mode. Never null.
 	 */
 	public Alignment getAlignment()
 	{
-		if (style != null)
-			return style.alignment;
-		return null;
+		return (style == null || style.alignment == null) ? DEFAULT_ALIGNMENT : style.alignment;
 	}
 
 	/**
-	 * Gets the bounds of the primitive.
+	 * Gets the bounds of the primitive, including insets.
 	 *
 	 * @param graphics The graphics context to use for calculations.
 	 * @param style    The style to use.
 	 * @return The bounds as rectangle.
 	 */
-	protected abstract Dimension2DFloat getDimension(Graphics2D graphics, DrawStyle style);
+	protected Dimension2DFloat getDimension(Graphics2D graphics, DrawStyle style)
+	{
+		Dimension2DFloat dim = getInnerDimension(graphics, style);
+		dim.width += insets.left + insets.right;
+		dim.height += insets.top + insets.bottom;
+
+		return dim;
+	}
+
+
+	/**
+	 * Gets the bounds of the primitive. Without insets.
+	 *
+	 * @param graphics The graphics context to use for calculations.
+	 * @param style    The style to use.
+	 * @return The dimension.
+	 */
+	protected abstract Dimension2DFloat getInnerDimension(Graphics2D graphics, DrawStyle style);
 
 	/**
 	 * Adds the primitive as SVG element to the string builder.
@@ -180,8 +185,8 @@ public abstract class DrawPrimitive
 	public void toSVG(SVGWriter sw,
 					  Point2D.Float position, DrawStyle parentStyle)
 	{
-		tempPosition.x = position.x + relativePosition.x;
-		tempPosition.y = position.y + relativePosition.y;
+		tempPosition.x = position.x + relativePosition.x + insets.left;
+		tempPosition.y = position.y + relativePosition.y + insets.top;
 		toSVGIntern(sw,
 				style == null ? parentStyle : style,
 				tempPosition);
@@ -198,11 +203,59 @@ public abstract class DrawPrimitive
 	protected abstract void toSVGIntern(SVGWriter sw, DrawStyle style, Point2D.Float pos);
 
 	/**
-	 * Mark the primitive to redraw.
+	 * Sets new insets.
+	 *
+	 * @param top    from the top.
+	 * @param left   from the left.
+	 * @param bottom from the bottom.
+	 * @param right  from the right.
 	 */
-	public void redraw()
+	public void setInsets(float top, float left, float bottom, float right)
 	{
-		redrawNeeded = true;
+		if (insets == DEFAULT_INSERTS)
+			insets = new InsetsFloat(top, left, bottom, right);
+		else
+		{
+			insets.top = top;
+			insets.left = left;
+			insets.bottom = bottom;
+			insets.right = right;
+		}
+	}
+
+	/**
+	 * Sets insets.
+	 *
+	 * @param insets The new insets or null to reset to 0,0,0,0.
+	 */
+	public void setInsets(InsetsFloat insets)
+	{
+		if (insets != null)
+		{
+			if (this.insets == DEFAULT_INSERTS)
+				this.insets = new InsetsFloat(insets.top, insets.left, insets.bottom, insets.right);
+			else
+			{
+				this.insets.top = insets.top;
+				this.insets.left = insets.left;
+				this.insets.bottom = insets.bottom;
+				this.insets.right = insets.right;
+			}
+		}
+		else
+		{
+			this.insets = DEFAULT_INSERTS;
+		}
+	}
+
+	/**
+	 * Gets insets.
+	 *
+	 * @return The insets, never null.
+	 */
+	public InsetsFloat getInsets()
+	{
+		return insets;
 	}
 
 }

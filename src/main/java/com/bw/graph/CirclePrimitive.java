@@ -3,6 +3,7 @@ package com.bw.graph;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 
 /**
@@ -10,9 +11,9 @@ import java.awt.geom.Point2D;
  */
 public class CirclePrimitive extends DrawPrimitive
 {
-	private float centerX;
-	private float centerY;
-	private float radius;
+	private float diameter;
+
+	private Ellipse2D.Float shape;
 
 	private boolean fill;
 
@@ -32,10 +33,10 @@ public class CirclePrimitive extends DrawPrimitive
 						   boolean scalable, float radius)
 	{
 		super(cx - radius, cy - radius, config, style, scalable);
-		this.centerX = cx;
-		this.centerY = cy;
-		this.radius = radius;
+		this.diameter = 2f * radius;
 		this.fill = false;
+
+		this.shape = new Ellipse2D.Float(0, 0, diameter, diameter);
 	}
 
 	/**
@@ -50,40 +51,36 @@ public class CirclePrimitive extends DrawPrimitive
 
 
 	@Override
-	protected void drawIntern(Graphics2D g2, DrawStyle style, Point2D.Float pos)
+	protected void drawIntern(Graphics2D g2, DrawStyle style)
 	{
-
-		final int radiusInt = (int) (2f * radius + 0.5f);
 		if (fill)
 		{
 			g2.setPaint(style.fillPaint);
-			g2.fillOval((int) (pos.x + 0.5), (int) (pos.y + 0.5),
-					radiusInt, radiusInt);
+			g2.fill(shape);
 		}
+		g2.setStroke(style.lineStroke);
 		g2.setPaint(style.linePaint);
-		g2.drawOval((int) (pos.x + 0.5), (int) (pos.y + 0.5),
-				radiusInt, radiusInt);
+		g2.draw(shape);
 	}
 
 	@Override
-	protected Dimension2DFloat getDimension(Graphics2D graphics, DrawStyle style)
+	protected Dimension2DFloat getInnerDimension(Graphics2D graphics, DrawStyle style)
 	{
-		return new Dimension2DFloat(radius, radius);
+		return new Dimension2DFloat(shape.width, shape.height);
 	}
 
 	@Override
 	protected void toSVGIntern(SVGWriter sw, DrawStyle style, Point2D.Float pos)
 	{
 		sw.startElement("circle");
-		sw.writeAttribute("cx", pos.x + radius);
-		sw.writeAttribute("cy", pos.y + radius);
-		sw.writeAttribute("r", radius);
+		sw.writeAttribute("cx", pos.x + (diameter / 2));
+		sw.writeAttribute("cy", pos.y + (diameter / 2));
+		sw.writeAttribute("r", (diameter / 2));
 		sw.startStyle();
 		if (fill)
 			sw.writeAttribute("fill", style.fillPaint);
 		sw.writeAttribute("stroke", style.linePaint);
-		sw.writeStrokeWith(style.lineStroke);
+		sw.writeStrokeWith(style.getStrokeWidth());
 		sw.endElement();
 	}
-
 }

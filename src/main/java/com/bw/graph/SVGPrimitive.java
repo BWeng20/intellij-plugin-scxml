@@ -70,13 +70,13 @@ public class SVGPrimitive extends DrawPrimitive
 
 
 	@Override
-	protected void drawIntern(Graphics2D g2, DrawStyle style, Point2D.Float pos)
+	protected void drawIntern(Graphics2D g2, DrawStyle style)
 	{
 		painter.paint(g2, null, style.fillPaint, false, gray);
 	}
 
 	@Override
-	protected Dimension2DFloat getDimension(Graphics2D graphics, DrawStyle style)
+	protected Dimension2DFloat getInnerDimension(Graphics2D graphics, DrawStyle style)
 	{
 		return new Dimension2DFloat(painter.getArea());
 	}
@@ -89,5 +89,4 @@ public class SVGPrimitive extends DrawPrimitive
 			sw.write(svgSource);
 		}
 	}
-
 }

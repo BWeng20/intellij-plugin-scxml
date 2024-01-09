@@ -4,14 +4,14 @@ import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 /**
  * A Rectangle.
  */
 public class RectanglePrimitive extends DrawPrimitive
 {
-	private float width;
-	private float height;
+	private Rectangle2D.Float shape;
 
 	private boolean fill;
 
@@ -32,9 +32,8 @@ public class RectanglePrimitive extends DrawPrimitive
 							  boolean scalable, float width, float height)
 	{
 		super(x, y, config, style, scalable);
-		this.width = width;
-		this.height = height;
 		this.fill = false;
+		shape = new Rectangle2D.Float(0, 0, width, height);
 	}
 
 	/**
@@ -49,26 +48,22 @@ public class RectanglePrimitive extends DrawPrimitive
 
 
 	@Override
-	protected void drawIntern(Graphics2D g2, DrawStyle style, Point2D.Float pos)
+	protected void drawIntern(Graphics2D g2, DrawStyle style)
 	{
-		final int x = (int) (pos.x + 0.5);
-		final int y = (int) (pos.y + 0.5);
-		final int w = (int) (width + 0.5);
-		final int h = (int) (height + 0.5);
-
 		if (fill && style.fillPaint != null)
 		{
 			g2.setPaint(style.fillPaint);
-			g2.fillRect(x, y, w, h);
+			g2.fill(shape);
 		}
 		g2.setPaint(style.linePaint);
-		g2.draw3DRect(x, y, w, h, style.highlighted);
+		g2.setStroke(style.lineStroke);
+		g2.draw(shape);
 	}
 
 	@Override
-	protected Dimension2DFloat getDimension(Graphics2D graphics, DrawStyle style)
+	protected Dimension2DFloat getInnerDimension(Graphics2D graphics, DrawStyle style)
 	{
-		return new Dimension2DFloat(width, height);
+		return new Dimension2DFloat(shape.width, shape.height);
 	}
 
 	@Override
@@ -77,13 +72,13 @@ public class RectanglePrimitive extends DrawPrimitive
 		sw.startElement("rect");
 		sw.writeAttribute("x", pos.x);
 		sw.writeAttribute("y", pos.y);
-		sw.writeAttribute("width", width);
-		sw.writeAttribute("height", height);
+		sw.writeAttribute("width", shape.width);
+		sw.writeAttribute("height", shape.height);
 		sw.startStyle();
 		if (fill)
 			sw.writeAttribute("fill", style.fillPaint);
 		sw.writeAttribute("stroke", style.linePaint);
-		sw.writeStrokeWith(style.lineStroke);
+		sw.writeStrokeWith(style.getStrokeWidth());
 		sw.endElement();
 	}
 

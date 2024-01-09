@@ -5,6 +5,7 @@ import com.bw.graph.CirclePrimitive;
 import com.bw.graph.DrawContext;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphPane;
+import com.bw.graph.LinePrimitive;
 import com.bw.graph.RectanglePrimitive;
 import com.bw.graph.TextPrimitive;
 import com.bw.graph.Visual;
@@ -50,6 +51,11 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	protected DrawStyle stateOutlineStyle = new DrawStyle();
 
 	/**
+	 * Style for inner lines.
+	 */
+	protected DrawStyle stateInlineStyle = new DrawStyle();
+
+	/**
 	 * Style for start nodes.
 	 */
 	protected DrawStyle startStyle = new DrawStyle();
@@ -68,7 +74,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	/**
 	 * Context for state outline.
 	 */
-	protected DrawContext stateOutlineContext = new DrawContext(stateOutlineStyle, stateOutlineStyleHighlight);
+	protected DrawContext stateOutlineContext = new DrawContext(pane.getGraphConfiguration(), stateOutlineStyle, stateOutlineStyleHighlight);
 
 	/**
 	 * The project of the file.
@@ -99,10 +105,13 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		{
 			var graphConfig = pane.getGraphConfiguration();
 			if (graphConfig.doubleBuffered != config.doublebuffered ||
-					graphConfig.antialiasing != config.antialiasing)
+					graphConfig.antialiasing != config.antialiasing ||
+					graphConfig.zoomByMetaMouseWheelEnabled != config.zoomByMetaMouseWheelEnabled
+			)
 			{
 				graphConfig.doubleBuffered = config.doublebuffered;
 				graphConfig.antialiasing = config.antialiasing;
+				graphConfig.zoomByMetaMouseWheelEnabled = config.zoomByMetaMouseWheelEnabled;
 				SwingUtilities.invokeLater(() -> {
 					pane.invalidate();
 					pane.repaint();
@@ -142,8 +151,15 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		stateOutlineStyle.font = font;
 		stateOutlineStyle.fontMetrics = fontMetrics;
 
+		stateInlineStyle.linePaint = stateOutlineStyle.linePaint;
+		stateInlineStyle.fillPaint = stateOutlineStyle.fillPaint;
+		stateInlineStyle.lineStroke = new BasicStroke(1);
+		stateInlineStyle.textPaint = stateOutlineStyle.textPaint;
+		stateInlineStyle.font = font;
+		stateInlineStyle.fontMetrics = fontMetrics;
+
 		stateOutlineStyleHighlight.linePaint = Color.RED;
-		stateOutlineStyleHighlight.lineStroke = new BasicStroke(4);
+		stateOutlineStyleHighlight.lineStroke = new BasicStroke(2);
 		stateOutlineStyleHighlight.textPaint = getForeground();
 		stateOutlineStyleHighlight.font = font;
 		stateOutlineStyleHighlight.fontMetrics = fontMetrics;
@@ -185,7 +201,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 			float x = fh;
 			float y = fh;
 
-			Visual startNode = createStartVisual(x + fh, y + fh, fh / 2);
+			Visual startNode = createStartVisual(x + fh / 2, y + fh, fh / 2);
 			pane.addVisual(startNode);
 
 			x += 2 * fh;
@@ -210,8 +226,9 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	protected Visual createStartVisual(float x, float y, float radius)
 	{
 		Visual startNode = new Visual(stateOutlineContext);
-		CirclePrimitive circle = new CirclePrimitive(x, y, pane.getGraphConfiguration(), startStyle, false, radius);
+		CirclePrimitive circle = new CirclePrimitive(radius, radius, pane.getGraphConfiguration(), startStyle, false, radius);
 		circle.setFill(true);
+		startNode.setPosition(x, y);
 		startNode.addDrawingPrimitive(circle);
 		return startNode;
 	}
@@ -230,19 +247,25 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		Visual v = new Visual(stateOutlineContext);
 		v.setPosition(x, y);
 
-		TextPrimitive label = new TextPrimitive(3, 3, pane.getGraphConfiguration(),
-				stateTextStyle, false, state.name);
-
 		Rectangle2D stringBounds = stateTextStyle.fontMetrics.getStringBounds(state.name, g2);
-		float height = 5 * stateTextStyle.fontMetrics.getHeight();
+		float fh = stateTextStyle.fontMetrics.getHeight();
+		float height = 5 * fh;
 
 		RectanglePrimitive frame = new RectanglePrimitive(
 				0, 0, pane.getGraphConfiguration(),
 				stateOutlineStyle, false,
-				(float) (stringBounds.getWidth() + 6), height);
+				(float) (stringBounds.getWidth() + 10), height);
 		frame.setFill(true);
-
 		v.addDrawingPrimitive(frame);
+
+		LinePrimitive separator = new LinePrimitive(0, fh * 1.5f, (float) (stringBounds.getWidth() + 10), fh * 1.5f
+				, pane.getGraphConfiguration(), stateInlineStyle);
+		v.addDrawingPrimitive(separator);
+
+		TextPrimitive label = new TextPrimitive(0, 0, pane.getGraphConfiguration(),
+				stateTextStyle, false, state.name);
+		label.setInsets(fh * 0.25f, 0, 0, 0);
+
 		v.addDrawingPrimitive(label);
 
 		return v;

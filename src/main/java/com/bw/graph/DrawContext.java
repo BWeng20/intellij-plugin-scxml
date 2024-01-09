@@ -1,9 +1,5 @@
 package com.bw.graph;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Font;
-
 /**
  * Drawing context for Visuals, containing style information.
  */
@@ -21,32 +17,21 @@ public class DrawContext
 	public DrawStyle highlighted;
 
 	/**
-	 * Create a new context with default values.
+	 * The configuration.
 	 */
-	public DrawContext()
-	{
-		normal = new DrawStyle();
-		normal.font = Font.getFont(Font.DIALOG);
-		normal.textPaint = Color.BLACK;
-		normal.linePaint = Color.BLACK;
-		normal.lineStroke = new BasicStroke(1);
-
-		highlighted = new DrawStyle();
-		highlighted.font = Font.getFont(Font.DIALOG);
-		highlighted.textPaint = Color.BLACK;
-		highlighted.linePaint = Color.BLACK;
-		highlighted.lineStroke = new BasicStroke(2);
-	}
+	public final GraphConfiguration configuration;
 
 	/**
 	 * Creates a new Context with styles,
 	 *
+	 * @param configuration  Graph configuration to use.
 	 * @param normalStyle    Style for normal state.
 	 * @param highlightStyle Style for highlighted state.
 	 */
-	public DrawContext(DrawStyle normalStyle, DrawStyle highlightStyle)
+	public DrawContext(GraphConfiguration configuration, DrawStyle normalStyle, DrawStyle highlightStyle)
 	{
 		this.normal = normalStyle;
 		this.highlighted = highlightStyle;
+		this.configuration = configuration;
 	}
 }

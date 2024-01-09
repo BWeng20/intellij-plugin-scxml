@@ -1,9 +1,7 @@
 package com.bw.svg;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Paint;
-import java.awt.Stroke;
 import java.awt.geom.Rectangle2D;
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -64,24 +62,16 @@ public class SVGWriter extends PrintWriter
 	/**
 	 * Write "stroke-width:" with the line width of the given stroke.
 	 *
-	 * @param stroke The stroke.
+	 * @param strokeWith The stroke.
 	 */
-	public void writeStrokeWith(Stroke stroke)
+	public void writeStrokeWith(float strokeWith)
 	{
-		if (stroke != null)
+		if (strokeWith > 0f)
 		{
 			writeAttributeProlog();
 			write("stroke-width");
 			writeAssign();
-			if (stroke instanceof BasicStroke)
-			{
-				writeRestrictedFloat(((BasicStroke) stroke).getLineWidth());
-			}
-			else
-			{
-				// Any other implementation to support?
-				write(1);
-			}
+			writeRestrictedFloat(strokeWith);
 			writeAttributeEpilog();
 		}
 	}

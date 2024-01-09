@@ -22,4 +22,15 @@ public class GraphConfiguration
 	 * Graph uses buffers to render elements.
 	 */
 	public boolean antialiasing = false;
+
+	/**
+	 * Installs a wheel-listener that zooms by mouse-wheel if Meta/Ctrl-Key is hold.
+	 */
+	public boolean zoomByMetaMouseWheelEnabled = true;
+
+	/**
+	 * The current scale of the graph.
+	 */
+	public float scale = 1f;
+
 }

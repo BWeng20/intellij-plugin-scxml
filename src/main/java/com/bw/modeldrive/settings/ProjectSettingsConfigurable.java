@@ -2,11 +2,11 @@ package com.bw.modeldrive.settings;
 
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.ui.components.JBCheckBox;
+import com.intellij.util.ui.FormBuilder;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
-import java.awt.GridLayout;
 
 /**
  * Configurable implementation for EP com.intellij.projectConfigurable
@@ -35,15 +35,23 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 	private JPanel editorComponent;
 	private JBCheckBox antialiasing;
 	private JBCheckBox doubleBuffered;
+	private JBCheckBox zoomByMouseWheel;
 
 	@Override
 	public @Nullable JComponent createComponent()
 	{
 		if (editorComponent == null)
 		{
-			editorComponent = new JPanel(new GridLayout(2, 1));
-			editorComponent.add(antialiasing = new JBCheckBox("Antialiasing"));
-			editorComponent.add(doubleBuffered = new JBCheckBox("Double Buffered"));
+			antialiasing = new JBCheckBox("Antialiasing");
+			doubleBuffered = new JBCheckBox("Double Buffered");
+			zoomByMouseWheel = new JBCheckBox("Zoom by Meta-Key + MouseWheel");
+
+			editorComponent = FormBuilder.createFormBuilder()
+										 .addComponent(antialiasing, 1)
+										 .addComponent(doubleBuffered, 1)
+										 .addComponent(zoomByMouseWheel, 1)
+										 .addComponentFillVertically(new JPanel(), 0)
+										 .getPanel();
 		}
 		return editorComponent;
 	}
@@ -56,7 +64,8 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 		{
 			Configuration configuration = service.getState();
 			return configuration.doublebuffered != doubleBuffered.isSelected() ||
-					configuration.antialiasing != antialiasing.isSelected();
+					configuration.antialiasing != antialiasing.isSelected() ||
+					configuration.zoomByMetaMouseWheelEnabled != zoomByMouseWheel.isSelected();
 		}
 		return false;
 	}
@@ -73,6 +82,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 			Configuration configuration = service.getState();
 			configuration.doublebuffered = doubleBuffered.isSelected();
 			configuration.antialiasing = antialiasing.isSelected();
+			configuration.zoomByMetaMouseWheelEnabled = zoomByMouseWheel.isSelected();
 
 			ChangeConfigurationNotifier publisher = theProject.getMessageBus()
 															  .syncPublisher(ChangeConfigurationNotifier.CHANGE_CONFIG_TOPIC);
@@ -89,6 +99,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 			Configuration configuration = service.getState();
 			doubleBuffered.setSelected(configuration.doublebuffered);
 			antialiasing.setSelected(configuration.antialiasing);
+			zoomByMouseWheel.setSelected(configuration.zoomByMetaMouseWheelEnabled);
 		}
 	}
 

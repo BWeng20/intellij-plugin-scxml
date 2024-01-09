@@ -33,16 +33,15 @@ public class TextPrimitive extends DrawPrimitive
 	}
 
 	@Override
-	protected void drawIntern(Graphics2D g2, DrawStyle style, Point2D.Float pos)
+	protected void drawIntern(Graphics2D g2, DrawStyle style)
 	{
 		g2.setFont(style.font);
 		g2.setPaint(style.textPaint);
-		g2.drawString(text, pos.x, pos.y + g2.getFontMetrics()
-											 .getAscent());
+		g2.drawString(text, 0, g2.getFontMetrics().getAscent());
 	}
 
 	@Override
-	protected Dimension2DFloat getDimension(Graphics2D graphics, DrawStyle style)
+	protected Dimension2DFloat getInnerDimension(Graphics2D graphics, DrawStyle style)
 	{
 		Rectangle2D r = style.fontMetrics.getStringBounds(text, graphics);
 

@@ -2,9 +2,15 @@ package com.bw.graph;
 
 import com.bw.svg.SVGWriter;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -45,6 +51,17 @@ public class Visual
 	 */
 	protected DrawContext context;
 
+	private BufferedImage buffer;
+	private boolean redrawNeeded = true;
+
+	/**
+	 * Static (0,0) coordinate for re-use.
+	 */
+	protected static final Point2D.Float zeroPoint2D = new Point2D.Float(0, 0);
+
+	private long buffersRecreated = 0;
+
+
 	/**
 	 * Create a new empty visual.
 	 *
@@ -62,7 +79,75 @@ public class Visual
 	 */
 	public void draw(Graphics2D g2)
 	{
-		forAllPrimitives(g2, DrawPrimitive::draw);
+		if (x2 < 0)
+			updateBounds(g2);
+
+		final GraphConfiguration graphConfiguration = context.configuration;
+		final GraphicsConfiguration graphicsConfiguration = g2.getDeviceConfiguration();
+
+
+		if (graphConfiguration.doubleBuffered && graphicsConfiguration.getDevice().getType() != GraphicsDevice.TYPE_PRINTER)
+		{
+			// Double buffering needs to consider the current scale, otherwise the result will get blurry.
+			// The buffer-image needs to use native, unscaled coordinates.
+			float offset = 1;
+			float scaleX = (float) g2.getTransform().getScaleX();
+			float scaleY = (float) g2.getTransform().getScaleY();
+			if (buffer == null || redrawNeeded)
+			{
+				Rectangle2D.Float bounds = getBounds2D(g2);
+
+				int scaledBoundsWidth = (int) Math.ceil((bounds.width + 2 * offset) * scaleX);
+				int scaledBoundsHeight = (int) Math.ceil((bounds.height + 2 * offset) * scaleY);
+				if (buffer == null || buffer.getWidth() != scaledBoundsWidth || buffer.getHeight() != scaledBoundsHeight)
+				{
+					++buffersRecreated;
+					buffer = ImageUtil.createCompotibleImage(graphicsConfiguration, scaledBoundsWidth, scaledBoundsHeight);
+				}
+				redrawNeeded = false;
+				Graphics2D g2Buffered = buffer.createGraphics();
+				try
+				{
+					if (graphConfiguration.antialiasing)
+						g2Buffered.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+					if (false)
+					{
+						g2Buffered.setPaint(Color.RED);
+						g2Buffered.fillRect(0, 0, buffer.getWidth(), buffer.getHeight());
+						g2Buffered.setPaint(Color.BLUE);
+						g2Buffered.drawRect((int) offset, (int) offset, (int) bounds.width - 1, (int) bounds.height - 1);
+					}
+
+					g2Buffered.scale(scaleX, scaleY);
+
+					// g2Buffered.translate(offset, offset);
+					forAllPrimitives(g2Buffered, DrawPrimitive::draw, new Rectangle2D.Float(offset, offset, bounds.width, bounds.height));
+				}
+				finally
+				{
+					g2Buffered.dispose();
+				}
+			}
+			AffineTransform orgTransform = g2.getTransform();
+			try
+			{
+				// Scale to 1:1
+				g2.scale(1 / scaleX, 1 / scaleY);
+				// Draw to "scaled" position but with native pixels sizes.
+				g2.drawImage(buffer, null,
+						(int) ((position.x - offset) * scaleX),
+						(int) ((position.y - offset) * scaleY));
+			}
+			finally
+			{
+				g2.setTransform(orgTransform);
+			}
+		}
+		else
+		{
+			forAllPrimitives(g2, DrawPrimitive::draw);
+		}
 	}
 
 	/**
@@ -87,32 +172,58 @@ public class Visual
 
 	/**
 	 * Calls a function on all primitives.
+	 * Relative positions are adapted to current visual position.
 	 *
 	 * @param g2       The graphics context.
 	 * @param consumer The consumer to call.
 	 */
 	protected void forAllPrimitives(Graphics2D g2, PrimitiveConsumer consumer)
 	{
-		if (position != null)
-		{
-			if (x2 < 0)
-				updateBounds(g2);
+		if (x2 < 0)
+			updateBounds(g2);
 
-			Point2D.Float pt = new Point2D.Float();
+		forAllPrimitives(g2, consumer, new Rectangle2D.Float(position.x, position.y, x2 - position.x, y2 - position.y));
+	}
+
+	/**
+	 * Calls a function on all primitives.
+	 *
+	 * @param g2       The graphics context.
+	 * @param consumer The consumer to call.
+	 * @param bounds   The bounds to adapt relative positions to.
+	 */
+	protected void forAllPrimitives(Graphics2D g2, PrimitiveConsumer consumer, final Rectangle2D.Float bounds)
+	{
+		if (bounds != null)
+		{
+			final Point2D.Float pt = new Point2D.Float();
+			final Point2D.Float pos = new Point2D.Float(bounds.x, bounds.y);
 			for (DrawPrimitive primitive : primitives)
 			{
 				DrawStyle style = highlighted ? context.highlighted : context.normal;
-				Alignment alignment = primitive.getAlignment();
-				if (alignment == null || alignment == Alignment.Left)
+				switch (primitive.getAlignment())
 				{
-					consumer.consume(primitive, g2, position, style);
-				}
-				else if (alignment == Alignment.Center)
-				{
-					Dimension2DFloat dim = primitive.getDimension(g2, style);
-					pt.x = ((x2 + position.x - dim.width) / 2.0f) - primitive.getRelativePosition().x;
-					pt.y = position.y;
-					consumer.consume(primitive, g2, pt, style);
+					case Left:
+						consumer.consume(primitive, g2, pos, style);
+						break;
+					case Center:
+					{
+						Dimension2DFloat dim = primitive.getDimension(g2, style);
+						pt.x = bounds.x + (bounds.width - dim.width) / 2f - 1;
+						pt.y = bounds.y;
+						consumer.consume(primitive, g2, pt, style);
+					}
+					break;
+					case Right:
+					{
+						Dimension2DFloat dim = primitive.getDimension(g2, style);
+						pt.x = bounds.x + bounds.width - dim.width;
+						pt.y = bounds.y;
+						consumer.consume(primitive, g2, pt, style);
+					}
+					break;
+					case Hidden:
+						break;
 				}
 			}
 		}
@@ -142,10 +253,21 @@ public class Visual
 
 		for (DrawPrimitive primitive : primitives)
 		{
-			Rectangle2D.Float r = primitive.getBounds2D(position, graphics, context.normal);
-			final float x2 = r.x + r.width;
+			Rectangle2D.Float primitiveBounds = primitive.getBounds2D(position, graphics, context.normal);
+			switch (primitive.getAlignment())
+			{
+				case Left:
+					break;
+				case Center:
+				case Right:
+					primitiveBounds.width += primitive.getRelativePosition().x;
+					break;
+				case Hidden:
+					continue;
+			}
+			final float x2 = primitiveBounds.x + primitiveBounds.width;
 			if (this.x2 < x2) this.x2 = x2;
-			final float y2 = r.y + r.height;
+			final float y2 = primitiveBounds.y + primitiveBounds.height;
 			if (this.y2 < y2) this.y2 = y2;
 		}
 	}
@@ -173,6 +295,7 @@ public class Visual
 	public void resetBounds()
 	{
 		x2 = -1;
+		redraw();
 	}
 
 	/**
@@ -185,7 +308,7 @@ public class Visual
 	{
 		if (x2 < 0)
 			updateBounds(g2);
-		return new Rectangle2D.Float(position.x, position.y, x2 - position.x, y2 - position.y);
+		return new Rectangle2D.Float(position.x, position.y, x2 - position.x + 1, y2 - position.y + 1);
 	}
 
 	/**
@@ -245,4 +368,13 @@ public class Visual
 		forAllPrimitives(g2,
 				(primitive, g, position, style) -> primitive.toSVG(sw, position, style));
 	}
+
+	/**
+	 * Mark the visual to redraw.
+	 */
+	public void redraw()
+	{
+		redrawNeeded = true;
+	}
+
 }

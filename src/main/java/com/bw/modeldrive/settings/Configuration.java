@@ -24,4 +24,9 @@ public class Configuration
 	 */
 	public boolean doublebuffered;
 
+	/**
+	 * Enables zooms by mouse-wheel if Meta/Ctrl-Key is hold.
+	 */
+	public boolean zoomByMetaMouseWheelEnabled;
+
 }

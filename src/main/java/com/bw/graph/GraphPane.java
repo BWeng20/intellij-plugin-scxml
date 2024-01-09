@@ -10,6 +10,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
@@ -73,8 +74,30 @@ public class GraphPane extends JComponent
 		}
 
 		@Override
-		public void mouseWheelMoved(MouseWheelEvent e)
+		public void mouseWheelMoved(MouseWheelEvent we)
 		{
+			if (configuration.zoomByMetaMouseWheelEnabled)
+			{
+				int wheel = we.getWheelRotation();
+				if (wheel != 0)
+				{
+					int mod = we.getModifiersEx();
+					if ((mod & InputEvent.META_DOWN_MASK) != 0 || (mod & InputEvent.CTRL_DOWN_MASK) != 0)
+					{
+						float scale = configuration.scale - 0.1f * wheel;
+						if (scale >= 0.1)
+						{
+							configuration.scale = scale;
+							SwingUtilities.invokeLater(() -> {
+								if (configuration.doubleBuffered)
+									visuals.forEach(Visual::redraw);
+								revalidate();
+								repaint();
+							});
+						}
+					}
+				}
+			}
 		}
 
 		@Override
@@ -90,7 +113,7 @@ public class GraphPane extends JComponent
 
 			if (draggingVisual != null)
 			{
-				draggingVisual.moveBy(xd, yd);
+				draggingVisual.moveBy(xd / configuration.scale, yd / configuration.scale);
 				revalidate();
 				repaint();
 			}
@@ -120,19 +143,24 @@ public class GraphPane extends JComponent
 	{
 		addMouseListener(mouseAdapter);
 		addMouseMotionListener(mouseAdapter);
+		addMouseWheelListener(mouseAdapter);
 	}
 
 	/**
 	 * Gets the visual at the coordinates (x,y).
 	 *
-	 * @param x The component local X-ordinate.
-	 * @param y The component local X-ordinate.
+	 * @param x The component local X-ordinate (unscaled).
+	 * @param y The component local X-ordinate (unscaled).
 	 * @return The found visual or null.
 	 */
 	protected Visual getVisualAt(float x, float y)
 	{
 		x -= offsetX;
 		y -= offsetY;
+
+		x /= configuration.scale;
+		y /= configuration.scale;
+
 		for (var it = visuals.listIterator(visuals.size()); it.hasPrevious(); )
 		{
 			final Visual v = it.previous();
@@ -176,9 +204,11 @@ public class GraphPane extends JComponent
 		{
 			if (isOpaque())
 			{
-				g.setColor(getBackground());
-				g.fillRect(0, 0, getWidth(), getHeight());
+				g2.setColor(getBackground());
+				g2.fillRect(0, 0, getWidth(), getHeight());
 			}
+
+			g2.scale(configuration.scale, configuration.scale);
 
 			for (Visual v : visuals)
 				v.draw(g2);
@@ -290,7 +320,7 @@ public class GraphPane extends JComponent
 	/**
 	 * Calculate the bounds of the graph.
 	 *
-	 * @return The bounds, containing all elements.
+	 * @return The scaled bounds, containing all elements.
 	 */
 	public Rectangle2D.Float getBounds2D()
 	{
@@ -316,8 +346,10 @@ public class GraphPane extends JComponent
 					y2 = t2;
 			}
 		}
-		bounds.height = y2 - bounds.y + 5;
-		bounds.width = x2 - bounds.x + 5;
+		bounds.x *= configuration.scale;
+		bounds.y *= configuration.scale;
+		bounds.height = (configuration.scale * y2) - bounds.y + 5;
+		bounds.width = (configuration.scale * x2) - bounds.x + 5;
 
 		return bounds;
 	}
