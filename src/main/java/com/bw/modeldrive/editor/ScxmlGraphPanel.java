@@ -192,7 +192,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 
 		if (fsm != null && fsm.pseudoRoot != null)
 		{
-			final float grapY = 5;
+			final float gapY = 5;
 
 			Graphics2D g2 = (Graphics2D) pane.getGraphics();
 
@@ -210,7 +210,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 			{
 				Visual stateVisual = createStateVisual(x, y, initalState, g2);
 				pane.addVisual(stateVisual);
-				y += stateVisual.getBounds2D(g2).height + grapY;
+				y += stateVisual.getBounds2D(g2).height + gapY;
 			}
 		}
 	}

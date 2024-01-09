@@ -55,12 +55,9 @@ public class Visual
 	private boolean redrawNeeded = true;
 
 	/**
-	 * Static (0,0) coordinate for re-use.
+	 * Statistical counter for double buffer creation.
 	 */
-	protected static final Point2D.Float zeroPoint2D = new Point2D.Float(0, 0);
-
 	private long buffersRecreated = 0;
-
 
 	/**
 	 * Create a new empty visual.
@@ -102,7 +99,7 @@ public class Visual
 				if (buffer == null || buffer.getWidth() != scaledBoundsWidth || buffer.getHeight() != scaledBoundsHeight)
 				{
 					++buffersRecreated;
-					buffer = ImageUtil.createCompotibleImage(graphicsConfiguration, scaledBoundsWidth, scaledBoundsHeight);
+					buffer = ImageUtil.createCompatibleImage(graphicsConfiguration, scaledBoundsWidth, scaledBoundsHeight);
 				}
 				redrawNeeded = false;
 				Graphics2D g2Buffered = buffer.createGraphics();
@@ -153,7 +150,7 @@ public class Visual
 	/**
 	 * Consumer used for {@link #forAllPrimitives(Graphics2D, PrimitiveConsumer)}
 	 */
-	protected static interface PrimitiveConsumer
+	protected interface PrimitiveConsumer
 	{
 
 		/**

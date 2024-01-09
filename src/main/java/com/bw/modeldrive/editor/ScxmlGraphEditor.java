@@ -50,7 +50,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	Document xmlDocument;
 
 	/**
-	 * True if a update of the graph was triggered.
+	 * True if an update of the graph was triggered.
 	 */
 	boolean updateTriggered = false;
 

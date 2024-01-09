@@ -25,9 +25,9 @@ public interface ImageUtil
 	 * @param height The height in pixel.
 	 * @return The new image.
 	 */
-	static BufferedImage createCompotibleImage(double width, double height)
+	static BufferedImage createCompatibleImage(double width, double height)
 	{
-		return createCompotibleImage(graphicsConfiguration, width, height);
+		return createCompatibleImage(graphicsConfiguration, width, height);
 	}
 
 	/**
@@ -38,7 +38,7 @@ public interface ImageUtil
 	 * @param height The height in pixel.
 	 * @return The new image.
 	 */
-	static BufferedImage createCompotibleImage(GraphicsConfiguration cfg, double width, double height)
+	static BufferedImage createCompatibleImage(GraphicsConfiguration cfg, double width, double height)
 	{
 		return cfg.createCompatibleImage((int) Math.ceil(width), (int) Math.ceil(height), Transparency.TRANSLUCENT);
 	}

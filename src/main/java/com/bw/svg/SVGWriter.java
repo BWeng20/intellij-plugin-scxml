@@ -5,7 +5,6 @@ import java.awt.Paint;
 import java.awt.geom.Rectangle2D;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.Locale;
 import java.util.Stack;
 
 /**
@@ -13,10 +12,9 @@ import java.util.Stack;
  */
 public class SVGWriter extends PrintWriter
 {
-	private final static Locale svgLocale = Locale.ENGLISH;
 	private final float precisionFactor = 10 * 10 * 10;
 
-	private Stack<String> tagStack = new Stack<>();
+	private final Stack<String> tagStack = new Stack<>();
 
 	private boolean inSvg = false;
 
@@ -26,7 +24,7 @@ public class SVGWriter extends PrintWriter
 	private boolean elementHasContent = false;
 
 	/**
-	 * Creates a SVG Writer on top of some other writer.
+	 * Creates an SVG Writer on top of some other writer.
 	 *
 	 * @param out The output writer
 	 */
