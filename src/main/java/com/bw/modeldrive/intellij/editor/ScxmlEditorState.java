@@ -1,4 +1,4 @@
-package com.bw.modeldrive.intellij;
+package com.bw.modeldrive.intellij.editor;
 
 import com.intellij.openapi.fileEditor.FileEditorState;
 import com.intellij.openapi.fileEditor.FileEditorStateLevel;

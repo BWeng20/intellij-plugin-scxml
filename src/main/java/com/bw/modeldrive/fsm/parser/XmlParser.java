@@ -1,6 +1,5 @@
 package com.bw.modeldrive.fsm.parser;
 
-import com.bw.modeldrive.intellij.ModelDriveBundle;
 import com.bw.modeldrive.fsm.model.BindingType;
 import com.bw.modeldrive.fsm.model.ExecutableContent;
 import com.bw.modeldrive.fsm.model.FiniteStateMachine;
@@ -11,6 +10,7 @@ import com.bw.modeldrive.fsm.model.TransitionType;
 import com.bw.modeldrive.fsm.model.executablecontent.Block;
 import com.bw.modeldrive.fsm.model.executablecontent.If;
 import com.bw.modeldrive.fsm.model.executablecontent.Log;
+import com.bw.modeldrive.intellij.ModelDriveBundle;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -57,7 +57,7 @@ public class XmlParser implements ScxmlTags
 	protected static Logger log = Logger.getLogger(XmlParser.class.getName());
 
 	/**
-	 * Resolver that checks that all includes inside the same directory tree as the main file.
+	 * Resolver that checks that all includes are located inside the same directory subtree as the main file.
 	 */
 	public static class IncludeProtectionResolver implements EntityResolver
 	{
@@ -72,8 +72,8 @@ public class XmlParser implements ScxmlTags
 		IncludeProtectionResolver(Path mainFile)
 		{
 			basePathUri = mainFile.getParent().normalize()
-							   .toUri()
-							   .toString();
+								  .toUri()
+								  .toString();
 		}
 
 		@Override

@@ -1,5 +1,5 @@
 /**
- * Contains the plug-in implementation of the SCXML plugin.
+ * Intellij plug-in implementations.
  */
 package com.bw.modeldrive.intellij;
 

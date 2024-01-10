@@ -1,5 +1,5 @@
 /**
- * Contains împlementations of graph draw primitives.
+ * Draw primitives.
  */
 package com.bw.graph.primitive;
 

@@ -1,6 +1,6 @@
-package com.bw.modeldrive.intellij;
+package com.bw.modeldrive.intellij.editor;
 
-import com.bw.modeldrive.intellij.editor.ScxmlGraphEditor;
+import com.bw.modeldrive.intellij.Icons;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorState;
 import com.intellij.openapi.fileEditor.TextEditor;

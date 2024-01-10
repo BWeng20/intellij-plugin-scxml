@@ -1,4 +1,4 @@
-package com.bw.modeldrive.intellij;
+package com.bw.modeldrive.intellij.editor;
 
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorPolicy;

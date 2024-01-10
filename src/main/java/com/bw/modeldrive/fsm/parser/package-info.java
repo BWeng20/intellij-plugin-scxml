@@ -1,5 +1,5 @@
 /**
- * Contains XML Parsweer the implementation of EP com.intellij.projectConfigurable.
+ * Parser for SCXML.
  */
 package com.bw.modeldrive.fsm.parser;
 

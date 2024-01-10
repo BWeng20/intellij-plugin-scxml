@@ -1,5 +1,6 @@
-package com.bw.modeldrive.intellij;
+package com.bw.modeldrive.intellij.actions;
 
+import com.bw.modeldrive.intellij.Icons;
 import com.intellij.ide.actions.CreateFileFromTemplateAction;
 import com.intellij.ide.actions.CreateFileFromTemplateDialog;
 import com.intellij.openapi.project.Project;
