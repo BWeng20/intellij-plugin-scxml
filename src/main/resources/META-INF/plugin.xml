@@ -27,10 +27,10 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
         <standardResource url="http://www.w3.org/2005/07/scxml" path="xsd/scxml.xsd"/>
-        <fileEditorProvider implementation="com.bw.modeldrive.ScxmlEditorProvider"/>
+        <fileEditorProvider implementation="com.bw.modeldrive.intellij.ScxmlEditorProvider"/>
         <projectConfigurable
                 parentId="language"
-                instance="com.bw.modeldrive.settings.ProjectSettingsConfigurable"
+                instance="com.bw.modeldrive.intellij.settings.ProjectSettingsConfigurable"
                 id="com.bw.idea.scxml.settings"
                 displayName="ScXML SDK"
                 nonDefaultProject="true"/>
@@ -39,7 +39,7 @@
     </extensions>
 
     <actions>
-        <action id="Create.SCXML" class="com.bw.modeldrive.ScxmlNewFileAction" icon="com.bw.modeldrive.Icons.SCXML">
+        <action id="Create.SCXML" class="com.bw.modeldrive.intellij.ScxmlNewFileAction" icon="com.bw.modeldrive.intellij.Icons.SCXML">
             <add-to-group group-id="NewGroup"/>
         </action>
     </actions>

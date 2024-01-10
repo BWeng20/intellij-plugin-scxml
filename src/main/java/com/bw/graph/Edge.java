@@ -3,6 +3,7 @@ package com.bw.graph;
 import java.awt.Graphics2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
+import java.util.Objects;
 
 /**
  * Edge that connects two visuals.
@@ -28,12 +29,15 @@ public class Edge
 	/**
 	 * Creates a new Edge.
 	 *
-	 * @param start   Start Visual.
-	 * @param end     Target Visual
-	 * @param context Draw context.
+	 * @param start   Start Visual. Must not be null.
+	 * @param end     Target Visual. Must not be null.
+	 * @param context Draw context. Must not be null.
 	 */
 	public Edge(Visual start, Visual end, DrawContext context)
 	{
+		Objects.requireNonNull(start);
+		Objects.requireNonNull(end);
+		Objects.requireNonNull(context);
 		this.start = start;
 		this.end = end;
 		this.context = context;
