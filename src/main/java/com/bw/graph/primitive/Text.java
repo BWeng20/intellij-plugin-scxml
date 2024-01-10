@@ -1,5 +1,9 @@
-package com.bw.graph;
+package com.bw.graph.primitive;
 
+import com.bw.graph.Dimension2DFloat;
+import com.bw.graph.DrawPrimitive;
+import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphConfiguration;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
@@ -9,7 +13,7 @@ import java.awt.geom.Rectangle2D;
 /**
  * A Text.
  */
-public class TextPrimitive extends DrawPrimitive
+public class Text extends DrawPrimitive
 {
 	/**
 	 * The text to show.
@@ -26,7 +30,7 @@ public class TextPrimitive extends DrawPrimitive
 	 * @param scalable True is user can scale this primitive independent of parent.
 	 * @param text     The text to draw.
 	 */
-	public TextPrimitive(float x, float y, GraphConfiguration config, DrawStyle style, boolean scalable, String text)
+	public Text(float x, float y, GraphConfiguration config, DrawStyle style, boolean scalable, String text)
 	{
 		super(x, y, config, style, scalable);
 		this.text = text;

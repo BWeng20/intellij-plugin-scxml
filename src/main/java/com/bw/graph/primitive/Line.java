@@ -1,5 +1,9 @@
-package com.bw.graph;
+package com.bw.graph.primitive;
 
+import com.bw.graph.Dimension2DFloat;
+import com.bw.graph.DrawPrimitive;
+import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphConfiguration;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
@@ -9,7 +13,7 @@ import java.awt.geom.Point2D;
 /**
  * A Line.
  */
-public class LinePrimitive extends DrawPrimitive
+public class Line extends DrawPrimitive
 {
 
 	private Line2D.Float shape;
@@ -24,9 +28,9 @@ public class LinePrimitive extends DrawPrimitive
 	 * @param config The configuration to use.
 	 * @param style  The style or null if default style shall be used.
 	 */
-	public LinePrimitive(float x1, float y1, float x2, float y2,
-						 GraphConfiguration config,
-						 DrawStyle style)
+	public Line(float x1, float y1, float x2, float y2,
+				GraphConfiguration config,
+				DrawStyle style)
 	{
 		super(x1, y1, config, style, false);
 		shape = new Line2D.Float(0, 0, x2 - x1, y2 - y1);

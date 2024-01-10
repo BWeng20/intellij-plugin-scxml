@@ -1,5 +1,9 @@
-package com.bw.graph;
+package com.bw.graph.primitive;
 
+import com.bw.graph.Dimension2DFloat;
+import com.bw.graph.DrawPrimitive;
+import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphConfiguration;
 import com.bw.jtools.shape.AbstractShape;
 import com.bw.jtools.shape.ShapePainter;
 import com.bw.jtools.svg.SVGConverter;
@@ -12,7 +16,7 @@ import java.awt.geom.Point2D;
 /**
  * Draws an SVG Shape.
  */
-public class SVGPrimitive extends DrawPrimitive
+public class Svg extends DrawPrimitive
 {
 	private ShapePainter painter;
 	private String svgSource;
@@ -28,10 +32,10 @@ public class SVGPrimitive extends DrawPrimitive
 	 * @param scalable True is user can scale this primitive independent of parent.
 	 * @param shape    SVG Shape
 	 */
-	public SVGPrimitive(float x, float y,
-						GraphConfiguration config,
-						DrawStyle style,
-						boolean scalable, AbstractShape shape)
+	public Svg(float x, float y,
+			   GraphConfiguration config,
+			   DrawStyle style,
+			   boolean scalable, AbstractShape shape)
 	{
 		super(x, y, config, style, scalable);
 		this.painter = new ShapePainter(shape);
@@ -49,9 +53,9 @@ public class SVGPrimitive extends DrawPrimitive
 	 * @param svg      SVG source.
 	 * @throws SVGException In case the source has errors.
 	 */
-	public SVGPrimitive(float x, float y, GraphConfiguration config,
-						DrawStyle style,
-						boolean scalable, String svg) throws SVGException
+	public Svg(float x, float y, GraphConfiguration config,
+			   DrawStyle style,
+			   boolean scalable, String svg) throws SVGException
 	{
 		this(x, y, config, style, scalable, SVGConverter.convert(svg));
 		this.svgSource = svg;

@@ -1,6 +1,10 @@
 package com.bw.modeldrive.editor;
 
 import com.bw.graph.*;
+import com.bw.graph.primitive.Circle;
+import com.bw.graph.primitive.Line;
+import com.bw.graph.primitive.Rectangle;
+import com.bw.graph.primitive.Text;
 import com.bw.modeldrive.model.FiniteStateMachine;
 import com.bw.modeldrive.model.State;
 import com.bw.modeldrive.model.Transition;
@@ -261,7 +265,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	protected Visual createStartVisual(float x, float y, float radius)
 	{
 		Visual startNode = new Visual(stateOutlineContext);
-		CirclePrimitive circle = new CirclePrimitive(radius, radius, pane.getGraphConfiguration(), startStyle, false, radius);
+		Circle circle = new Circle(radius, radius, pane.getGraphConfiguration(), startStyle, false, radius);
 		circle.setFill(true);
 		startNode.setPosition(x, y);
 		startNode.addDrawingPrimitive(circle);
@@ -286,18 +290,18 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		float fh = stateTextStyle.fontMetrics.getHeight();
 		float height = 5 * fh;
 
-		RectanglePrimitive frame = new RectanglePrimitive(
+		Rectangle frame = new Rectangle(
 				0, 0, pane.getGraphConfiguration(),
 				stateOutlineStyle, false,
 				(float) (stringBounds.getWidth() + 10), height);
 		frame.setFill(true);
 		v.addDrawingPrimitive(frame);
 
-		LinePrimitive separator = new LinePrimitive(0, fh * 1.5f, (float) (stringBounds.getWidth() + 10), fh * 1.5f
+		Line separator = new Line(0, fh * 1.5f, (float) (stringBounds.getWidth() + 10), fh * 1.5f
 				, pane.getGraphConfiguration(), stateInlineStyle);
 		v.addDrawingPrimitive(separator);
 
-		TextPrimitive label = new TextPrimitive(0, 0, pane.getGraphConfiguration(),
+		Text label = new Text(0, 0, pane.getGraphConfiguration(),
 				stateTextStyle, false, state.name);
 		label.setInsets(fh * 0.25f, 0, 0, 0);
 

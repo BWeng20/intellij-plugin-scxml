@@ -1,48 +1,49 @@
-package com.bw.graph;
+package com.bw.graph.primitive;
 
+import com.bw.graph.Dimension2DFloat;
+import com.bw.graph.DrawPrimitive;
+import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphConfiguration;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
-import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 /**
- * A Circle.
+ * A Rectangle.
  */
-public class CirclePrimitive extends DrawPrimitive
+public class Rectangle extends DrawPrimitive
 {
-	private float diameter;
-
-	private Ellipse2D.Float shape;
+	private Rectangle2D.Float shape;
 
 	private boolean fill;
 
 	/**
-	 * Creates a new Circle Primitive.
+	 * Creates a new Rectangle Primitive.
 	 *
-	 * @param cx       The relative center x-position
-	 * @param cy       The relative center y-position
+	 * @param x        The relative x-position
+	 * @param y        The relative y-position
 	 * @param config   The configuration to use.
 	 * @param style    The style or null if default style shall be used.
 	 * @param scalable True is user can scale this primitive independent of parent.
-	 * @param radius   Radius in pixel.
+	 * @param width    Width in pixel.
+	 * @param height   Height in pixel
 	 */
-	public CirclePrimitive(float cx, float cy,
-						   GraphConfiguration config,
-						   DrawStyle style,
-						   boolean scalable, float radius)
+	public Rectangle(float x, float y,
+					 GraphConfiguration config,
+					 DrawStyle style,
+					 boolean scalable, float width, float height)
 	{
-		super(cx - radius, cy - radius, config, style, scalable);
-		this.diameter = 2f * radius;
+		super(x, y, config, style, scalable);
 		this.fill = false;
-
-		this.shape = new Ellipse2D.Float(0, 0, diameter, diameter);
+		shape = new Rectangle2D.Float(0, 0, width, height);
 	}
 
 	/**
 	 * Sets filled.
 	 *
-	 * @param fill If true, the circle is filled
+	 * @param fill If true, the rectangle is filled
 	 */
 	public void setFill(boolean fill)
 	{
@@ -53,13 +54,13 @@ public class CirclePrimitive extends DrawPrimitive
 	@Override
 	protected void drawIntern(Graphics2D g2, DrawStyle style)
 	{
-		if (fill)
+		if (fill && style.fillPaint != null)
 		{
 			g2.setPaint(style.fillPaint);
 			g2.fill(shape);
 		}
-		g2.setStroke(style.lineStroke);
 		g2.setPaint(style.linePaint);
+		g2.setStroke(style.lineStroke);
 		g2.draw(shape);
 	}
 
@@ -72,10 +73,11 @@ public class CirclePrimitive extends DrawPrimitive
 	@Override
 	protected void toSVGIntern(SVGWriter sw, DrawStyle style, Point2D.Float pos)
 	{
-		sw.startElement("circle");
-		sw.writeAttribute("cx", pos.x + (diameter / 2));
-		sw.writeAttribute("cy", pos.y + (diameter / 2));
-		sw.writeAttribute("r", (diameter / 2));
+		sw.startElement("rect");
+		sw.writeAttribute("x", pos.x);
+		sw.writeAttribute("y", pos.y);
+		sw.writeAttribute("width", shape.width);
+		sw.writeAttribute("height", shape.height);
 		sw.startStyle();
 		if (fill)
 			sw.writeAttribute("fill", style.fillPaint);
@@ -83,4 +85,5 @@ public class CirclePrimitive extends DrawPrimitive
 		sw.writeStrokeWith(style.getStrokeWidth());
 		sw.endElement();
 	}
+
 }
