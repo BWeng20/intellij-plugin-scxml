@@ -1,4 +1,4 @@
-package com.bw.graph;
+package com.bw.graph.util;
 
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;

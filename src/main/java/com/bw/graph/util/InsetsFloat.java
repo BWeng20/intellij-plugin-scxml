@@ -1,7 +1,7 @@
-package com.bw.graph;
+package com.bw.graph.util;
 
 /**
- * The class implements Insets via float values.
+ * The class represents Insets as float values.
  */
 public final class InsetsFloat
 {

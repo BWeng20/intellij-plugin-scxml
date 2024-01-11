@@ -1,5 +1,7 @@
 package com.bw.graph;
 
+import com.bw.graph.visual.EdgeVisual;
+import com.bw.graph.visual.Visual;
 import com.bw.svg.SVGWriter;
 
 import javax.swing.JComponent;
@@ -16,7 +18,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Rectangle2D;
 import java.io.StringWriter;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -28,11 +30,6 @@ public class GraphPane extends JComponent
 	 * Graph configuration
 	 */
 	GraphConfiguration configuration = new GraphConfiguration();
-
-	/**
-	 * Logger of this class.
-	 */
-	static final Logger log = Logger.getLogger(GraphPane.class.getName());
 
 	/**
 	 * Listens to clicks and drags on visuals.
@@ -58,8 +55,7 @@ public class GraphPane extends JComponent
 
 			if (draggingVisual != null)
 			{
-				visuals.remove(draggingVisual);
-				visuals.add(draggingVisual);
+				model.moveVisualToTop(draggingVisual);
 			}
 
 			SwingUtilities.convertPointToScreen(lastDragPoint, GraphPane.this);
@@ -90,7 +86,7 @@ public class GraphPane extends JComponent
 							configuration.scale = scale;
 							SwingUtilities.invokeLater(() -> {
 								if (configuration.doubleBuffered)
-									visuals.forEach(Visual::redraw);
+									model.getVisuals().forEach(Visual::repaint);
 								revalidate();
 								repaint();
 							});
@@ -141,6 +137,7 @@ public class GraphPane extends JComponent
 	 */
 	public GraphPane()
 	{
+		setModel(new VisualModel());
 		addMouseListener(mouseAdapter);
 		addMouseMotionListener(mouseAdapter);
 		addMouseWheelListener(mouseAdapter);
@@ -161,6 +158,7 @@ public class GraphPane extends JComponent
 		x /= configuration.scale;
 		y /= configuration.scale;
 
+		var visuals = model.getVisuals();
 		for (var it = visuals.listIterator(visuals.size()); it.hasPrevious(); )
 		{
 			final Visual v = it.previous();
@@ -173,14 +171,9 @@ public class GraphPane extends JComponent
 	}
 
 	/**
-	 * List of visuals.
+	 * The top level model
 	 */
-	protected LinkedList<Visual> visuals = new LinkedList<>();
-
-	/**
-	 * List of Edges.
-	 */
-	protected LinkedList<Edge> edges = new LinkedList<>();
+	protected VisualModel model;
 
 	/**
 	 * Drawing X-offset.
@@ -215,10 +208,10 @@ public class GraphPane extends JComponent
 
 			g2.scale(configuration.scale, configuration.scale);
 
-			for (Edge e : edges)
+			for (EdgeVisual e : model.getEdges())
 				e.draw(g2);
 
-			for (Visual v : visuals)
+			for (Visual v : model.getVisuals())
 				v.draw(g2);
 		}
 		finally
@@ -240,43 +233,41 @@ public class GraphPane extends JComponent
 
 		Rectangle2D.Float bounds = getBounds2D();
 		sw.startSVG(bounds, null);
-		for (Visual v : visuals)
+		for (Visual v : model.getVisuals())
 			v.toSVG(sw, g2);
 		sw.endSVG();
 		return ssw.getBuffer()
 				  .toString();
 	}
 
-
 	/**
-	 * Adds a new visual to the graph.
+	 * Sets the model.
 	 *
-	 * @param v The visual.
+	 * @param model The new model. Can be null.
 	 */
-	public void addVisual(Visual v)
+	public void setModel(VisualModel model)
 	{
-		if (v != null)
+		selectedVisual = null;
+		if (this.model != null)
 		{
-			v.resetBounds();
-			visuals.add(v);
-			repaint();
+			// Will also remove our listener.
+			this.model.dispose();
 		}
-
-		// log.warning(toSVG());
+		if (model == null)
+			model = new VisualModel();
+		this.model = model;
+		model.addListener(this::repaint);
+		repaint();
 	}
 
 	/**
-	 * Adds a new Edge.
+	 * Gets the model.
 	 *
-	 * @param edge The new edge.
+	 * @return The model. Never null.
 	 */
-	public void addEdge(Edge edge)
+	public VisualModel getModel()
 	{
-		if (edge != null)
-		{
-			edges.add(edge);
-			repaint();
-		}
+		return model;
 	}
 
 	/**
@@ -299,11 +290,12 @@ public class GraphPane extends JComponent
 			visual.setHighlighted(true);
 			triggerRepaint = true;
 		}
+		List<Visual> visuals = model.getVisuals();
 		if (selectedVisual != null && visuals.indexOf(selectedVisual) != (visuals.size() - 1))
 		{
-			visuals.remove(selectedVisual);
-			visuals.add(selectedVisual);
-			triggerRepaint = true;
+			model.moveVisualToTop(selectedVisual);
+			// Repaint will be triggered my model listener
+			triggerRepaint = false;
 		}
 		if (triggerRepaint)
 		{
@@ -317,7 +309,7 @@ public class GraphPane extends JComponent
 	public void dispose()
 	{
 		selectedVisual = null;
-		visuals.clear();
+		model.dispose();
 		removeMouseListener(mouseAdapter);
 		removeMouseMotionListener(mouseAdapter);
 		mouseAdapter = null;
@@ -351,7 +343,7 @@ public class GraphPane extends JComponent
 		float y2 = 0;
 		float t2;
 		final Graphics2D g2 = (Graphics2D) getGraphics();
-		for (Visual visual : visuals)
+		for (Visual visual : model.getVisuals())
 		{
 			Rectangle2D.Float visualBounds = visual.getBounds2D(g2);
 			if (visualBounds != null)
@@ -375,17 +367,6 @@ public class GraphPane extends JComponent
 
 		return bounds;
 	}
-
-	/**
-	 * Remove all visuals.
-	 */
-	public void removeAllVisuals()
-	{
-		visuals.clear();
-		edges.clear();
-		repaint();
-	}
-
 
 	/**
 	 * Gets the graph configuration.

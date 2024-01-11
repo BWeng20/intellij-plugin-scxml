@@ -1,4 +1,4 @@
-package com.bw.graph;
+package com.bw.graph.util;
 
 import java.awt.geom.Dimension2D;
 import java.awt.geom.Rectangle2D;

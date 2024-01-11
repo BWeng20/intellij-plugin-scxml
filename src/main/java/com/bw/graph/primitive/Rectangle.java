@@ -1,73 +1,33 @@
 package com.bw.graph.primitive;
 
-import com.bw.graph.Dimension2DFloat;
-import com.bw.graph.DrawPrimitive;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.svg.SVGWriter;
 
-import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
 /**
  * A Rectangle.
  */
-public class Rectangle extends DrawPrimitive
+public class Rectangle extends ShapeBase
 {
-	private Rectangle2D.Float shape;
-
-	private boolean fill;
-
 	/**
 	 * Creates a new Rectangle Primitive.
 	 *
-	 * @param x        The relative x-position
-	 * @param y        The relative y-position
-	 * @param config   The configuration to use.
-	 * @param style    The style or null if default style shall be used.
-	 * @param scalable True is user can scale this primitive independent of parent.
-	 * @param width    Width in pixel.
-	 * @param height   Height in pixel
+	 * @param x      The relative x-position
+	 * @param y      The relative y-position
+	 * @param width  Width in pixel.
+	 * @param height Height in pixel
+	 * @param config The configuration to use.
+	 * @param style  The style or null if default style shall be used.
 	 */
-	public Rectangle(float x, float y,
+	public Rectangle(float x, float y, float width, float height,
 					 GraphConfiguration config,
-					 DrawStyle style,
-					 boolean scalable, float width, float height)
+					 DrawStyle style)
 	{
-		super(x, y, config, style, scalable);
-		this.fill = false;
+		super(x, y, config, style);
 		shape = new Rectangle2D.Float(0, 0, width, height);
-	}
-
-	/**
-	 * Sets filled.
-	 *
-	 * @param fill If true, the rectangle is filled
-	 */
-	public void setFill(boolean fill)
-	{
-		this.fill = fill;
-	}
-
-
-	@Override
-	protected void drawIntern(Graphics2D g2, DrawStyle style)
-	{
-		if (fill && style.fillPaint != null)
-		{
-			g2.setPaint(style.fillPaint);
-			g2.fill(shape);
-		}
-		g2.setPaint(style.linePaint);
-		g2.setStroke(style.lineStroke);
-		g2.draw(shape);
-	}
-
-	@Override
-	protected Dimension2DFloat getInnerDimension(Graphics2D graphics, DrawStyle style)
-	{
-		return new Dimension2DFloat(shape.width, shape.height);
 	}
 
 	@Override
@@ -76,10 +36,10 @@ public class Rectangle extends DrawPrimitive
 		sw.startElement("rect");
 		sw.writeAttribute("x", pos.x);
 		sw.writeAttribute("y", pos.y);
-		sw.writeAttribute("width", shape.width);
-		sw.writeAttribute("height", shape.height);
+		sw.writeAttribute("width", ((Rectangle2D.Float) shape).width);
+		sw.writeAttribute("height", ((Rectangle2D.Float) shape).height);
 		sw.startStyle();
-		if (fill)
+		if (isFill())
 			sw.writeAttribute("fill", style.fillPaint);
 		sw.writeAttribute("stroke", style.linePaint);
 		sw.writeStrokeWith(style.getStrokeWidth());

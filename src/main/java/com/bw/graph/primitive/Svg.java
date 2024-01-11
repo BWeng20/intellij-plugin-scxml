@@ -1,9 +1,8 @@
 package com.bw.graph.primitive;
 
-import com.bw.graph.Dimension2DFloat;
-import com.bw.graph.DrawPrimitive;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
+import com.bw.graph.util.Dimension2DFloat;
 import com.bw.jtools.shape.AbstractShape;
 import com.bw.jtools.shape.ShapePainter;
 import com.bw.jtools.svg.SVGConverter;
@@ -25,19 +24,18 @@ public class Svg extends DrawPrimitive
 	/**
 	 * Creates a new SVG Primitive.
 	 *
-	 * @param x        The relative x-position
-	 * @param y        The relative y-position
-	 * @param config   The configuration to use.
-	 * @param style    The style or null if default style shall be used.
-	 * @param scalable True is user can scale this primitive independent of parent.
-	 * @param shape    SVG Shape
+	 * @param x      The relative x-position
+	 * @param y      The relative y-position
+	 * @param shape  SVG Shape
+	 * @param config The configuration to use.
+	 * @param style  The style or null if default style shall be used.
 	 */
 	public Svg(float x, float y,
+			   AbstractShape shape,
 			   GraphConfiguration config,
-			   DrawStyle style,
-			   boolean scalable, AbstractShape shape)
+			   DrawStyle style)
 	{
-		super(x, y, config, style, scalable);
+		super(x, y, config, style);
 		this.painter = new ShapePainter(shape);
 		this.gray = false;
 	}
@@ -45,19 +43,17 @@ public class Svg extends DrawPrimitive
 	/**
 	 * Creates a new SVG Primitive.
 	 *
-	 * @param x        The relative x-position
-	 * @param y        The relative y-position
-	 * @param config   The configuration to use.
-	 * @param style    The style or null if default style shall be used.
-	 * @param scalable True is user can scale this primitive independent of parent.
-	 * @param svg      SVG source.
+	 * @param x      The relative x-position
+	 * @param y      The relative y-position
+	 * @param svg    SVG source.
+	 * @param config The configuration to use.
+	 * @param style  The style or null if default style shall be used.
 	 * @throws SVGException In case the source has errors.
 	 */
-	public Svg(float x, float y, GraphConfiguration config,
-			   DrawStyle style,
-			   boolean scalable, String svg) throws SVGException
+	public Svg(float x, float y, String svg, GraphConfiguration config,
+			   DrawStyle style) throws SVGException
 	{
-		this(x, y, config, style, scalable, SVGConverter.convert(svg));
+		this(x, y, SVGConverter.convert(svg), config, style);
 		this.svgSource = svg;
 	}
 

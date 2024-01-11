@@ -1,5 +1,7 @@
 package com.bw.graph;
 
+import com.bw.graph.visual.Visual;
+
 /**
  * Listener to monitor user interactions with graph components
  */

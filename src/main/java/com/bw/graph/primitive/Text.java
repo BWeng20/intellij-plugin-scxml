@@ -1,9 +1,8 @@
 package com.bw.graph.primitive;
 
-import com.bw.graph.Dimension2DFloat;
-import com.bw.graph.DrawPrimitive;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
+import com.bw.graph.util.Dimension2DFloat;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
@@ -23,16 +22,15 @@ public class Text extends DrawPrimitive
 	/**
 	 * Creates a new Primitive.
 	 *
-	 * @param x        The relative x-position
-	 * @param y        The relative y-position
-	 * @param config   The configuration to use.
-	 * @param style    The style or null if default style shall be used.
-	 * @param scalable True is user can scale this primitive independent of parent.
-	 * @param text     The text to draw.
+	 * @param x      The relative x-position
+	 * @param y      The relative y-position
+	 * @param text   The text to draw.
+	 * @param config The configuration to use.
+	 * @param style  The style or null if default style shall be used.
 	 */
-	public Text(float x, float y, GraphConfiguration config, DrawStyle style, boolean scalable, String text)
+	public Text(float x, float y, String text, GraphConfiguration config, DrawStyle style)
 	{
-		super(x, y, config, style, scalable);
+		super(x, y, config, style);
 		this.text = text;
 	}
 

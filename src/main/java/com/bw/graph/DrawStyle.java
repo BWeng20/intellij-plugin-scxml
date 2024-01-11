@@ -28,16 +28,6 @@ public class DrawStyle
 	}
 
 	/**
-	 * The alignment. Can be null.
-	 */
-	public Alignment alignment;
-
-	/**
-	 * True if highlighted.
-	 */
-	public boolean highlighted;
-
-	/**
 	 * Paint for lines
 	 */
 	public Paint linePaint = Color.BLACK;

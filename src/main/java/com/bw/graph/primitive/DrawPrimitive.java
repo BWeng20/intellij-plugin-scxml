@@ -1,5 +1,10 @@
-package com.bw.graph;
+package com.bw.graph.primitive;
 
+import com.bw.graph.Alignment;
+import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphConfiguration;
+import com.bw.graph.util.Dimension2DFloat;
+import com.bw.graph.util.InsetsFloat;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
@@ -13,7 +18,6 @@ import java.awt.geom.Rectangle2D;
  */
 public abstract class DrawPrimitive
 {
-	private final boolean scalable;
 	private final DrawStyle style;
 	private final Point2D.Float relativePosition;
 	private final Point2D.Float tempPosition = new Point2D.Float();
@@ -41,19 +45,22 @@ public abstract class DrawPrimitive
 	public static Alignment DEFAULT_ALIGNMENT = Alignment.Left;
 
 	/**
+	 * The alignment of this primitive.
+	 */
+	protected Alignment alignment;
+
+	/**
 	 * Creates a new Primitive.
 	 *
-	 * @param x        The relative x-position
-	 * @param y        The relative y-position
-	 * @param config   The configuration to use.
-	 * @param style    The local style or null if parent style shall be used.
-	 * @param scalable True is user can scale this primitive independent of parent.
+	 * @param x      The relative x-position
+	 * @param y      The relative y-position
+	 * @param config The configuration to use.
+	 * @param style  The local style or null if parent style shall be used.
 	 */
-	protected DrawPrimitive(float x, float y, GraphConfiguration config, DrawStyle style, boolean scalable)
+	protected DrawPrimitive(float x, float y, GraphConfiguration config, DrawStyle style)
 	{
 		this.style = style;
 		this.relativePosition = new Point2D.Float(x, y);
-		this.scalable = scalable;
 		this.config = config;
 	}
 
@@ -64,14 +71,21 @@ public abstract class DrawPrimitive
 	 *
 	 * @param g2          The graphics context
 	 * @param position    The base position to draw at.
-	 * @param parentStyle The style of parent, used of primitive has no own style.
+	 * @param parentStyle The style of parent, used if primitive has no own style.
 	 */
 	public void draw(Graphics2D g2, Point2D.Float position, DrawStyle parentStyle)
 	{
 		final DrawStyle actualStyle = style == null ? parentStyle : style;
 
-		tempPosition.x = position.x + relativePosition.x + insets.left;
-		tempPosition.y = position.y + relativePosition.y + insets.top;
+		tempPosition.x = relativePosition.x + insets.left;
+		tempPosition.y = relativePosition.y + insets.top;
+
+		if (position != null)
+		{
+			// Primitive has a base position
+			tempPosition.x += position.x;
+			tempPosition.y += position.y;
+		}
 
 		AffineTransform orgTransform = g2.getTransform();
 		try
@@ -92,16 +106,6 @@ public abstract class DrawPrimitive
 	 * @param style The style to use.
 	 */
 	protected abstract void drawIntern(Graphics2D g2, DrawStyle style);
-
-	/**
-	 * Check if primitive can be scaled independent of parent.
-	 *
-	 * @return true if primitive is scalable.
-	 */
-	public boolean isScalable()
-	{
-		return scalable;
-	}
 
 	/**
 	 * Get the local style if independent of parent.
@@ -146,7 +150,17 @@ public abstract class DrawPrimitive
 	 */
 	public Alignment getAlignment()
 	{
-		return (style == null || style.alignment == null) ? DEFAULT_ALIGNMENT : style.alignment;
+		return (alignment == null) ? DEFAULT_ALIGNMENT : alignment;
+	}
+
+	/**
+	 * Set the alignment.
+	 *
+	 * @param alignment The alignment-mode. Can be null.
+	 */
+	public void setAlignment(Alignment alignment)
+	{
+		this.alignment = alignment;
 	}
 
 	/**
@@ -156,7 +170,7 @@ public abstract class DrawPrimitive
 	 * @param style    The style to use.
 	 * @return The bounds as rectangle.
 	 */
-	protected Dimension2DFloat getDimension(Graphics2D graphics, DrawStyle style)
+	public Dimension2DFloat getDimension(Graphics2D graphics, DrawStyle style)
 	{
 		Dimension2DFloat dim = getInnerDimension(graphics, style);
 		dim.width += insets.left + insets.right;

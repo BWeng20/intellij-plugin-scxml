@@ -1,9 +1,8 @@
 package com.bw.graph.primitive;
 
-import com.bw.graph.Dimension2DFloat;
-import com.bw.graph.DrawPrimitive;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
+import com.bw.graph.util.Dimension2DFloat;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
@@ -32,7 +31,7 @@ public class Line extends DrawPrimitive
 				GraphConfiguration config,
 				DrawStyle style)
 	{
-		super(x1, y1, config, style, false);
+		super(x1, y1, config, style);
 		shape = new Line2D.Float(0, 0, x2 - x1, y2 - y1);
 	}
 

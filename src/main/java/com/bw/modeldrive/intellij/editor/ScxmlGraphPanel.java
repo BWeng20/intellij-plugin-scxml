@@ -1,13 +1,10 @@
 package com.bw.modeldrive.intellij.editor;
 
-import com.bw.graph.*;
-import com.bw.graph.primitive.Circle;
-import com.bw.graph.primitive.Line;
-import com.bw.graph.primitive.Rectangle;
-import com.bw.graph.primitive.Text;
+import com.bw.graph.DrawContext;
+import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphPane;
 import com.bw.modeldrive.fsm.model.FiniteStateMachine;
-import com.bw.modeldrive.fsm.model.State;
-import com.bw.modeldrive.fsm.model.Transition;
+import com.bw.modeldrive.fsm.ui.GraphFactory;
 import com.bw.modeldrive.intellij.settings.ChangeConfigurationNotifier;
 import com.bw.modeldrive.intellij.settings.Configuration;
 import com.bw.modeldrive.intellij.settings.PersistenceService;
@@ -15,7 +12,6 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.messages.MessageBusConnection;
-import org.apache.commons.collections.map.HashedMap;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -27,8 +23,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
-import java.awt.geom.Rectangle2D;
-import java.util.LinkedList;
 
 /**
  * Panel to show the FSM as Graphical State Machine.
@@ -51,9 +45,9 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	protected DrawStyle stateOutlineStyle = new DrawStyle();
 
 	/**
-	 * Style for inner lines.
+	 * Style for inner drawings in the states.
 	 */
-	protected DrawStyle stateInlineStyle = new DrawStyle();
+	protected DrawStyle stateInnerStyle = new DrawStyle();
 
 	/**
 	 * Style for start nodes.
@@ -66,21 +60,27 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	protected DrawStyle stateOutlineStyleHighlight = new DrawStyle();
 
 	/**
-	 * Style for state text.
-	 */
-	protected DrawStyle stateTextStyle = new DrawStyle();
-
-
-	/**
 	 * Context for state outline.
 	 */
 	protected DrawContext stateOutlineContext = new DrawContext(pane.getGraphConfiguration(), stateOutlineStyle, stateOutlineStyleHighlight);
 
 	/**
+	 * The context for inner drawing for states.
+	 */
+	protected DrawContext stateInnerContext = new DrawContext(pane.getGraphConfiguration(),
+			stateInnerStyle, stateInnerStyle);
+
+
+	/**
 	 * Context for edges.
 	 */
-	protected DrawContext edgeContext = new DrawContext(pane.getGraphConfiguration(), stateInlineStyle, stateInlineStyle);
+	protected DrawContext edgeContext = new DrawContext(pane.getGraphConfiguration(), stateInnerStyle, stateInnerStyle);
 
+
+	/**
+	 * Context for start node.
+	 */
+	protected DrawContext startContext = new DrawContext(pane.getGraphConfiguration(), startStyle, startStyle);
 
 	/**
 	 * The project of the file.
@@ -91,9 +91,6 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 * Message bus for change notification.
 	 */
 	private MessageBusConnection mbCon;
-
-	private static final Logger log = Logger.getInstance(ScxmlGraphPanel.class);
-
 
 	@Override
 	public void dispose()
@@ -159,25 +156,18 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		stateOutlineStyle.font = font;
 		stateOutlineStyle.fontMetrics = fontMetrics;
 
-		stateInlineStyle.linePaint = stateOutlineStyle.linePaint;
-		stateInlineStyle.fillPaint = stateOutlineStyle.fillPaint;
-		stateInlineStyle.lineStroke = new BasicStroke(1);
-		stateInlineStyle.textPaint = stateOutlineStyle.textPaint;
-		stateInlineStyle.font = font;
-		stateInlineStyle.fontMetrics = fontMetrics;
+		stateInnerStyle.linePaint = stateOutlineStyle.linePaint;
+		stateInnerStyle.fillPaint = stateOutlineStyle.fillPaint;
+		stateInnerStyle.lineStroke = new BasicStroke(1);
+		stateInnerStyle.textPaint = stateOutlineStyle.textPaint;
+		stateInnerStyle.font = font;
+		stateInnerStyle.fontMetrics = fontMetrics;
 
 		stateOutlineStyleHighlight.linePaint = Color.RED;
 		stateOutlineStyleHighlight.lineStroke = new BasicStroke(2);
 		stateOutlineStyleHighlight.textPaint = getForeground();
 		stateOutlineStyleHighlight.font = font;
 		stateOutlineStyleHighlight.fontMetrics = fontMetrics;
-
-		stateTextStyle.linePaint = stateOutlineStyle.linePaint;
-		stateTextStyle.lineStroke = new BasicStroke(4);
-		stateTextStyle.textPaint = getForeground();
-		stateTextStyle.alignment = Alignment.Center;
-		stateTextStyle.font = font;
-		stateTextStyle.fontMetrics = fontMetrics;
 
 		mbCon = theProject.getMessageBus().connect();
 		mbCon.subscribe(ChangeConfigurationNotifier.CHANGE_CONFIG_TOPIC, (ChangeConfigurationNotifier) this::setConfiguration);
@@ -196,128 +186,11 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 */
 	public void setStateMachine(FiniteStateMachine fsm)
 	{
-		pane.removeAllVisuals();
+		GraphFactory factory = new GraphFactory();
 
-		if (fsm != null && fsm.pseudoRoot != null)
-		{
-			java.util.Map<String, Visual> stateVisuals = new HashedMap();
-			java.util.Queue<State> states = new LinkedList<>(fsm.pseudoRoot.states);
+		pane.setModel(factory.createVisualModel(fsm, (Graphics2D) pane.getGraphics(),
+				startContext, stateOutlineContext, stateInnerContext, edgeContext));
 
-			final float gapY = 5;
-			Graphics2D g2 = (Graphics2D) pane.getGraphics();
-			float fh = stateOutlineStyle.fontMetrics.getHeight();
-			float x = fh;
-			float y = fh;
-			Visual startNode = createStartVisual(x + fh / 2, y + fh, fh / 2);
-			pane.addVisual(startNode);
-
-			x += 2 * fh;
-			float maxWidth = 0;
-			java.util.Map<Integer, Transition> transitions = new HashedMap();
-			while (!states.isEmpty())
-			{
-				State state = states.poll();
-				if (!stateVisuals.containsKey(state.name))
-				{
-					Visual stateVisual = createStateVisual(x, y, state, g2);
-					Rectangle2D.Float bounds = stateVisual.getBounds2D(g2);
-					y += bounds.height + gapY;
-					if (bounds.width > maxWidth)
-						maxWidth = bounds.width;
-					if (y > 600)
-					{
-						x += maxWidth + fh;
-						y = fh;
-						maxWidth = 0;
-					}
-					pane.addVisual(stateVisual);
-					stateVisuals.put(state.name, stateVisual);
-
-					states.addAll(state.states);
-					for (Transition t : state.transitions.asList())
-					{
-						states.addAll(t.target);
-						transitions.put(t.docId, t);
-					}
-				}
-			}
-
-			if (fsm.pseudoRoot.initial != null)
-				for (State s : fsm.pseudoRoot.initial.target)
-				{
-					Visual targetVisual = stateVisuals.get(s.name);
-					if ( targetVisual == null )
-						log.warn(String.format("Target state of initial transition %d not found",  s.name ));
-						else
-					pane.addEdge(new Edge(startNode, stateVisuals.get(s.name), edgeContext));
-
-				}
-
-			for (Transition t : transitions.values())
-			{
-				Visual startV = stateVisuals.get(t.source.name);
-				for (State target : t.target)
-				{
-					pane.addEdge(new Edge(startV, stateVisuals.get(target.name), edgeContext));
-				}
-			}
-		}
-	}
-
-	/**
-	 * Creates a visual for a start-node
-	 *
-	 * @param x      Base X Position
-	 * @param y      Base Y Position
-	 * @param radius Radius of circle.
-	 * @return The visual
-	 */
-	protected Visual createStartVisual(float x, float y, float radius)
-	{
-		Visual startNode = new Visual(stateOutlineContext);
-		Circle circle = new Circle(radius, radius, pane.getGraphConfiguration(), startStyle, false, radius);
-		circle.setFill(true);
-		startNode.setPosition(x, y);
-		startNode.addDrawingPrimitive(circle);
-		return startNode;
-	}
-
-	/**
-	 * Creates a visual for a state
-	 *
-	 * @param x     Base X Position
-	 * @param y     Base Y Position
-	 * @param state State to create the visual for.
-	 * @param g2    Graphics to use for dimension calculations.
-	 * @return The creates visual.
-	 */
-	protected Visual createStateVisual(float x, float y, State state, Graphics2D g2)
-	{
-		Visual v = new Visual(stateOutlineContext);
-		v.setPosition(x, y);
-
-		Rectangle2D stringBounds = stateTextStyle.fontMetrics.getStringBounds(state.name, g2);
-		float fh = stateTextStyle.fontMetrics.getHeight();
-		float height = 5 * fh;
-
-		Rectangle frame = new Rectangle(
-				0, 0, pane.getGraphConfiguration(),
-				stateOutlineStyle, false,
-				(float) (stringBounds.getWidth() + 10), height);
-		frame.setFill(true);
-		v.addDrawingPrimitive(frame);
-
-		Line separator = new Line(0, fh * 1.5f, (float) (stringBounds.getWidth() + 10), fh * 1.5f
-				, pane.getGraphConfiguration(), stateInlineStyle);
-		v.addDrawingPrimitive(separator);
-
-		Text label = new Text(0, 0, pane.getGraphConfiguration(),
-				stateTextStyle, false, state.name);
-		label.setInsets(fh * 0.25f, 0, 0, 0);
-
-		v.addDrawingPrimitive(label);
-
-		return v;
 	}
 
 	/**
