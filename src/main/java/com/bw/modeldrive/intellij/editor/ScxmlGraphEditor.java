@@ -23,7 +23,7 @@ import javax.swing.JComponent;
 import java.beans.PropertyChangeListener;
 
 /**
- * SCXML Editor.
+ * Graphical SCXML {@link FileEditor}.
  */
 public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 {

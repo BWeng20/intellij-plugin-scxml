@@ -1,4 +1,4 @@
-package com.bw.graph;
+package com.bw.graph.editor;
 
 import com.bw.graph.visual.Visual;
 
@@ -8,17 +8,23 @@ import com.bw.graph.visual.Visual;
 public interface InteractionListener
 {
 	/**
-	 * A visual was selected.
+	 * Some visual was selected.
 	 *
 	 * @param visual The selected visual.
 	 */
 	void selected(Visual visual);
 
 	/**
-	 * A visual was de-selected.
+	 * A visual was explicitly de-selected without replacement.
 	 *
 	 * @param visual The de-selected visual.
 	 */
 	void deselected(Visual visual);
+
+
+	/**
+	 * Some sub-model was entered or left.
+	 */
+	void hierarchyChanged();
 
 }

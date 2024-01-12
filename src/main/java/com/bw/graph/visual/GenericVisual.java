@@ -40,11 +40,12 @@ public class GenericVisual extends Visual
 	/**
 	 * Create a new empty visual.
 	 *
+	 * @param id      The identification. Can be null.
 	 * @param context The Drawing context to use.
 	 */
-	public GenericVisual(DrawContext context)
+	public GenericVisual(Object id, DrawContext context)
 	{
-		super(context);
+		super(id, context);
 	}
 
 	/**
@@ -53,7 +54,7 @@ public class GenericVisual extends Visual
 	 * @param g2 The Graphics context
 	 */
 	@Override
-	public void draw(Graphics2D g2, final DrawStyle style)
+	public void drawIntern(Graphics2D g2, final DrawStyle style)
 	{
 		if (x2 < 0)
 			updateBounds(g2);
@@ -136,6 +137,12 @@ public class GenericVisual extends Visual
 	{
 		x2 = position.x;
 		y2 = position.y;
+
+		if (innerModel != null)
+		{
+			x2 += innerModelDimension.width + innerModelInsets.left + innerModelInsets.right;
+			y2 += innerModelDimension.height + innerModelInsets.top + innerModelInsets.bottom;
+		}
 
 		for (DrawPrimitive primitive : primitives)
 		{
@@ -272,5 +279,13 @@ public class GenericVisual extends Visual
 	{
 		super.resetBounds();
 		repaint();
+	}
+
+	@Override
+	public void dispose()
+	{
+		super.dispose();
+		buffer = null;
+		primitives.clear();
 	}
 }

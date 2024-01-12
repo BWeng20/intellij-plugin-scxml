@@ -9,6 +9,7 @@ import com.bw.graph.util.Dimension2DFloat;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
+import java.awt.geom.Point2D;
 
 /**
  * Used to visualize connectors in different modes.
@@ -17,6 +18,7 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 {
 
 	private DrawPrimitive primitive;
+	private float radius;
 
 	/**
 	 * Creates a new Primitive.
@@ -26,9 +28,10 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	 */
 	public ConnectorVisual(Visual parent, DrawContext context)
 	{
-		super(context);
+		super(null, context);
 		this.parent = parent;
-		this.primitive = new Circle(5, 5, 5, context.configuration, null);
+		this.radius = context.configuration.connectorSize;
+		this.primitive = new Circle(radius, radius, radius, context.configuration, null);
 	}
 
 	/**
@@ -37,7 +40,7 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	 * @param g2          The graphics context
 	 * @param parentStyle The style of Edge, used if primitive has no own style.
 	 */
-	public void draw(Graphics2D g2, DrawStyle parentStyle)
+	protected void drawIntern(Graphics2D g2, DrawStyle parentStyle)
 	{
 		if (parent != null && parent.isHighlighted())
 		{
@@ -58,5 +61,19 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	@Override
 	public void toSVG(SVGWriter sw, Graphics2D g2)
 	{
+	}
+
+	@Override
+	public void dispose()
+	{
+		super.dispose();
+		primitive = null;
+	}
+
+	@Override
+	public Point2D.Float getControlPosition()
+	{
+		Point2D.Float pt = getPosition();
+		return new Point2D.Float(pt.x + radius, pt.y + radius);
 	}
 }

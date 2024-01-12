@@ -3,6 +3,8 @@ package com.bw.graph;
 import com.bw.graph.visual.EdgeVisual;
 import com.bw.graph.visual.Visual;
 
+import java.awt.Graphics2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -85,17 +87,28 @@ public class VisualModel
 	 */
 	public void moveVisualToTop(Visual visual)
 	{
-		visuals.remove(visual);
-		visuals.add(visual);
+		if (visual instanceof EdgeVisual)
+		{
+			if (edges.remove(visual))
+			{
+				edges.add((EdgeVisual) visual);
+			}
+		}
+		else if (visuals.remove(visual))
+		{
+			visuals.add(visual);
+		}
 		fireModelChange();
 	}
 
 	/**
-	 * Dispose all. Clears edges and visuals and removed all listeners.
+	 * Dispose all. Dispose edges and visuals and removes all listeners.
 	 */
 	public void dispose()
 	{
+		visuals.forEach(Visual::dispose);
 		visuals.clear();
+		edges.forEach(Visual::dispose);
 		edges.clear();
 		listeners.clear();
 	}
@@ -130,5 +143,53 @@ public class VisualModel
 		for (var l : ll)
 			l.modelChanged();
 	}
+
+	/**
+	 * Draws the model
+	 *
+	 * @param g2 The Graphics to use.
+	 */
+	public void draw(Graphics2D g2)
+	{
+		for (EdgeVisual e : edges)
+			e.draw(g2);
+		for (Visual v : visuals)
+			v.draw(g2);
+	}
+
+	/**
+	 * Calculate the bounds of the model.
+	 *
+	 * @param g2 The Graphics to use. for calculations.
+	 * @return The bounds, containing all elements.
+	 */
+	public Rectangle2D.Float getBounds2D(Graphics2D g2)
+	{
+		Rectangle2D.Float bounds = new Rectangle2D.Float(0, 0, 0, 0);
+		float x2 = 0;
+		float y2 = 0;
+		float t2;
+		for (Visual visual : visuals)
+		{
+			Rectangle2D.Float visualBounds = visual.getBounds2D(g2);
+			if (visualBounds != null)
+			{
+				if (bounds.x > visualBounds.x)
+					bounds.x = visualBounds.x;
+				if (bounds.y > visualBounds.y)
+					bounds.y = visualBounds.y;
+				t2 = visualBounds.x + visualBounds.width;
+				if (x2 < t2)
+					x2 = t2;
+				t2 = visualBounds.y + visualBounds.height;
+				if (y2 < t2)
+					y2 = t2;
+			}
+		}
+		bounds.width = x2 - bounds.x;
+		bounds.height = y2 - bounds.y;
+		return bounds;
+	}
+
 
 }

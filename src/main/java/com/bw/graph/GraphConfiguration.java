@@ -10,8 +10,17 @@ public class GraphConfiguration
 	 */
 	public GraphConfiguration()
 	{
-
 	}
+
+	/**
+	 * Size of connector visuals.
+	 */
+	public float connectorSize = 5;
+
+	/**
+	 * Maximum distance to select an edge.
+	 */
+	public float selectEdgeMaxDistance = 10;
 
 	/**
 	 * Graph is shown with antialiasing if true.

@@ -2,9 +2,13 @@ package com.bw.graph.visual;
 
 import com.bw.graph.DrawContext;
 import com.bw.graph.DrawStyle;
+import com.bw.graph.VisualModel;
+import com.bw.graph.util.Dimension2DFloat;
+import com.bw.graph.util.InsetsFloat;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
@@ -14,12 +18,30 @@ import java.util.Objects;
  */
 public abstract class Visual
 {
+	/**
+	 * Identification object from caller. Can be null.
+	 */
+	protected Object id;
 
 	/**
-	 * The parent of the visual is bound.
+	 * A sub-model or null.
+	 */
+	protected VisualModel innerModel;
+
+	/**
+	 * The inner model target dimension inside this visual.
+	 */
+	protected Dimension2DFloat innerModelDimension = new Dimension2DFloat(200, 200);
+
+	/**
+	 * Insets for the inner model.
+	 */
+	protected InsetsFloat innerModelInsets = new InsetsFloat(20, 5, 5, 5);
+
+	/**
+	 * The parent the visual is bound to or null.
 	 */
 	protected Visual parent;
-
 
 	/**
 	 * True of the visual is high-lighted.
@@ -27,18 +49,18 @@ public abstract class Visual
 	protected boolean highlighted;
 
 	/**
-	 * The base position of the visual.
+	 * The base position of the visual, relative to parent.
 	 */
 	protected Point2D.Float position = new Point2D.Float(0, 0);
 
 	/**
-	 * The maximal x position inside the visual.<br>
+	 * The maximal x position inside the visual, relative to parent.<br>
 	 * The value is lazy calculated and updated if set to a negative value.
 	 */
 	protected float x2 = -1;
 
 	/**
-	 * The maximal y position inside the visual.<br>
+	 * The maximal y position inside the visual, relative to parent.<br>
 	 * The value is lazy calculated and updated if set to a negative value.
 	 */
 	protected float y2 = -1;
@@ -56,11 +78,13 @@ public abstract class Visual
 	/**
 	 * Create a new empty visual.
 	 *
+	 * @param id      The identification. Can be null.
 	 * @param context The Drawing context to use.
 	 */
-	protected Visual(DrawContext context)
+	protected Visual(Object id, DrawContext context)
 	{
 		Objects.requireNonNull(context);
+		this.id = id;
 		this.context = context;
 	}
 
@@ -74,14 +98,62 @@ public abstract class Visual
 		draw(g2, getStyle());
 	}
 
+	/**
+	 * Draw the visual and (if availanble) the sub-model inside.<br>
+	 *
+	 * @param g2    The Graphics context
+	 * @param style The style.
+	 */
+	public void draw(Graphics2D g2, DrawStyle style)
+	{
+		drawIntern(g2, style);
+
+		if (innerModel != null)
+		{
+			Rectangle2D.Float bounds = getBounds2D(g2);
+			Rectangle2D.Float subBounds = innerModel.getBounds2D(g2);
+
+			// Calc scale, use minimum to keep aspect ratio
+			float scale = Math.min(innerModelDimension.width / subBounds.width, innerModelDimension.height / subBounds.height);
+			if (scale > 1f)
+				scale = 1f;
+			// Get resulting box for the sub-model.
+			subBounds.x *= scale;
+			subBounds.y *= scale;
+			subBounds.width *= scale;
+			subBounds.height *= scale;
+
+			Rectangle2D.Float subModelBox = new Rectangle2D.Float(
+					bounds.x + (bounds.width - (subBounds.width + innerModelInsets.left + innerModelInsets.right)) / 2f,
+					bounds.y + bounds.height - (subBounds.height + innerModelInsets.bottom),
+					subBounds.width,
+					subBounds.height
+			);
+
+			AffineTransform orgAft = g2.getTransform();
+			try
+			{
+				g2.translate(subModelBox.x, subModelBox.y);
+				g2.scale(scale, scale);
+				innerModel.draw(g2);
+			}
+			finally
+			{
+				g2.setTransform(orgAft);
+			}
+		}
+	}
+
 
 	/**
-	 * Draw the visual.
+	 * Draw the visual.<br>
+	 * If a sub-model is set, the area described by {@link #innerModelDimension} and {@link #innerModelInsets} shall be spared,
+	 * as this area will be over-drawn by {@link #draw(Graphics2D, DrawStyle)}.
 	 *
-	 * @param g2          The Graphics context
-	 * @param parentStyle The style of the parent, used in case this visual has not own style.
+	 * @param g2    The Graphics context
+	 * @param style The style.
 	 */
-	public abstract void draw(Graphics2D g2, DrawStyle parentStyle);
+	protected abstract void drawIntern(Graphics2D g2, DrawStyle style);
 
 	/**
 	 * Checks if a point is inside the area of the visual.
@@ -96,7 +168,8 @@ public abstract class Visual
 	}
 
 	/**
-	 * Updates {@link #x2} and {@link #y2}.
+	 * Updates {@link #x2} and {@link #y2}.<br>
+	 * If the visual supports sub-models, {@link #innerModelDimension} and {@link #innerModelInsets} needs to be considered.
 	 *
 	 * @param graphics The graphics context to use for calculations.
 	 */
@@ -128,16 +201,17 @@ public abstract class Visual
 	}
 
 	/**
-	 * Gets bounds if available.
+	 * Gets the bounds of the visual.
 	 *
 	 * @param g2 The Graphic context to use for calculations. Will not be modified.
-	 * @return The bounds in local coordinates or null.
+	 * @return The bounds in absolute coordinates, never null.
 	 */
 	public Rectangle2D.Float getBounds2D(Graphics2D g2)
 	{
 		if (x2 < 0)
 			updateBounds(g2);
-		return new Rectangle2D.Float(position.x, position.y, x2 - position.x + 1, y2 - position.y + 1);
+		Point2D.Float pos = getPosition();
+		return new Rectangle2D.Float(pos.x, pos.y, x2 - position.x + 1, y2 - position.y + 1);
 	}
 
 	/**
@@ -200,18 +274,80 @@ public abstract class Visual
 	}
 
 	/**
+	 * Sets the inner model.
+	 *
+	 * @param model The model
+	 */
+	public void setInnerModel(VisualModel model)
+	{
+		innerModel = model;
+	}
+
+	/**
+	 * Gets the inner model.
+	 *
+	 * @return The model
+	 */
+	public VisualModel getInnerModel()
+	{
+		return innerModel;
+	}
+
+	/**
+	 * Sets the insert for drawing the inner model.
+	 *
+	 * @param insets The insets
+	 */
+	public void setInnerModelInsets(InsetsFloat insets)
+	{
+		if (innerModel != null)
+			resetBounds();
+		this.innerModelInsets = insets;
+	}
+
+
+	/**
+	 * Gets the insert for drawing the inner model.
+	 *
+	 * @return The insets
+	 */
+	public InsetsFloat getInnerModelInsets()
+	{
+		return innerModelInsets;
+	}
+
+	/**
+	 * Gets the dimension of the box for the inner model.
+	 *
+	 * @return The dimension.
+	 */
+	public Dimension2DFloat getInnerModelDimension()
+	{
+		return innerModelDimension;
+	}
+
+	/**
+	 * Sets the dimension of the box for the inner model.
+	 *
+	 * @param innerModelDimension The dimension.
+	 */
+	public void setInnerModelDimension(Dimension2DFloat innerModelDimension)
+	{
+		this.innerModelDimension = innerModelDimension;
+		if (innerModel != null)
+			resetBounds();
+	}
+
+	/**
 	 * Gets the absolute center position.
 	 *
-	 * @return the position of the center.
+	 * @param g2 The graphics context to use for calculations.
+	 * @return the position of the center in absolute coordinates.
 	 */
-	public Point2D.Float getCenterPosition()
+	public Point2D.Float getCenterPosition(Graphics2D g2)
 	{
-		Point2D.Float center = new Point2D.Float();
-		center.setLocation(getPosition());
-		center.x += (x2 - position.x) / 2f;
-		center.y += (y2 - position.y) / 2f;
-
-		return center;
+		Rectangle2D.Float bounds = getBounds2D(g2);
+		return new Point2D.Float((float) bounds.getCenterX(), (float) bounds.getCenterY());
 	}
 
 	/**
@@ -230,4 +366,28 @@ public abstract class Visual
 	 */
 	public abstract void toSVG(SVGWriter sw, Graphics2D g2);
 
+	/**
+	 * Gets the Id of the visual
+	 *
+	 * @return The id.
+	 */
+	public Object getId()
+	{
+		return id;
+	}
+
+	/**
+	 * Dispose all resources.
+	 */
+	public void dispose()
+	{
+		if (innerModel != null)
+		{
+			innerModel.dispose();
+			innerModel = null;
+		}
+		parent = null;
+		id = null;
+		context = null;
+	}
 }

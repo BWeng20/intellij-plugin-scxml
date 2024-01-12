@@ -8,6 +8,7 @@ import com.bw.graph.primitive.Rectangle;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
 /**
@@ -16,6 +17,7 @@ import java.awt.geom.Rectangle2D;
 public class PathControlVisual extends Visual implements PathControlPoint
 {
 	private DrawPrimitive primitive;
+	private float radius = 3;
 
 	/**
 	 * Creates a new Primitive.
@@ -24,8 +26,8 @@ public class PathControlVisual extends Visual implements PathControlPoint
 	 */
 	public PathControlVisual(DrawContext context)
 	{
-		super(context);
-		this.primitive = new Rectangle(-3, -3, 3, 3, context.configuration, context.normal);
+		super(null, context);
+		this.primitive = new Rectangle(-radius, -radius, 2 * radius, 2 * radius, context.configuration, context.normal);
 	}
 
 	/**
@@ -35,7 +37,7 @@ public class PathControlVisual extends Visual implements PathControlPoint
 	 * @param parentStyle The style of parent, used if primitive has no own style.
 	 */
 	@Override
-	public void draw(Graphics2D g2, DrawStyle parentStyle)
+	protected void drawIntern(Graphics2D g2, DrawStyle parentStyle)
 	{
 		if (isHighlighted())
 		{
@@ -57,4 +59,17 @@ public class PathControlVisual extends Visual implements PathControlPoint
 	{
 	}
 
+	@Override
+	public void dispose()
+	{
+		super.dispose();
+		primitive = null;
+	}
+
+	@Override
+	public Point2D.Float getControlPosition()
+	{
+		Point2D.Float pt = getPosition();
+		return new Point2D.Float(pt.x + radius, pt.y + radius);
+	}
 }

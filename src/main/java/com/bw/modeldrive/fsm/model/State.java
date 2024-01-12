@@ -1,6 +1,7 @@
 package com.bw.modeldrive.fsm.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Holds the representation of a state.
@@ -109,4 +110,16 @@ public class State
 		return sb.toString();
 	}
 
+	/**
+	 * Get all substates in document declaration order.
+	 *
+	 * @return The list of states. Never null.
+	 */
+	public java.util.List<State> getInnerStatesInDocumentOrder()
+	{
+		State[] statesArray = new State[states.size()];
+		statesArray = states.toArray(statesArray);
+		Arrays.sort(statesArray, (s1, s2) -> s1.docId - s2.docId);
+		return Arrays.asList(statesArray);
+	}
 }

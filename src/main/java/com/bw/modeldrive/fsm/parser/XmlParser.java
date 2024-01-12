@@ -646,8 +646,9 @@ public class XmlParser implements ScxmlTags
 			t.docId = ++docIdCounter;
 			t.transitionType = TransitionType.Internal;
 			t.source = state;
-			state.initial = t;
 			parseStateSpecification(initial, t.target);
+			if (!t.target.isEmpty())
+				state.initial = t;
 		}
 
 		if (parent != null)
@@ -775,7 +776,11 @@ public class XmlParser implements ScxmlTags
 	protected void parseStateSpecification(String targetName, java.util.List<State> targets)
 	{
 		Arrays.stream(targetName.split("(?U)\s"))
-			  .forEach(t -> targets.add(getOrCreateState(t, false)));
+			  .forEach(t -> {
+						  if (!t.isEmpty())
+							  targets.add(getOrCreateState(t, false));
+					  }
+			  );
 	}
 
 	/**

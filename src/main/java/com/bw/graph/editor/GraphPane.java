@@ -1,6 +1,7 @@
-package com.bw.graph;
+package com.bw.graph.editor;
 
-import com.bw.graph.visual.EdgeVisual;
+import com.bw.graph.GraphConfiguration;
+import com.bw.graph.VisualModel;
 import com.bw.graph.visual.Visual;
 import com.bw.svg.SVGWriter;
 
@@ -18,8 +19,10 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Rectangle2D;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * Component to draw the graph.
@@ -29,7 +32,17 @@ public class GraphPane extends JComponent
 	/**
 	 * Graph configuration
 	 */
-	GraphConfiguration configuration = new GraphConfiguration();
+	private GraphConfiguration configuration = new GraphConfiguration();
+
+	/**
+	 * Listeners.
+	 */
+	private final LinkedList<InteractionListener> listeners = new LinkedList<>();
+
+	/**
+	 * Queue of parent states we had entered.
+	 */
+	protected LinkedList<Visual> parents = new LinkedList<>();
 
 	/**
 	 * Listens to clicks and drags on visuals.
@@ -40,24 +53,29 @@ public class GraphPane extends JComponent
 		private Visual draggingVisual;
 
 		/** The last coordinate of a drag-event. */
-		private Point lastDragPoint = new Point(0, 0);
+		private final Point lastDragPoint = new Point(0, 0);
 
 		@Override
 		public void mouseClicked(MouseEvent e)
 		{
-			setSelectedVisual(getVisualAt(e.getX(), e.getY()));
+			Visual clicked = getVisualAt(e.getX(), e.getY());
+			if (clicked != null && e.getClickCount() > 1)
+			{
+				if (clicked.getInnerModel() != null)
+				{
+					parents.add(clicked);
+					clicked.setHighlighted(false);
+					setModel(clicked.getInnerModel());
+					fireHierarchyChanged();
+				}
+			}
 		}
 
 		@Override
 		public void mousePressed(MouseEvent e)
 		{
 			draggingVisual = getVisualAt(lastDragPoint.x = e.getX(), lastDragPoint.y = e.getY());
-
-			if (draggingVisual != null)
-			{
-				model.moveVisualToTop(draggingVisual);
-			}
-
+			setSelectedVisual(draggingVisual);
 			SwingUtilities.convertPointToScreen(lastDragPoint, GraphPane.this);
 		}
 
@@ -167,6 +185,15 @@ public class GraphPane extends JComponent
 				return v;
 			}
 		}
+		var edges = model.getEdges();
+		for (var it = edges.listIterator(edges.size()); it.hasPrevious(); )
+		{
+			final Visual v = it.previous();
+			if (v.containsPoint(x, y))
+			{
+				return v;
+			}
+		}
 		return null;
 	}
 
@@ -208,11 +235,7 @@ public class GraphPane extends JComponent
 
 			g2.scale(configuration.scale, configuration.scale);
 
-			for (EdgeVisual e : model.getEdges())
-				e.draw(g2);
-
-			for (Visual v : model.getVisuals())
-				v.draw(g2);
+			model.draw(g2);
 		}
 		finally
 		{
@@ -247,17 +270,36 @@ public class GraphPane extends JComponent
 	 */
 	public void setModel(VisualModel model)
 	{
-		selectedVisual = null;
-		if (this.model != null)
+		if (model != this.model)
 		{
-			// Will also remove our listener.
-			this.model.dispose();
+			boolean fireHierarchy = false;
+			while (!parents.isEmpty())
+			{
+				if (parents.peekLast().getInnerModel() == model)
+					break;
+				parents.removeLast();
+				fireHierarchy = true;
+			}
+
+			Visual oldSelected = selectedVisual;
+			selectedVisual = null;
+			if (this.model != null)
+			{
+				this.model.removeListener(this::repaint);
+			}
+			if (model == null)
+				model = new VisualModel();
+			this.model = model;
+			model.addListener(this::repaint);
+
+			if (oldSelected != null)
+				fireVisualDeselected(oldSelected);
+
+			if (fireHierarchy)
+				fireHierarchyChanged();
+
+			repaint();
 		}
-		if (model == null)
-			model = new VisualModel();
-		this.model = model;
-		model.addListener(this::repaint);
-		repaint();
 	}
 
 	/**
@@ -279,12 +321,18 @@ public class GraphPane extends JComponent
 	{
 		boolean triggerRepaint = false;
 
-		if (selectedVisual != null && selectedVisual != visual && selectedVisual.isHighlighted())
-		{
-			selectedVisual.setHighlighted(false);
-			triggerRepaint = true;
-		}
+		Visual oldSelected = selectedVisual;
 		selectedVisual = visual;
+
+		if (oldSelected != null && oldSelected != selectedVisual)
+		{
+			if (oldSelected.isHighlighted())
+			{
+				oldSelected.setHighlighted(false);
+				triggerRepaint = true;
+			}
+		}
+
 		if (selectedVisual != null && !selectedVisual.isHighlighted())
 		{
 			visual.setHighlighted(true);
@@ -297,6 +345,15 @@ public class GraphPane extends JComponent
 			// Repaint will be triggered my model listener
 			triggerRepaint = false;
 		}
+
+		if (oldSelected != null && oldSelected != selectedVisual)
+		{
+			if (selectedVisual == null)
+				fireVisualDeselected(oldSelected);
+			else
+				fireVisualSelected();
+		}
+
 		if (triggerRepaint)
 		{
 			repaint();
@@ -309,9 +366,11 @@ public class GraphPane extends JComponent
 	public void dispose()
 	{
 		selectedVisual = null;
-		model.dispose();
+		model = null;
 		removeMouseListener(mouseAdapter);
 		removeMouseMotionListener(mouseAdapter);
+		listeners.clear();
+		parents.clear();
 		mouseAdapter = null;
 	}
 
@@ -338,32 +397,11 @@ public class GraphPane extends JComponent
 	 */
 	public Rectangle2D.Float getBounds2D()
 	{
-		Rectangle2D.Float bounds = new Rectangle2D.Float(0, 0, 0, 0);
-		float x2 = 0;
-		float y2 = 0;
-		float t2;
-		final Graphics2D g2 = (Graphics2D) getGraphics();
-		for (Visual visual : model.getVisuals())
-		{
-			Rectangle2D.Float visualBounds = visual.getBounds2D(g2);
-			if (visualBounds != null)
-			{
-				if (bounds.x > visualBounds.x)
-					bounds.x = visualBounds.x;
-				if (bounds.y > visualBounds.y)
-					bounds.y = visualBounds.y;
-				t2 = visualBounds.x + visualBounds.width;
-				if (x2 < t2)
-					x2 = t2;
-				t2 = visualBounds.y + visualBounds.height;
-				if (y2 < t2)
-					y2 = t2;
-			}
-		}
+		Rectangle2D.Float bounds = model.getBounds2D((Graphics2D) getGraphics());
 		bounds.x *= configuration.scale;
 		bounds.y *= configuration.scale;
-		bounds.height = (configuration.scale * y2) - bounds.y + 5;
-		bounds.width = (configuration.scale * x2) - bounds.x + 5;
+		bounds.height = 5 + bounds.height * configuration.scale;
+		bounds.width = 5 + bounds.width * configuration.scale;
 
 		return bounds;
 	}
@@ -376,6 +414,63 @@ public class GraphPane extends JComponent
 	public GraphConfiguration getGraphConfiguration()
 	{
 		return configuration;
+	}
+
+	/**
+	 * Adds a new interaction listener.
+	 *
+	 * @param listener The listener to add.
+	 */
+	public void addInteractionListener(InteractionListener listener)
+	{
+		this.listeners.remove(listener);
+		this.listeners.add(listener);
+	}
+
+	/**
+	 * Removes an interaction listener.
+	 *
+	 * @param listener The listener to add.
+	 */
+	public void removeInteractionListener(InteractionListener listener)
+	{
+		this.listeners.remove(listener);
+	}
+
+	/**
+	 * Calls {@link InteractionListener#selected(Visual)} on all listeners.
+	 */
+	protected void fireVisualSelected()
+	{
+		new ArrayList<>(listeners).forEach(listener -> listener.selected(selectedVisual));
+	}
+
+	/**
+	 * Calls {@link InteractionListener#deselected(Visual)} on all listeners.
+	 *
+	 * @param oldSelected The de-selected visual.
+	 */
+	protected void fireVisualDeselected(Visual oldSelected)
+	{
+		new ArrayList<>(listeners).forEach(listener -> listener.deselected(oldSelected));
+	}
+
+	/**
+	 * Calls hierarchyChanged on all listeners.
+	 */
+	protected void fireHierarchyChanged()
+	{
+		new ArrayList<>(listeners).forEach(InteractionListener::hierarchyChanged);
+	}
+
+	/**
+	 * Get current hierarchy
+	 *
+	 * @return The chain of parents the editor entered.
+	 */
+	public List<Visual> getHierarchy()
+	{
+		return Collections.unmodifiableList(parents);
 	}
 
 }

@@ -13,6 +13,6 @@ public interface PathControlPoint
 	 *
 	 * @return The position.
 	 */
-	Point2D.Float getPosition();
+	Point2D.Float getControlPosition();
 
 }

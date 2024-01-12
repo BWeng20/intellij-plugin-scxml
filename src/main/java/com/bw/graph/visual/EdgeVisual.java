@@ -6,7 +6,7 @@ import com.bw.graph.primitive.Path;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
-import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.util.LinkedList;
 
 /**
@@ -38,18 +38,22 @@ public class EdgeVisual extends Visual
 	/**
 	 * Creates a new Primitive.
 	 *
+	 * @param id      The Identification, can be null.
 	 * @param source  The start connector.
 	 * @param target  The end connector.
 	 * @param context The  context. Must not be null.
 	 */
-	public EdgeVisual(ConnectorVisual source, ConnectorVisual target,
+	public EdgeVisual(Object id, ConnectorVisual source, ConnectorVisual target,
 					  DrawContext context)
 	{
-		super(context);
+		super(id, context);
 
-		this.path = new Path(context.configuration, context.normal);
+		this.path = new Path(context.configuration, null);
 		this.sourceConnector = source;
 		this.targetConnector = target;
+
+		this.path.addPoint(sourceConnector);
+		this.path.addPoint(targetConnector);
 	}
 
 	/**
@@ -57,15 +61,11 @@ public class EdgeVisual extends Visual
 	 *
 	 * @param g2 The graphics context
 	 */
-	public void draw(Graphics2D g2, DrawStyle actualStyle)
+	protected void drawIntern(Graphics2D g2, DrawStyle actualStyle)
 	{
 		if (targetConnector != null)
 		{
-			g2.setPaint(actualStyle.linePaint);
-			g2.setStroke(actualStyle.lineStroke);
-			g2.draw(new Line2D.Float(sourceConnector.getCenterPosition(), targetConnector.getCenterPosition()));
-			// path.draw(g2, null, actualStyle);
-
+			path.draw(g2, null, actualStyle);
 			targetConnector.draw(g2, actualStyle);
 		}
 		sourceConnector.draw(g2, actualStyle);
@@ -84,4 +84,36 @@ public class EdgeVisual extends Visual
 	{
 		// @TODO
 	}
+
+	@Override
+	public void dispose()
+	{
+		super.dispose();
+		path = null;
+		if (sourceConnector != null)
+		{
+			sourceConnector.dispose();
+			sourceConnector = null;
+		}
+		if (targetConnector != null)
+		{
+			targetConnector.dispose();
+			targetConnector = null;
+		}
+		controlVisual.forEach(Visual::dispose);
+		controlVisual.clear();
+	}
+
+	/**
+	 * Checks if a point is inside the area of the visual.
+	 *
+	 * @param x X position.
+	 * @param y Y position.
+	 * @return true if (x,y) is inside the visual.
+	 */
+	public boolean containsPoint(float x, float y)
+	{
+		return path.getDistanceTo(new Point2D.Float(x, y)) < context.configuration.selectEdgeMaxDistance;
+	}
+
 }
