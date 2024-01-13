@@ -272,6 +272,7 @@ public class GraphPane extends JComponent
 	{
 		if (model != this.model)
 		{
+			setSelectedVisual(null);
 			boolean fireHierarchy = false;
 			while (!parents.isEmpty())
 			{
@@ -338,12 +339,15 @@ public class GraphPane extends JComponent
 			visual.setHighlighted(true);
 			triggerRepaint = true;
 		}
-		List<Visual> visuals = model.getVisuals();
-		if (selectedVisual != null && visuals.indexOf(selectedVisual) != (visuals.size() - 1))
+		if ( model != null )
 		{
-			model.moveVisualToTop(selectedVisual);
-			// Repaint will be triggered my model listener
-			triggerRepaint = false;
+			List<Visual> visuals = model.getVisuals();
+			if (selectedVisual != null && visuals.indexOf(selectedVisual) != (visuals.size() - 1))
+			{
+				model.moveVisualToTop(selectedVisual);
+				// Repaint will be triggered my model listener
+				triggerRepaint = false;
+			}
 		}
 
 		if (oldSelected != null && oldSelected != selectedVisual)
