@@ -11,7 +11,7 @@ import java.util.List;
  * A conformant SCXML document must specify at least one of 'event', 'cond' or 'target'.
  * 3.13 Selecting and Executing Transitions contains more detail on the semantics of transitions.
  */
-public class Transition
+public class Transition implements FsmElement
 {
 
 	/**

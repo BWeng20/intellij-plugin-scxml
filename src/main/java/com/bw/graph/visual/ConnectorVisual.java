@@ -46,7 +46,10 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 		{
 			DrawStyle style = getStyle();
 			final DrawStyle actualStyle = style == null ? parentStyle : style;
-			primitive.draw(g2, getPosition(), actualStyle);
+
+			Point2D.Float pt = new Point2D.Float();
+			getPosition(pt);
+			primitive.draw(g2, pt, actualStyle);
 		}
 	}
 
@@ -71,9 +74,10 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	}
 
 	@Override
-	public Point2D.Float getControlPosition()
+	public void getControlPosition(Point2D.Float pt)
 	{
-		Point2D.Float pt = getPosition();
-		return new Point2D.Float(pt.x + radius, pt.y + radius);
+		getPosition(pt);
+		pt.x += radius;
+		pt.y += radius;
 	}
 }

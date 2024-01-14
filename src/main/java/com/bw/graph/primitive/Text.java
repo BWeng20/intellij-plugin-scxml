@@ -39,7 +39,8 @@ public class Text extends DrawPrimitive
 	{
 		g2.setFont(style.font);
 		g2.setPaint(style.textPaint);
-		g2.drawString(text, 0, g2.getFontMetrics().getAscent());
+		g2.drawString(text, 0, g2.getFontMetrics()
+								 .getAscent());
 	}
 
 	@Override

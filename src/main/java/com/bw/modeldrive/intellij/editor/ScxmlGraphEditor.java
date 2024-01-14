@@ -1,8 +1,10 @@
 package com.bw.modeldrive.intellij.editor;
 
 import com.bw.modeldrive.fsm.model.FiniteStateMachine;
+import com.bw.modeldrive.fsm.parser.LogExtensionParser;
 import com.bw.modeldrive.fsm.parser.ParserException;
 import com.bw.modeldrive.fsm.parser.XmlParser;
+import com.bw.modeldrive.fsm.ui.GraphExtension;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
@@ -95,9 +97,15 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 			{
 				try
 				{
-					final FiniteStateMachine fsm = new XmlParser().parse(file.toNioPath(), xmlDocument.getText());
+					XmlParser parser = new XmlParser();
+					parser.addExtensionParser("*", new LogExtensionParser());
+
+					GraphExtension ge = new GraphExtension();
+					parser.addExtensionParser(GraphExtension.NS_GRAPH_EXTENSION, ge);
+
+					final FiniteStateMachine fsm = parser.parse(file.toNioPath(), xmlDocument.getText());
 					ApplicationManager.getApplication()
-									  .invokeLater(() -> component.setStateMachine(fsm));
+									  .invokeLater(() -> component.setStateMachine(fsm, ge));
 				}
 				catch (ProcessCanceledException pce)
 				{

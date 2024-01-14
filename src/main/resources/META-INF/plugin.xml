@@ -26,6 +26,7 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
+        <standardResource url="http://berndwengenroth.de/GraphExtension/1.0" path="xsd/graph.xsd"/>
         <standardResource url="http://www.w3.org/2005/07/scxml" path="xsd/scxml.xsd"/>
         <fileEditorProvider implementation="com.bw.modeldrive.intellij.editor.ScxmlEditorProvider"/>
         <projectConfigurable

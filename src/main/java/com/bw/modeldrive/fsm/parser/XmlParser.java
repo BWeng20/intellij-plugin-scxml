@@ -3,6 +3,7 @@ package com.bw.modeldrive.fsm.parser;
 import com.bw.modeldrive.fsm.model.BindingType;
 import com.bw.modeldrive.fsm.model.ExecutableContent;
 import com.bw.modeldrive.fsm.model.FiniteStateMachine;
+import com.bw.modeldrive.fsm.model.FsmElement;
 import com.bw.modeldrive.fsm.model.Invoke;
 import com.bw.modeldrive.fsm.model.State;
 import com.bw.modeldrive.fsm.model.Transition;
@@ -13,6 +14,7 @@ import com.bw.modeldrive.fsm.model.executablecontent.Log;
 import com.bw.modeldrive.intellij.ModelDriveBundle;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.EntityResolver;
@@ -27,8 +29,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -43,6 +48,9 @@ public class XmlParser implements ScxmlTags
 	 * The fsm the parser is working on.
 	 */
 	protected FiniteStateMachine fsm;
+
+	protected Map<String, List<ExtensionParser>> extensionParsers = new HashMap<>();
+	protected ExtensionParser fallbackExtensionParser;
 
 	/**
 	 * Creates a new XMLParser.
@@ -71,7 +79,8 @@ public class XmlParser implements ScxmlTags
 		 */
 		IncludeProtectionResolver(Path mainFile)
 		{
-			basePathUri = mainFile.getParent().normalize()
+			basePathUri = mainFile.getParent()
+								  .normalize()
 								  .toUri()
 								  .toString();
 		}
@@ -135,7 +144,8 @@ public class XmlParser implements ScxmlTags
 
 			InputSource is = new InputSource();
 			is.setByteStream(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
-			is.setSystemId(file.normalize().toString());
+			is.setSystemId(file.normalize()
+							   .toString());
 
 			doc = builder.parse(is);
 		}
@@ -172,30 +182,31 @@ public class XmlParser implements ScxmlTags
 		return fsm;
 	}
 
-	static class ScxmlChildIterator implements Iterator<Element>
+	class ScxmlElementIterator implements Iterator<Element>
 	{
 		Element child;
 
-		ScxmlChildIterator(Element parent)
+		List<Element> notHandled = new ArrayList<>();
+		FsmElement currentFsmElement;
+
+
+		ScxmlElementIterator(Element parent, FsmElement fsmElement)
 		{
-			processToScxmlTag(parent.getFirstChild());
+			this.currentFsmElement = fsmElement;
+			processToNextElement(parent.getFirstChild());
 		}
 
-
-		private void processToScxmlTag(Node child)
+		private void processToNextElement(Node child)
 		{
 			while (child != null)
 			{
 				if (child instanceof Element xmlTagChild)
 				{
-					if (NS_XINCLUDE.equals(xmlTagChild.getNamespaceURI()))
-					{
-						log.warning(String.format(" skipping Include %s: %s", xmlTagChild.getTagName(), xmlTagChild.getTextContent()));
-					}
-					else
-					{
+					final String ns = child.getNamespaceURI();
+					if (ns == null || NS_SCXML.equals(ns))
 						break;
-					}
+					else
+						notHandled.add(((Element) child));
 				}
 				child = child.getNextSibling();
 			}
@@ -205,6 +216,11 @@ public class XmlParser implements ScxmlTags
 		@Override
 		public boolean hasNext()
 		{
+			if (child == null)
+			{
+				if (currentFsmElement != null)
+					processNotHandledElements(currentFsmElement);
+			}
 			return child != null;
 		}
 
@@ -213,10 +229,54 @@ public class XmlParser implements ScxmlTags
 		{
 			Element r = child;
 			if (child != null)
-				processToScxmlTag(child.getNextSibling());
+				processToNextElement(child.getNextSibling());
 			return r;
 		}
+
+		void processNotHandledElements(FsmElement fsmElement)
+		{
+			for (Element e : notHandled)
+			{
+				List<ExtensionParser> pl = extensionParsers.get(e.getNamespaceURI());
+				if (pl == null)
+				{
+					if (fallbackExtensionParser != null)
+						fallbackExtensionParser.processChild(fsmElement, e);
+				}
+				else
+					for (ExtensionParser p : pl)
+						p.processChild(fsmElement, e);
+			}
+			notHandled.clear();
+		}
 	}
+
+	protected void processUnhandledAttributes(Element e, FsmElement fsmElement)
+	{
+
+		NamedNodeMap attributes = e.getAttributes();
+		int n = attributes.getLength();
+		for (int i = 0; i < n; ++i)
+		{
+			Node attrNode = attributes.item(i);
+			String nsUri = attrNode.getNamespaceURI();
+			if (nsUri != null && !NS_SCXML.equals(nsUri))
+			{
+				List<ExtensionParser> pl = extensionParsers.get(nsUri);
+				if (pl == null)
+				{
+					if (fallbackExtensionParser != null)
+						fallbackExtensionParser.processAttribute(fsmElement, attrNode);
+
+				}
+				else
+					for (ExtensionParser ep : pl)
+						ep.processAttribute(fsmElement, attrNode);
+			}
+		}
+
+	}
+
 
 	/**
 	 * Parse a state specification and all sub-elements.
@@ -231,7 +291,7 @@ public class XmlParser implements ScxmlTags
 	{
 		State state = getOrCreateStateWithAttributes(node, parallel, parent);
 
-		for (ScxmlChildIterator it = new ScxmlChildIterator(node); it.hasNext(); )
+		for (ScxmlElementIterator it = new ScxmlElementIterator(node, state); it.hasNext(); )
 		{
 			Element xmlChild = it.next();
 			switch (xmlChild.getLocalName())
@@ -276,7 +336,7 @@ public class XmlParser implements ScxmlTags
 		parseSymbolList(getOptionalAttribute(node, ATTR_NAMELIST), invoke.namelist);
 		invoke.autoforward = parseBoolean(getOptionalAttribute(node, ATTR_AUTOFORWARD), false);
 
-		for (ScxmlChildIterator it = new ScxmlChildIterator(node); it.hasNext(); )
+		for (ScxmlElementIterator it = new ScxmlElementIterator(node, invoke); it.hasNext(); )
 		{
 			Element xmlChild = it.next();
 			switch (xmlChild.getLocalName())
@@ -287,7 +347,6 @@ public class XmlParser implements ScxmlTags
 				default -> debug("Unsupported tag %s", xmlChild.getLocalName());
 			}
 		}
-
 		sourceState.invoke.add(invoke);
 	}
 
@@ -421,10 +480,12 @@ public class XmlParser implements ScxmlTags
 	{
 		ExecutableContent c = null;
 
-		for (ScxmlChildIterator it = new ScxmlChildIterator(node); it.hasNext(); )
+		ScxmlElementIterator it = new ScxmlElementIterator(node, null);
+		while (it.hasNext())
 		{
 			c = parseExecutableContentElement(it.next(), c);
 		}
+		it.processNotHandledElements(c);
 		return c;
 	}
 
@@ -488,7 +549,7 @@ public class XmlParser implements ScxmlTags
 
 		boolean elseSeen = false;
 
-		for (ScxmlChildIterator it = new ScxmlChildIterator(node); it.hasNext(); )
+		for (ScxmlElementIterator it = new ScxmlElementIterator(node, ifC); it.hasNext(); )
 		{
 			Element xmlChild = it.next();
 			switch (xmlChild.getLocalName())
@@ -519,6 +580,7 @@ public class XmlParser implements ScxmlTags
 				default -> parseExecutableContentElement(xmlChild, currentBlock);
 			}
 		}
+		processUnhandledAttributes(node, ifC);
 		return chainExecutableContent(prev, ifC);
 	}
 
@@ -664,6 +726,9 @@ public class XmlParser implements ScxmlTags
 		{
 			debug("state %s no parent", state.toString());
 		}
+
+		processUnhandledAttributes(node, state);
+
 		return state;
 	}
 
@@ -776,7 +841,8 @@ public class XmlParser implements ScxmlTags
 	protected void parseStateSpecification(String targetName, java.util.List<State> targets)
 	{
 		Arrays.stream(targetName.split("(?U)\s"))
-			  .forEach(t -> {
+			  .forEach(t ->
+					  {
 						  if (!t.isEmpty())
 							  targets.add(getOrCreateState(t, false));
 					  }
@@ -849,4 +915,20 @@ public class XmlParser implements ScxmlTags
 		return result;
 	}
 
+	public void addExtensionParser(String namespace, ExtensionParser parser)
+	{
+		if ("*".equals(namespace))
+			fallbackExtensionParser = parser;
+		else
+			extensionParsers.computeIfAbsent(namespace.intern(), s -> new ArrayList<>())
+							.add(parser);
+	}
+
+	public void removeExtensionParser(String namespace)
+	{
+		if ("*".equals(namespace))
+			fallbackExtensionParser = null;
+		else
+			extensionParsers.remove(namespace);
+	}
 }

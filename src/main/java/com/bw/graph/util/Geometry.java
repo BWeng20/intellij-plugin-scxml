@@ -105,4 +105,100 @@ public interface Geometry
 			}
 		}
 	}
+
+	/**
+	 * Get closest point from p1 to line segment lp1,lp2
+	 *
+	 * @param p1x    X ordinate of the reference point to get the closest point for.
+	 * @param p1y    Y ordinate of the reference point to get the closest point for.
+	 * @param lp1x   X ordinate of the first point of line segment.
+	 * @param lp1y   Y ordinate of the first point of line segment.
+	 * @param lp2x   X ordinate of the second point of line segment.
+	 * @param lp2y   Y ordinate of the second point of line segment.
+	 * @param result point to be set to the location of the found closest point.
+	 */
+	static void getClosestPointOnLineSegment(float p1x, float p1y, float lp1x, float lp1y, float lp2x, float lp2y, Point2D.Float result)
+	{
+		final float xd = lp2x - lp1x;
+		final float yd = lp2y - lp1y;
+
+		if (xd == 0 && yd == 0)
+		{
+			result.setLocation(lp1x, lp1y);
+		}
+		else
+		{
+			final float u = ((p1x - lp1x) * xd + (p1y - lp1y) * yd) / (xd * xd + yd * yd);
+			if (u < 0)
+			{
+				result.setLocation(lp1x, lp1y);
+			}
+			else if (u > 1)
+			{
+				result.setLocation(lp2x, lp2y);
+			}
+			else
+			{
+				result.setLocation(lp1x + u * xd, lp1y + u * yd);
+			}
+		}
+	}
+
+	/**
+	 * Get the closest point on a polygon.
+	 *
+	 * @param rp The reverence point to get the closest point for.
+	 * @param
+	 * @return The closest point. Never null.
+	 */
+	static void getClosestPointOnPolygon(Point2D.Float rp, Point2D.Float[] polyline, float flatness, Point2D.Float result)
+	{
+		float p1x = 0;
+		float p1y = 0;
+		float p2x = 0;
+		float p2y = 0;
+		Point2D.Float r = new Point2D.Float();
+
+		result.x = rp.x;
+		result.y = rp.y;
+
+		p2x = polyline[0].x;
+		p2y = polyline[0].y;
+
+		double d, bestd = Double.MAX_VALUE, dx, dy;
+
+		for (int i = 1; i < polyline.length; ++i)
+		{
+			p1x = p2x;
+			p1y = p2y;
+			p2x = polyline[i].x;
+			p2y = polyline[i].y;
+
+			getClosestPointOnLineSegment(rp.x, rp.y, p1x, p1y, polyline[i].x, polyline[i].y, r);
+			dx = rp.x - r.x;
+			dy = rp.y - r.y;
+			d = dx * dx + dy * dy;
+			if (d < bestd)
+			{
+				bestd = d;
+				result.x = r.x;
+				result.y = r.y;
+			}
+		}
+	}
+
+
+	/**
+	 * Get the angle in Radians of the line.
+	 *
+	 * @param x1 X of first point.
+	 * @param y1 Y of first point.
+	 * @param x2 X of second point.
+	 * @param y2 Y of second point.
+	 * @return The angle.
+	 */
+	static float getAngle(float x1, float y1, float x2, float y2)
+	{
+		return (float) Math.atan2(y2 - y1, x2 - x1);
+	}
 }

@@ -210,7 +210,8 @@ public abstract class Visual
 	{
 		if (x2 < 0)
 			updateBounds(g2);
-		Point2D.Float pos = getPosition();
+		Point2D.Float pos = new Point2D.Float();
+		getPosition(pos);
 		return new Rectangle2D.Float(pos.x, pos.y, x2 - position.x + 1, y2 - position.y + 1);
 	}
 
@@ -262,15 +263,17 @@ public abstract class Visual
 	 *
 	 * @return the position.
 	 */
-	public Point2D.Float getPosition()
+	public void getPosition(Point2D.Float pt)
 	{
-		Point2D.Float parentPos = (parent == null) ? null : parent.getPosition();
+		if (parent == null)
+			pt.setLocation(0, 0);
+		else
+			parent.getPosition(pt);
 		if (position != null)
 		{
-			return (parentPos == null) ? position : new Point2D.Float(parentPos.x + position.x, parentPos.y + position.y);
+			pt.x += position.x;
+			pt.y += position.y;
 		}
-		else
-			return parentPos;
 	}
 
 	/**

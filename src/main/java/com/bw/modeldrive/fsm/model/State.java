@@ -6,7 +6,7 @@ import java.util.Arrays;
 /**
  * Holds the representation of a state.
  */
-public class State
+public class State implements FsmElement
 {
 
 	/**

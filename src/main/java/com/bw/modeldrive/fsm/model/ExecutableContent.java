@@ -3,7 +3,7 @@ package com.bw.modeldrive.fsm.model;
 /**
  * Some executable content.
  */
-public interface ExecutableContent
+public interface ExecutableContent extends FsmElement
 {
 	/**
 	 * Executes

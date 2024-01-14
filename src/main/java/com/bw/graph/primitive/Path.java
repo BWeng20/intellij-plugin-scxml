@@ -4,7 +4,6 @@ import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.util.Dimension2DFloat;
 import com.bw.graph.util.Geometry;
-import com.bw.jtools.svg.ShapeHelper;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
@@ -29,6 +28,9 @@ public class Path extends DrawPrimitive
 	 * The edge path, created during draw.
 	 */
 	protected Path2D path2D;
+	protected Shape arrowTranslated;
+
+	protected Point2D.Float[] coordinates = new Point2D.Float[0];
 
 	/**
 	 * Arrow path.
@@ -68,41 +70,63 @@ public class Path extends DrawPrimitive
 		DrawStyle style = getStyle();
 		final DrawStyle actualStyle = style == null ? parentStyle : style;
 
-		path2D = new Path2D.Float();
+		Point2D.Float pt = new Point2D.Float();
+		boolean recreatePath = path2D == null;
 
-		Point2D.Float pt;
-		var it = controlPoints.iterator();
-		if (it.hasNext())
+		final int LI = coordinates.length - 1;
+
+		for (int i = 0; i <= LI; ++i)
 		{
-			pt = it.next().getControlPosition();
-			path2D.moveTo(pt.x, pt.y);
+			if (recreatePath)
+			{
+				controlPoints.get(i)
+							 .getControlPosition(coordinates[i]);
+			}
+			else
+			{
+				controlPoints.get(i)
+							 .getControlPosition(pt);
+				if (pt.x != coordinates[i].x || pt.y != coordinates[i].y)
+				{
+					recreatePath = true;
+					coordinates[i].x = pt.x;
+					coordinates[i].y = pt.y;
+				}
+			}
 		}
-		else
+
+		float theta = 0;
+
+
+		if (recreatePath)
 		{
-			pt = null;
+			path2D = new Path2D.Float();
+			arrowTranslated = null;
+
+			if (LI >= 0)
+			{
+				path2D.moveTo(coordinates[0].x, coordinates[0].y);
+				if (LI > 0)
+				{
+					for (int i = 1; i <= LI; ++i)
+					{
+						path2D.lineTo(coordinates[i].x, coordinates[i].y);
+					}
+					theta = Geometry.getAngle(coordinates[LI - 1].x, coordinates[LI - 1].y, coordinates[LI].x, coordinates[LI].y);
+
+					AffineTransform aft = new AffineTransform();
+					aft.translate(coordinates[LI].x, coordinates[LI].y);
+					aft.rotate(theta);
+					arrowTranslated = aft.createTransformedShape(arrow);
+				}
+			}
 		}
-		while (it.hasNext())
-		{
-			pt = it.next().getControlPosition();
-			path2D.lineTo(pt.x, pt.y);
-		}
 
-		if (pt != null)
-		{
-			g2.setStroke(actualStyle.lineStroke);
-			g2.setPaint(actualStyle.linePaint);
-			g2.draw(path2D);
-
-			ShapeHelper h = new ShapeHelper(path2D);
-
-			var s = h.pointAtLength(h.getOutlineLength());
-
-			AffineTransform aft = new AffineTransform();
-			aft.translate(s.x_, s.y_);
-			aft.rotate(s.angle_);
-			Shape p = aft.createTransformedShape(arrow);
-			g2.fill(p);
-		}
+		g2.setStroke(actualStyle.lineStroke);
+		g2.setPaint(actualStyle.linePaint);
+		g2.draw(path2D);
+		if (arrowTranslated != null)
+			g2.fill(arrowTranslated);
 	}
 
 
@@ -133,6 +157,10 @@ public class Path extends DrawPrimitive
 	{
 		controlPoints.add(pt);
 		path2D = null;
+
+		coordinates = new Point2D.Float[controlPoints.size()];
+		for (int i = 0; i < coordinates.length; ++i)
+			coordinates[i] = new Point2D.Float(0, 0);
 	}
 
 	/**

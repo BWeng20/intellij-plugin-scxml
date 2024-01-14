@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+		   targetNamespace="http://berndwengenroth.de/GraphExtension/1.0"
+		   xmlns="http://berndwengenroth.de/GraphExtension/1.0"
+    elementFormDefault="qualified">
+
+	<xsd:annotation>
+		<xsd:documentation>
+			This is the XML Schema for ScXML Graph extensions 1.0.
+		</xsd:documentation>
+	</xsd:annotation>
+
+	<xsd:element name="start">
+		<xsd:annotation>
+			<xsd:documentation>
+				Define the bounding box of the start-node.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:attribute name="bounds" type="boundsType"/>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:attribute name="bounds" type="boundsType">
+		<xsd:annotation>
+			<xsd:documentation>
+				Allows to define a bounding box.
+				The value must consist of four floating point values, separated by spaces.
+				First the X- and Y-ordinates of the upper left corner, then the width and height.
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:attribute>
+
+	<xsd:simpleType name="boundsType">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="(\s*[+-]?(([0-9]+[.]?[0-9]*)|([0-9]*[.]?[0-9]+))){4}\s*"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+
+
+
+
+</xsd:schema>

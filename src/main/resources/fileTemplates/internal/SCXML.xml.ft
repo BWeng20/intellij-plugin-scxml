@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <scxml
     xmlns="http://www.w3.org/2005/07/scxml"
-    xmlns:svg="http://www.w3.org/2000/svg"
+    xmlns:md="http://berndwengenroth.de/GraphExtension/1.0"
     version="1.0" initial="start">
-    <state id="start">
+    <state id="start" md:bounds="10 10 200 200">
     </state>
 </scxml>

@@ -62,13 +62,16 @@ public class GenericVisual extends Visual
 		final GraphConfiguration graphConfiguration = context.configuration;
 		final GraphicsConfiguration graphicsConfiguration = g2.getDeviceConfiguration();
 
-		if (graphConfiguration.doubleBuffered && graphicsConfiguration.getDevice().getType() != GraphicsDevice.TYPE_PRINTER)
+		if (graphConfiguration.doubleBuffered && graphicsConfiguration.getDevice()
+																	  .getType() != GraphicsDevice.TYPE_PRINTER)
 		{
 			// Double buffering needs to consider the current scale, otherwise the result will get blurry.
 			// The buffer-image needs to use native, unscaled coordinates.
 			float offset = 1;
-			float scaleX = (float) g2.getTransform().getScaleX();
-			float scaleY = (float) g2.getTransform().getScaleY();
+			float scaleX = (float) g2.getTransform()
+									 .getScaleX();
+			float scaleY = (float) g2.getTransform()
+									 .getScaleY();
 			if (buffer == null || repaintTriggered)
 			{
 				Rectangle2D.Float bounds = getBounds2D(g2);

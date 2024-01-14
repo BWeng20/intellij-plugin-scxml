@@ -44,10 +44,16 @@ public class GraphFactory
 
 
 	/**
+	 * Extensions with layout information
+	 */
+	protected GraphExtension graphExtension;
+
+	/**
 	 * Creates a new factory.
 	 */
-	public GraphFactory()
+	public GraphFactory(GraphExtension graphExtension)
 	{
+		this.graphExtension = graphExtension;
 	}
 
 	/**
@@ -114,34 +120,41 @@ public class GraphFactory
 	public void createStatePrimitives(Visual visual, float x, float y, State state, Graphics2D g2, DrawContext stateOuterContext, DrawContext stateInnerContext)
 	{
 		GenericVisual v = (GenericVisual) visual;
-		v.setPosition(x, y);
 
-		Rectangle2D stringBounds = stateInnerContext.normal.fontMetrics.getStringBounds(state.name, g2);
 		float fh = stateInnerContext.normal.fontMetrics.getHeight();
+		Rectangle2D.Float bounds = graphExtension.bounds.get(state.docId);
 
-		float height = 5 * fh;
-		float width = (float) (stringBounds.getWidth() + 10);
-
-		if (visual.getInnerModel() != null)
+		if (bounds == null)
 		{
-			Dimension2DFloat dim = visual.getInnerModelDimension();
-			InsetsFloat insets = visual.getInnerModelInsets();
-			insets.top = fh * 2f;
+			Rectangle2D stringBounds = stateInnerContext.normal.fontMetrics.getStringBounds(state.name, g2);
 
-			float w = dim.width + insets.right + insets.left;
-			float h = dim.height + insets.top + insets.bottom;
+			float height = 5 * fh;
+			float width = (float) (stringBounds.getWidth() + 10);
 
-			if (width < w) width = w;
-			if (height < h) height = h;
+			if (visual.getInnerModel() != null)
+			{
+				Dimension2DFloat dim = visual.getInnerModelDimension();
+				InsetsFloat insets = visual.getInnerModelInsets();
+				insets.top = fh * 2f;
+
+				float w = dim.width + insets.right + insets.left;
+				float h = dim.height + insets.top + insets.bottom;
+
+				if (width < w) width = w;
+				if (height < h) height = h;
+			}
+			bounds = new Rectangle2D.Float(x, y, width, height);
 		}
 
+		v.setPosition(bounds.x, bounds.y);
+
 		Rectangle frame = new Rectangle(
-				0, 0, width, height, stateOuterContext.configuration,
+				0, 0, bounds.width, bounds.height, stateOuterContext.configuration,
 				stateOuterContext.normal);
 		frame.setFill(true);
 		v.addDrawingPrimitive(frame);
 
-		Line separator = new Line(0, fh * 1.5f, width, fh * 1.5f
+		Line separator = new Line(0, fh * 1.5f, bounds.width, fh * 1.5f
 				, stateInnerContext.configuration, stateInnerContext.normal);
 		v.addDrawingPrimitive(separator);
 
@@ -199,7 +212,9 @@ public class GraphFactory
 
 					Visual stateVisual = new GenericVisual(state.name, stateInnerStyles);
 					if (state.parent != null)
-						stateVisuals.get(state.parent.name).getInnerModel().addVisual(stateVisual);
+						stateVisuals.get(state.parent.name)
+									.getInnerModel()
+									.addVisual(stateVisual);
 					else
 						rootModel.addVisual(stateVisual);
 					stateVisuals.put(state.name, stateVisual);
@@ -208,8 +223,7 @@ public class GraphFactory
 					{
 						VisualModel subModel = new VisualModel();
 						stateVisual.setInnerModel(subModel);
-						statePosition = new Rectangle2D.Float(fh, fh, 0, 0);
-						statePosition.x += 2 * fh;
+						statePosition = new Rectangle2D.Float(3 * fh, fh, 0, 0);
 						statePositions.put(state.name, statePosition);
 						states.addAll(state.states);
 
@@ -249,8 +263,10 @@ public class GraphFactory
 				Visual sourceVisual = stateVisuals.get(t.source.name);
 				for (State target : t.target)
 				{
-					stateVisuals.get(t.source.parent.name).getInnerModel().addEdge(
-							createEdge(t.docId, sourceVisual, stateVisuals.get(target.name), g2, edgeStyles));
+					stateVisuals.get(t.source.parent.name)
+								.getInnerModel()
+								.addEdge(
+										createEdge(t.docId, sourceVisual, stateVisuals.get(target.name), g2, edgeStyles));
 				}
 			}
 
@@ -275,7 +291,8 @@ public class GraphFactory
 					}
 					else
 					{
-						initialStates.add(state.getInnerStatesInDocumentOrder().get(0));
+						initialStates.add(state.getInnerStatesInDocumentOrder()
+											   .get(0));
 						id = null;
 					}
 					for (State initialState : initialStates)

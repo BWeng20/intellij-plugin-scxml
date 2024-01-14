@@ -4,7 +4,7 @@ package com.bw.modeldrive.fsm.model;
  * <b>W3C says:</b><br>
  * The &lt;invoke&gt; element is used to create an instance of an external service.
  */
-public class Invoke
+public class Invoke implements FsmElement
 {
 	/**
 	 * The unique id, counting in document order.<br>

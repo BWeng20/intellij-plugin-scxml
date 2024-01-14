@@ -67,9 +67,10 @@ public class PathControlVisual extends Visual implements PathControlPoint
 	}
 
 	@Override
-	public Point2D.Float getControlPosition()
+	public void getControlPosition(Point2D.Float pt)
 	{
-		Point2D.Float pt = getPosition();
-		return new Point2D.Float(pt.x + radius, pt.y + radius);
+		getPosition(pt);
+		pt.x += radius;
+		pt.y += radius;
 	}
 }

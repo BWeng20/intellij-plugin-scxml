@@ -102,9 +102,11 @@ public class GraphPane extends JComponent
 						if (scale >= 0.1)
 						{
 							configuration.scale = scale;
-							SwingUtilities.invokeLater(() -> {
+							SwingUtilities.invokeLater(() ->
+							{
 								if (configuration.doubleBuffered)
-									model.getVisuals().forEach(Visual::repaint);
+									model.getVisuals()
+										 .forEach(Visual::repaint);
 								revalidate();
 								repaint();
 							});
@@ -276,7 +278,8 @@ public class GraphPane extends JComponent
 			boolean fireHierarchy = false;
 			while (!parents.isEmpty())
 			{
-				if (parents.peekLast().getInnerModel() == model)
+				if (parents.peekLast()
+						   .getInnerModel() == model)
 					break;
 				parents.removeLast();
 				fireHierarchy = true;
@@ -339,7 +342,7 @@ public class GraphPane extends JComponent
 			visual.setHighlighted(true);
 			triggerRepaint = true;
 		}
-		if ( model != null )
+		if (model != null)
 		{
 			List<Visual> visuals = model.getVisuals();
 			if (selectedVisual != null && visuals.indexOf(selectedVisual) != (visuals.size() - 1))

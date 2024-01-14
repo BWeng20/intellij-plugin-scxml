@@ -7,6 +7,7 @@ import com.bw.graph.editor.GraphPane;
 import com.bw.graph.editor.InteractionListener;
 import com.bw.graph.visual.Visual;
 import com.bw.modeldrive.fsm.model.FiniteStateMachine;
+import com.bw.modeldrive.fsm.ui.GraphExtension;
 import com.bw.modeldrive.fsm.ui.GraphFactory;
 import com.bw.modeldrive.intellij.settings.ChangeConfigurationNotifier;
 import com.bw.modeldrive.intellij.settings.Configuration;
@@ -147,7 +148,8 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 				graphConfig.doubleBuffered = config.doublebuffered;
 				graphConfig.antialiasing = config.antialiasing;
 				graphConfig.zoomByMetaMouseWheelEnabled = config.zoomByMetaMouseWheelEnabled;
-				SwingUtilities.invokeLater(() -> {
+				SwingUtilities.invokeLater(() ->
+				{
 					pane.invalidate();
 					pane.repaint();
 				});
@@ -193,7 +195,9 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		protected TextAttributes getAttributes(Crumb crumb)
 		{
 			TextAttributesKey key = this.getKey(crumb);
-			return key == null ? null : EditorColorsManager.getInstance().getGlobalScheme().getAttributes(key);
+			return key == null ? null : EditorColorsManager.getInstance()
+														   .getGlobalScheme()
+														   .getAttributes(key);
 		}
 	}
 
@@ -239,10 +243,12 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		stateHierarchyBreadCrumbs = new StateBreadCrumbs();
 		add(stateHierarchyBreadCrumbs, BorderLayout.SOUTH);
 
-		stateHierarchyBreadCrumbs.onHover((crumb, inputEvent) -> {
+		stateHierarchyBreadCrumbs.onHover((crumb, inputEvent) ->
+		{
 		});
 
-		stateHierarchyBreadCrumbs.onSelect((crumb, inputEvent) -> {
+		stateHierarchyBreadCrumbs.onSelect((crumb, inputEvent) ->
+		{
 			StateCrumb sc = (StateCrumb) crumb;
 			if (sc != null)
 				pane.setModel(sc.state.getInnerModel());
@@ -289,7 +295,8 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		stateOutlineStyleHighlight.font = font;
 		stateOutlineStyleHighlight.fontMetrics = fontMetrics;
 
-		mbCon = theProject.getMessageBus().connect();
+		mbCon = theProject.getMessageBus()
+						  .connect();
 		mbCon.subscribe(ChangeConfigurationNotifier.CHANGE_CONFIG_TOPIC, (ChangeConfigurationNotifier) this::setConfiguration);
 
 		PersistenceService persistenceService = theProject.getService(PersistenceService.class);
@@ -339,10 +346,11 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 * Sets the FSM to show.
 	 *
 	 * @param fsm The FSM to show.
+	 * @param ge
 	 */
-	public void setStateMachine(FiniteStateMachine fsm)
+	public void setStateMachine(FiniteStateMachine fsm, GraphExtension graphExtension)
 	{
-		GraphFactory factory = new GraphFactory();
+		GraphFactory factory = new GraphFactory(graphExtension);
 
 		pane.setModel(null);
 		if (root != null)
@@ -354,9 +362,11 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 				factory.createVisualModel(fsm, (Graphics2D) pane.getGraphics(),
 						startContext, stateOutlineContext, stateInnerContext, edgeContext);
 
-		if (!rootModel.getVisuals().isEmpty())
+		if (!rootModel.getVisuals()
+					  .isEmpty())
 		{
-			root = rootModel.getVisuals().get(0);
+			root = rootModel.getVisuals()
+							.get(0);
 			pane.setModel(root.getInnerModel());
 		}
 		else
