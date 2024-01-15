@@ -23,9 +23,9 @@ public class GraphConfiguration
 	public float selectEdgeMaxDistance = 10;
 
 	/**
-	 * Graph is shown with antialiasing if true.
+	 * Graph use buffering for complex figures.
 	 */
-	public boolean doubleBuffered = false;
+	public boolean buffered = false;
 
 	/**
 	 * Graph uses buffers to render elements.

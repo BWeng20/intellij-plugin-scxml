@@ -8,6 +8,7 @@ import com.bw.svg.SVGWriter;
 import javax.swing.JComponent;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -43,6 +44,16 @@ public class GraphPane extends JComponent
 	 * Queue of parent states we had entered.
 	 */
 	protected LinkedList<Visual> parents = new LinkedList<>();
+
+	/**
+	 * Milliseconds needed of last paint cycle.
+	 */
+	private long lastPaintMS;
+
+	/**
+	 * If true {@link #lastPaintMS} is shown on screen for debugging.
+	 */
+	private boolean showDrawSpeed = true;
 
 	/**
 	 * Listens to clicks and drags on visuals.
@@ -96,7 +107,7 @@ public class GraphPane extends JComponent
 				if (wheel != 0)
 				{
 					int mod = we.getModifiersEx();
-					if ((mod & InputEvent.META_DOWN_MASK) != 0 || (mod & InputEvent.CTRL_DOWN_MASK) != 0)
+					if ((mod & (InputEvent.CTRL_DOWN_MASK | InputEvent.META_DOWN_MASK)) != 0)
 					{
 						float scale = configuration.scale - 0.1f * wheel;
 						if (scale >= 0.1)
@@ -104,9 +115,8 @@ public class GraphPane extends JComponent
 							configuration.scale = scale;
 							SwingUtilities.invokeLater(() ->
 							{
-								if (configuration.doubleBuffered)
-									model.getVisuals()
-										 .forEach(Visual::repaint);
+								if (configuration.buffered)
+									model.repaint();
 								revalidate();
 								repaint();
 							});
@@ -222,6 +232,7 @@ public class GraphPane extends JComponent
 	@Override
 	protected void paintComponent(Graphics g)
 	{
+		final long start = System.currentTimeMillis();
 		Graphics2D g2 = (Graphics2D) g.create();
 		g2.translate(offsetX, offsetY);
 
@@ -242,6 +253,18 @@ public class GraphPane extends JComponent
 		finally
 		{
 			g2.dispose();
+
+			final long end = System.currentTimeMillis();
+			lastPaintMS = end - start;
+
+			if (showDrawSpeed)
+			{
+				g.setColor(Color.BLACK);
+				g.setFont(getFont());
+				char[] text = (Long.toString(lastPaintMS) + "ms").toCharArray();
+				g.drawChars(text, 0, text.length, 0, 20);
+			}
+
 		}
 	}
 
@@ -274,12 +297,10 @@ public class GraphPane extends JComponent
 	{
 		if (model != this.model)
 		{
-			setSelectedVisual(null);
 			boolean fireHierarchy = false;
 			while (!parents.isEmpty())
 			{
-				if (parents.peekLast()
-						   .getInnerModel() == model)
+				if (parents.peekLast().getInnerModel() == model)
 					break;
 				parents.removeLast();
 				fireHierarchy = true;
@@ -302,6 +323,8 @@ public class GraphPane extends JComponent
 			if (fireHierarchy)
 				fireHierarchyChanged();
 
+			// Force repaint.
+			model.repaint();
 			repaint();
 		}
 	}
@@ -342,15 +365,12 @@ public class GraphPane extends JComponent
 			visual.setHighlighted(true);
 			triggerRepaint = true;
 		}
-		if (model != null)
+		List<Visual> visuals = model.getVisuals();
+		if (selectedVisual != null && visuals.indexOf(selectedVisual) != (visuals.size() - 1))
 		{
-			List<Visual> visuals = model.getVisuals();
-			if (selectedVisual != null && visuals.indexOf(selectedVisual) != (visuals.size() - 1))
-			{
-				model.moveVisualToTop(selectedVisual);
-				// Repaint will be triggered my model listener
-				triggerRepaint = false;
-			}
+			model.moveVisualToTop(selectedVisual);
+			// Repaint will be triggered my model listener
+			triggerRepaint = false;
 		}
 
 		if (oldSelected != null && oldSelected != selectedVisual)

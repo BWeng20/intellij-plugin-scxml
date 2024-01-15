@@ -11,7 +11,7 @@ public interface PathControlPoint
 	/**
 	 * Get the absolute position.
 	 *
-	 * @return The position.
+	 * @param pt The Point to set.
 	 */
 	void getControlPosition(Point2D.Float pt);
 

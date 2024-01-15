@@ -191,5 +191,11 @@ public class VisualModel
 		return bounds;
 	}
 
-
+	/**
+	 * Force a repaint of the model.
+	 */
+	public void repaint()
+	{
+		getVisuals().forEach(Visual::repaint);
+	}
 }

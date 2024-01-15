@@ -19,20 +19,33 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 
 	private DrawPrimitive primitive;
 	private float radius;
+	private EdgeVisual edgeVisual;
 
 	/**
 	 * Creates a new Primitive.
 	 *
-	 * @param parent  The connected visual (not the edge itself!)
+	 * @param parent  The connected visual (not the edge itself!).
 	 * @param context The draw context. Must not be null.
 	 */
 	public ConnectorVisual(Visual parent, DrawContext context)
 	{
 		super(null, context);
 		this.parent = parent;
+		this.edgeVisual = edgeVisual;
 		this.radius = context.configuration.connectorSize;
 		this.primitive = new Circle(radius, radius, radius, context.configuration, null);
 	}
+
+	/**
+	 * Sets the edge.
+	 *
+	 * @param edgeVisual The connected edge.
+	 */
+	public void setEdgeVisual(EdgeVisual edgeVisual)
+	{
+		this.edgeVisual = edgeVisual;
+	}
+
 
 	/**
 	 * Draws for given context.
@@ -42,7 +55,7 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	 */
 	protected void drawIntern(Graphics2D g2, DrawStyle parentStyle)
 	{
-		if (parent != null && parent.isHighlighted())
+		if ((parent != null && parent.isHighlighted()) || (edgeVisual != null && edgeVisual.isHighlighted()))
 		{
 			DrawStyle style = getStyle();
 			final DrawStyle actualStyle = style == null ? parentStyle : style;

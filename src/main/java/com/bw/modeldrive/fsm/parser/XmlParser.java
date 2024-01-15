@@ -49,7 +49,15 @@ public class XmlParser implements ScxmlTags
 	 */
 	protected FiniteStateMachine fsm;
 
+	/**
+	 * List of extensions.
+	 */
 	protected Map<String, List<ExtensionParser>> extensionParsers = new HashMap<>();
+
+
+	/**
+	 * Extension to use for namespace for which no matching extension was found.
+	 */
 	protected ExtensionParser fallbackExtensionParser;
 
 	/**
@@ -251,6 +259,11 @@ public class XmlParser implements ScxmlTags
 		}
 	}
 
+	/**
+	 * Process unhandled attributes (with unknown namespaces).
+	 * @param e The parent-element of the attributes.
+	 * @param fsmElement The current element.
+	 */
 	protected void processUnhandledAttributes(Element e, FsmElement fsmElement)
 	{
 
@@ -321,9 +334,8 @@ public class XmlParser implements ScxmlTags
 	 *
 	 * @param node        The node.
 	 * @param sourceState The parent-state
-	 * @throws ParserException in case something was wrong with the file.
 	 */
-	protected void parseInvoke(Element node, State sourceState) throws ParserException
+	protected void parseInvoke(Element node, State sourceState)
 	{
 		Invoke invoke = new Invoke();
 
@@ -840,7 +852,7 @@ public class XmlParser implements ScxmlTags
 	 */
 	protected void parseStateSpecification(String targetName, java.util.List<State> targets)
 	{
-		Arrays.stream(targetName.split("(?U)\s"))
+		Arrays.stream(targetName.split("(?U)\\s"))
 			  .forEach(t ->
 					  {
 						  if (!t.isEmpty())
@@ -871,8 +883,7 @@ public class XmlParser implements ScxmlTags
 	{
 		if (eventNames != null)
 		{
-			Arrays.stream(eventNames.split("(?U)\s"))
-				  .forEach(events::add);
+			events.addAll(Arrays.asList(eventNames.split("(?U)\\s")));
 		}
 	}
 
@@ -915,6 +926,12 @@ public class XmlParser implements ScxmlTags
 		return result;
 	}
 
+	/**
+	 * Adds an extension.
+	 *
+	 * @param namespace The namespace-uri for this extension (the complete uri, not the alias) or "*" to match all.
+	 * @param parser    The extension instance.
+	 */
 	public void addExtensionParser(String namespace, ExtensionParser parser)
 	{
 		if ("*".equals(namespace))
@@ -924,6 +941,11 @@ public class XmlParser implements ScxmlTags
 							.add(parser);
 	}
 
+	/**
+	 * Removes an extension.
+	 *
+	 * @param namespace The namespace-uri for this extension (the complete uri, not the alias) or "*" for the fallback handler.
+	 */
 	public void removeExtensionParser(String namespace)
 	{
 		if ("*".equals(namespace))

@@ -62,8 +62,7 @@ public class GenericVisual extends Visual
 		final GraphConfiguration graphConfiguration = context.configuration;
 		final GraphicsConfiguration graphicsConfiguration = g2.getDeviceConfiguration();
 
-		if (graphConfiguration.doubleBuffered && graphicsConfiguration.getDevice()
-																	  .getType() != GraphicsDevice.TYPE_PRINTER)
+		if (graphConfiguration.buffered && graphicsConfiguration.getDevice().getType() != GraphicsDevice.TYPE_PRINTER)
 		{
 			// Double buffering needs to consider the current scale, otherwise the result will get blurry.
 			// The buffer-image needs to use native, unscaled coordinates.
@@ -127,7 +126,13 @@ public class GenericVisual extends Visual
 		}
 		else
 		{
-			forAllPrimitives(g2, DrawPrimitive::draw, null, style);
+			try
+			{
+				forAllPrimitives(g2, DrawPrimitive::draw, null, style);
+			}
+			finally
+			{
+			}
 		}
 	}
 
@@ -138,33 +143,42 @@ public class GenericVisual extends Visual
 	 */
 	protected void updateBounds(Graphics2D graphics)
 	{
-		x2 = position.x;
-		y2 = position.y;
-
-		if (innerModel != null)
+		Dimension2DFloat dim = getPreferredDimension();
+		if (dim == null)
 		{
-			x2 += innerModelDimension.width + innerModelInsets.left + innerModelInsets.right;
-			y2 += innerModelDimension.height + innerModelInsets.top + innerModelInsets.bottom;
-		}
+			x2 = position.x;
+			y2 = position.y;
 
-		for (DrawPrimitive primitive : primitives)
-		{
-			Rectangle2D.Float primitiveBounds = primitive.getBounds2D(position, graphics, context.normal);
-			switch (primitive.getAlignment())
+			if (innerModel != null)
 			{
-				case Left:
-					break;
-				case Center:
-				case Right:
-					primitiveBounds.width += primitive.getRelativePosition().x;
-					break;
-				case Hidden:
-					continue;
+				x2 += innerModelDimension.width + innerModelInsets.left + innerModelInsets.right;
+				y2 += innerModelDimension.height + innerModelInsets.top + innerModelInsets.bottom;
 			}
-			final float x2 = primitiveBounds.x + primitiveBounds.width;
-			if (this.x2 < x2) this.x2 = x2;
-			final float y2 = primitiveBounds.y + primitiveBounds.height;
-			if (this.y2 < y2) this.y2 = y2;
+
+			for (DrawPrimitive primitive : primitives)
+			{
+				Rectangle2D.Float primitiveBounds = primitive.getBounds2D(position, graphics, context.normal);
+				switch (primitive.getAlignment())
+				{
+					case Left:
+						break;
+					case Center:
+					case Right:
+						primitiveBounds.width += primitive.getRelativePosition().x;
+						break;
+					case Hidden:
+						continue;
+				}
+				final float x2 = primitiveBounds.x + primitiveBounds.width;
+				if (this.x2 < x2) this.x2 = x2;
+				final float y2 = primitiveBounds.y + primitiveBounds.height;
+				if (this.y2 < y2) this.y2 = y2;
+			}
+		}
+		else
+		{
+			x2 = position.x + dim.width;
+			y2 = position.y + dim.height;
 		}
 	}
 

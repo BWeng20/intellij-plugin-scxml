@@ -147,11 +147,12 @@ public interface Geometry
 	/**
 	 * Get the closest point on a polygon.
 	 *
-	 * @param rp The reverence point to get the closest point for.
-	 * @param
-	 * @return The closest point. Never null.
+	 * @param rp      The reverence point to get the closest point for.
+	 * @param polygon The polygon
+	 * @param result  The point to use for result or null.
+	 * @return The closest point.
 	 */
-	static void getClosestPointOnPolygon(Point2D.Float rp, Point2D.Float[] polyline, float flatness, Point2D.Float result)
+	static Point2D.Float getClosestPointOnPolygon(Point2D.Float rp, Point2D.Float[] polygon, Point2D.Float result)
 	{
 		float p1x = 0;
 		float p1y = 0;
@@ -159,22 +160,24 @@ public interface Geometry
 		float p2y = 0;
 		Point2D.Float r = new Point2D.Float();
 
+		if (result == null)
+			result = new Point2D.Float();
 		result.x = rp.x;
 		result.y = rp.y;
 
-		p2x = polyline[0].x;
-		p2y = polyline[0].y;
+		p2x = polygon[0].x;
+		p2y = polygon[0].y;
 
 		double d, bestd = Double.MAX_VALUE, dx, dy;
 
-		for (int i = 1; i < polyline.length; ++i)
+		for (int i = 1; i < polygon.length; ++i)
 		{
 			p1x = p2x;
 			p1y = p2y;
-			p2x = polyline[i].x;
-			p2y = polyline[i].y;
+			p2x = polygon[i].x;
+			p2y = polygon[i].y;
 
-			getClosestPointOnLineSegment(rp.x, rp.y, p1x, p1y, polyline[i].x, polyline[i].y, r);
+			getClosestPointOnLineSegment(rp.x, rp.y, p1x, p1y, polygon[i].x, polygon[i].y, r);
 			dx = rp.x - r.x;
 			dy = rp.y - r.y;
 			d = dx * dx + dy * dy;
@@ -185,6 +188,7 @@ public interface Geometry
 				result.y = r.y;
 			}
 		}
+		return result;
 	}
 
 

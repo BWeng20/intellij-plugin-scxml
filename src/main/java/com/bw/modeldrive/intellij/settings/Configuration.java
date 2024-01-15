@@ -22,7 +22,7 @@ public class Configuration
 	/**
 	 * Graph uses buffers to render elements.
 	 */
-	public boolean doublebuffered;
+	public boolean buffered;
 
 	/**
 	 * Enables zooms by mouse-wheel if Meta/Ctrl-Key is hold.

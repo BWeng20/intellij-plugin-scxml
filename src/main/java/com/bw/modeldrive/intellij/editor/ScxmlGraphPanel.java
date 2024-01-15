@@ -140,12 +140,12 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		if (config != null)
 		{
 			var graphConfig = pane.getGraphConfiguration();
-			if (graphConfig.doubleBuffered != config.doublebuffered ||
+			if (graphConfig.buffered != config.buffered ||
 					graphConfig.antialiasing != config.antialiasing ||
 					graphConfig.zoomByMetaMouseWheelEnabled != config.zoomByMetaMouseWheelEnabled
 			)
 			{
-				graphConfig.doubleBuffered = config.doublebuffered;
+				graphConfig.buffered = config.buffered;
 				graphConfig.antialiasing = config.antialiasing;
 				graphConfig.zoomByMetaMouseWheelEnabled = config.zoomByMetaMouseWheelEnabled;
 				SwingUtilities.invokeLater(() ->
@@ -345,8 +345,8 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	/**
 	 * Sets the FSM to show.
 	 *
-	 * @param fsm The FSM to show.
-	 * @param ge
+	 * @param fsm            The FSM to show.
+	 * @param graphExtension The graph-extension or null
 	 */
 	public void setStateMachine(FiniteStateMachine fsm, GraphExtension graphExtension)
 	{

@@ -28,14 +28,21 @@ public class Path extends DrawPrimitive
 	 * The edge path, created during draw.
 	 */
 	protected Path2D path2D;
+
+	/**
+	 * The buffered translated arrow shape.
+	 */
 	protected Shape arrowTranslated;
 
+	/**
+	 * Buffered control point coordinates.
+	 */
 	protected Point2D.Float[] coordinates = new Point2D.Float[0];
 
 	/**
 	 * Arrow path.
 	 */
-	protected Path2D arrow = new Path2D.Float();
+	protected static Path2D arrow = new Path2D.Float();
 
 	/**
 	 * Creates a new Path Primitive.<br>
@@ -171,10 +178,9 @@ public class Path extends DrawPrimitive
 	 */
 	public float getDistanceTo(Point2D.Float pt)
 	{
-		if (path2D != null)
+		if (pt != null && coordinates.length > 1)
 		{
-			Point2D.Float p = Geometry.getClosestPointOnShape(pt, path2D, 5);
-			return (float) p.distance(pt);
+			return (float) pt.distance(Geometry.getClosestPointOnPolygon(pt, coordinates, null));
 		}
 		return Float.MAX_VALUE;
 	}

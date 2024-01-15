@@ -52,6 +52,9 @@ public class EdgeVisual extends Visual
 		this.sourceConnector = source;
 		this.targetConnector = target;
 
+		sourceConnector.setEdgeVisual(this);
+		targetConnector.setEdgeVisual(this);
+
 		this.path.addPoint(sourceConnector);
 		this.path.addPoint(targetConnector);
 	}

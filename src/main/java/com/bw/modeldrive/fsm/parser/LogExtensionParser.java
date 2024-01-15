@@ -12,11 +12,19 @@ import java.util.logging.Logger;
 public class LogExtensionParser implements ExtensionParser
 {
 
+	/**
+	 * Creates a new logging extension parser with default logger.
+	 */
 	public LogExtensionParser()
 	{
 		this.logger = log;
 	}
 
+	/**
+	 * Creates a new logging extension parser on top of some logger.
+	 *
+	 * @param log The logger to use.
+	 */
 	public LogExtensionParser(Logger log)
 	{
 		this.logger = log;
@@ -30,7 +38,7 @@ public class LogExtensionParser implements ExtensionParser
 	/**
 	 * Logger to use
 	 */
-	protected Logger logger = Logger.getLogger(XmlParser.class.getName() + ".unhandled");
+	protected final Logger logger;
 
 
 	@Override

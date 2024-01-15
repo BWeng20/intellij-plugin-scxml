@@ -54,6 +54,12 @@ public abstract class Visual
 	protected Point2D.Float position = new Point2D.Float(0, 0);
 
 	/**
+	 * The preferred dimension of the visual.
+	 */
+	protected Dimension2DFloat dimension;
+
+
+	/**
 	 * The maximal x position inside the visual, relative to parent.<br>
 	 * The value is lazy calculated and updated if set to a negative value.
 	 */
@@ -261,7 +267,7 @@ public abstract class Visual
 	/**
 	 * Gets the absolute base position.
 	 *
-	 * @return the position.
+	 * @param pt The Point to set.
 	 */
 	public void getPosition(Point2D.Float pt)
 	{
@@ -359,6 +365,10 @@ public abstract class Visual
 	public void repaint()
 	{
 		repaintTriggered = true;
+		if (innerModel != null)
+		{
+			innerModel.repaint();
+		}
 	}
 
 	/**
@@ -393,4 +403,52 @@ public abstract class Visual
 		id = null;
 		context = null;
 	}
+
+	/**
+	 * Sets the preferred dimension.<br>
+	 * If no preferred dimension is set, the dimension of the visual is calculated from its contents.
+	 *
+	 * @param dimension The dimension or null to reset to calculated dimension.
+	 */
+	public void setPreferredDimension(Dimension2DFloat dimension)
+	{
+		if (dimension == null)
+		{
+			if (this.dimension != null)
+			{
+				this.dimension = null;
+				resetBounds();
+				repaint();
+			}
+		}
+		else
+			setPreferredDimension(dimension.width, dimension.height);
+	}
+
+	/**
+	 * Sets the preferred dimension.
+	 *
+	 * @param width  The width.
+	 * @param height The height.
+	 */
+	public void setPreferredDimension(float width, float height)
+	{
+		if (dimension == null || dimension.width != width || dimension.height != height)
+		{
+			this.dimension = new Dimension2DFloat(width, height);
+			resetBounds();
+			repaint();
+		}
+	}
+
+	/**
+	 * Gets the preferred dimension or null.
+	 *
+	 * @return The dimension or null.
+	 */
+	public Dimension2DFloat getPreferredDimension()
+	{
+		return dimension;
+	}
+
 }

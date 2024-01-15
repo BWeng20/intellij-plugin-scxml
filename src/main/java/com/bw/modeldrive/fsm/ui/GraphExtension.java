@@ -19,6 +19,14 @@ public class GraphExtension implements ExtensionParser
 {
 
 	/**
+	 * Creates a new instance.
+	 */
+	public GraphExtension()
+	{
+
+	}
+
+	/**
 	 * Logger for this class.
 	 */
 	protected static Logger log = Logger.getLogger(GraphExtension.class.getName());
@@ -29,8 +37,14 @@ public class GraphExtension implements ExtensionParser
 	 */
 	public static final String NS_GRAPH_EXTENSION = "http://berndwengenroth.de/GraphExtension/1.0";
 
-	public static final String BOUNDS = "bounds";
+	/**
+	 * Name of attribute used for bounds
+	 */
+	public static final String ATTR_BOUNDS = "bounds";
 
+	/**
+	 * Collected bounds. Key = docId, Value = the bounds.
+	 */
 	protected Map<Integer, Rectangle2D.Float> bounds = new HashMap<>();
 
 	@Override
@@ -41,11 +55,17 @@ public class GraphExtension implements ExtensionParser
 		}
 	}
 
+	/**
+	 * Parse a bounds values, a white-space separated list of four floats.
+	 *
+	 * @param bounds The value.
+	 * @return The parsed rectangle or null.
+	 */
 	protected Rectangle2D.Float parseBounds(String bounds)
 	{
 		if (bounds != null)
 		{
-			String[] coordinate = bounds.split("(?U)\s");
+			String[] coordinate = bounds.split("(?U)\\s");
 			if (coordinate.length == 4)
 			{
 				try
@@ -73,7 +93,7 @@ public class GraphExtension implements ExtensionParser
 		{
 			switch (attributeNode.getLocalName())
 			{
-				case BOUNDS ->
+				case ATTR_BOUNDS ->
 				{
 					Rectangle2D.Float r = parseBounds(attributeNode.getNodeValue());
 					if (r != null)

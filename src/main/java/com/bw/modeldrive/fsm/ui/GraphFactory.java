@@ -50,6 +50,8 @@ public class GraphFactory
 
 	/**
 	 * Creates a new factory.
+	 *
+	 * @param graphExtension graph-extension handler or null.
 	 */
 	public GraphFactory(GraphExtension graphExtension)
 	{
@@ -144,6 +146,10 @@ public class GraphFactory
 				if (height < h) height = h;
 			}
 			bounds = new Rectangle2D.Float(x, y, width, height);
+		}
+		else
+		{
+			v.setPreferredDimension(bounds.width, bounds.height);
 		}
 
 		v.setPosition(bounds.x, bounds.y);

@@ -34,7 +34,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 
 	private JPanel editorComponent;
 	private JBCheckBox antialiasing;
-	private JBCheckBox doubleBuffered;
+	private JBCheckBox buffered;
 	private JBCheckBox zoomByMouseWheel;
 
 	@Override
@@ -43,12 +43,13 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 		if (editorComponent == null)
 		{
 			antialiasing = new JBCheckBox("Antialiasing");
-			doubleBuffered = new JBCheckBox("Double Buffered");
-			zoomByMouseWheel = new JBCheckBox("Zoom by Meta-Key + MouseWheel");
+			buffered = new JBCheckBox("Draw States Buffered");
+			zoomByMouseWheel = new JBCheckBox("Zoom by Meta/Ctrl-Key + MouseWheel");
+
 
 			editorComponent = FormBuilder.createFormBuilder()
 										 .addComponent(antialiasing, 1)
-										 .addComponent(doubleBuffered, 1)
+										 .addComponent(buffered, 1)
 										 .addComponent(zoomByMouseWheel, 1)
 										 .addComponentFillVertically(new JPanel(), 0)
 										 .getPanel();
@@ -63,7 +64,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 		if (service != null)
 		{
 			Configuration configuration = service.getState();
-			return configuration.doublebuffered != doubleBuffered.isSelected() ||
+			return configuration.buffered != buffered.isSelected() ||
 					configuration.antialiasing != antialiasing.isSelected() ||
 					configuration.zoomByMetaMouseWheelEnabled != zoomByMouseWheel.isSelected();
 		}
@@ -80,7 +81,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 		if (isModified())
 		{
 			Configuration configuration = service.getState();
-			configuration.doublebuffered = doubleBuffered.isSelected();
+			configuration.buffered = buffered.isSelected();
 			configuration.antialiasing = antialiasing.isSelected();
 			configuration.zoomByMetaMouseWheelEnabled = zoomByMouseWheel.isSelected();
 
@@ -97,7 +98,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 		if (service != null)
 		{
 			Configuration configuration = service.getState();
-			doubleBuffered.setSelected(configuration.doublebuffered);
+			buffered.setSelected(configuration.buffered);
 			antialiasing.setSelected(configuration.antialiasing);
 			zoomByMouseWheel.setSelected(configuration.zoomByMetaMouseWheelEnabled);
 		}
