@@ -6,6 +6,7 @@ import com.bw.svg.SVGWriter;
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.RoundRectangle2D;
 
 /**
  * A Rectangle.
@@ -15,19 +16,24 @@ public class Rectangle extends ShapeBase
 	/**
 	 * Creates a new Rectangle Primitive.
 	 *
-	 * @param x      The relative x-position
-	 * @param y      The relative y-position
-	 * @param width  Width in pixel.
-	 * @param height Height in pixel
-	 * @param config The configuration to use.
-	 * @param style  The style or null if default style shall be used.
+	 * @param x       The relative x-position
+	 * @param y       The relative y-position
+	 * @param width   Width in pixel.
+	 * @param height  Height in pixel
+	 * @param arcSize Size of arc to use to round off the corners.
+	 * @param config  The configuration to use.
+	 * @param style   The style or null if default style shall be used.
 	 */
-	public Rectangle(float x, float y, float width, float height,
+	public Rectangle(float x, float y, float width, float height, float arcSize,
 					 GraphConfiguration config,
 					 DrawStyle style)
 	{
 		super(x, y, config, style);
-		shape = new Rectangle2D.Float(0, 0, width, height);
+
+		if (arcSize == 0)
+			shape = new Rectangle2D.Float(0, 0, width, height);
+		else
+			shape = new RoundRectangle2D.Float(0, 0, width, height, arcSize, arcSize);
 	}
 
 	@Override
