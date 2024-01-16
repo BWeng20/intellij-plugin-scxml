@@ -4,6 +4,7 @@ import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.util.Dimension2DFloat;
 import com.bw.graph.util.Geometry;
+import com.bw.jtools.svg.ShapeHelper;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
@@ -19,6 +20,28 @@ import java.util.List;
  */
 public class Path extends DrawPrimitive
 {
+
+	/**
+	 * Edge mode.
+	 */
+	public enum Mode
+	{
+		/**
+		 * Quad
+		 */
+		Quad,
+		/**
+		 * Simple line
+		 */
+		Straight,
+
+	}
+
+	/**
+	 * Edge mode.
+	 */
+	protected Mode mode = Mode.Quad;
+
 	/**
 	 * Control points.
 	 */
@@ -30,9 +53,9 @@ public class Path extends DrawPrimitive
 	protected Path2D path2D;
 
 	/**
-	 * The buffered translated arrow shape.
+	 * The buffered translated arrow shape for the path end.
 	 */
-	protected Shape arrowTranslated;
+	protected Shape arrowEndTranslated;
 
 	/**
 	 * Buffered control point coordinates.
@@ -40,9 +63,9 @@ public class Path extends DrawPrimitive
 	protected Point2D.Float[] coordinates = new Point2D.Float[0];
 
 	/**
-	 * Arrow path.
+	 * Reused arrow path template.
 	 */
-	protected static Path2D arrow = new Path2D.Float();
+	protected Path2D arrow = new Path2D.Float();
 
 	/**
 	 * Creates a new Path Primitive.<br>
@@ -60,12 +83,12 @@ public class Path extends DrawPrimitive
 		arrow.lineTo(0, 0);
 		arrow.lineTo(-2f * config.connectorSize, config.connectorSize);
 		arrow.closePath();
-
 	}
 
 	/**
 	 * Draws for given context.<br>
-	 * Paths don't use relative positions or insets. This override draw along the control points.
+	 * Paths don't use relative positions or insets.
+	 * This override draws a path along the absolute points of the control points.
 	 *
 	 * @param g2          The graphics context
 	 * @param position    not used.
@@ -101,14 +124,10 @@ public class Path extends DrawPrimitive
 				}
 			}
 		}
-
-		float theta = 0;
-
-
 		if (recreatePath)
 		{
 			path2D = new Path2D.Float();
-			arrowTranslated = null;
+			arrowEndTranslated = null;
 
 			if (LI >= 0)
 			{
@@ -117,14 +136,25 @@ public class Path extends DrawPrimitive
 				{
 					for (int i = 1; i <= LI; ++i)
 					{
-						path2D.lineTo(coordinates[i].x, coordinates[i].y);
+						switch (mode)
+						{
+							case Quad ->
+							{
+								float cx = coordinates[i - 1].x + (coordinates[i].x - coordinates[i - 1].x) / 2f;
+								float cy = coordinates[i].y;
+								path2D.quadTo(cx, cy, coordinates[i].x, coordinates[i].y);
+							}
+							case Straight -> path2D.lineTo(coordinates[i].x, coordinates[i].y);
+						}
 					}
-					theta = Geometry.getAngle(coordinates[LI - 1].x, coordinates[LI - 1].y, coordinates[LI].x, coordinates[LI].y);
+					ShapeHelper sh = new ShapeHelper(path2D);
+					var pos = sh.pointAtLength(sh.getOutlineLength() - config.connectorSize);
+					double theta = pos == null ? 0 : pos.angle_;
 
 					AffineTransform aft = new AffineTransform();
 					aft.translate(coordinates[LI].x, coordinates[LI].y);
 					aft.rotate(theta);
-					arrowTranslated = aft.createTransformedShape(arrow);
+					arrowEndTranslated = aft.createTransformedShape(arrow);
 				}
 			}
 		}
@@ -132,10 +162,9 @@ public class Path extends DrawPrimitive
 		g2.setStroke(actualStyle.lineStroke);
 		g2.setPaint(actualStyle.linePaint);
 		g2.draw(path2D);
-		if (arrowTranslated != null)
-			g2.fill(arrowTranslated);
+		if (arrowEndTranslated != null)
+			g2.fill(arrowEndTranslated);
 	}
-
 
 	@Override
 	protected void drawIntern(Graphics2D g2, DrawStyle style)
@@ -180,7 +209,7 @@ public class Path extends DrawPrimitive
 	{
 		if (pt != null && coordinates.length > 1)
 		{
-			return (float) pt.distance(Geometry.getClosestPointOnPolygon(pt, coordinates, null));
+			return (float) pt.distance(Geometry.getClosestPointOnShape(pt, path2D, 1));
 		}
 		return Float.MAX_VALUE;
 	}
