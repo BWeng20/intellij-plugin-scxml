@@ -27,7 +27,7 @@ public class PathControlVisual extends Visual implements PathControlPoint
 	public PathControlVisual(DrawContext context)
 	{
 		super(null, context);
-		this.primitive = new Rectangle(-radius, -radius, 2 * radius, 2 * radius, context.configuration, context.normal);
+		this.primitive = new Rectangle(-radius, -radius, 2 * radius, 2 * radius, 0, context.configuration, context.normal);
 	}
 
 	/**

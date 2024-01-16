@@ -79,7 +79,37 @@ public class GraphFactory
 	}
 
 	/**
-	 * Creates an edge between teo visuals.
+	 * Creates an edge between two states.
+	 * Only the edge to the state or parent in the same model is created.
+	 *
+	 * @param id     The Identification, can be null.
+	 * @param source The source-state
+	 * @param target The target-stare
+	 * @param g2     Graphics context for calculations.
+	 * @param style  The style to use.
+	 * @return The edge visual created.
+	 */
+	public EdgeVisual createEdge(Integer id, State source, State target, Graphics2D g2, DrawContext style)
+	{
+		if (source != null && target != null)
+		{
+			Visual sourceVisual = stateVisuals.get(source.name);
+
+			while (target != null && !source.parent.states.contains(target))
+			{
+				target = target.parent;
+			}
+			if (target != null)
+			{
+				return createEdge(id, sourceVisual, stateVisuals.get(target.name), g2, style);
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Creates an edge between two visuals.
+	 * Only the edge to the state or parent in the same model is created.
 	 *
 	 * @param id     The Identification, can be null.
 	 * @param source The source-visual
@@ -135,9 +165,12 @@ public class GraphFactory
 
 			if (visual.getInnerModel() != null)
 			{
-				Dimension2DFloat dim = visual.getInnerModelDimension();
-				InsetsFloat insets = visual.getInnerModelInsets();
-				insets.top = fh * 2f;
+				Dimension2DFloat dim = stateInnerContext.configuration.innerModelBoxDimension;
+				InsetsFloat insets = stateInnerContext.configuration.innerModelBoxInsets;
+				insets.top = fh * 2.5f;
+				insets.bottom = fh;
+				insets.left = fh;
+				insets.right = fh;
 
 				float w = dim.width + insets.right + insets.left;
 				float h = dim.height + insets.top + insets.bottom;
@@ -155,8 +188,9 @@ public class GraphFactory
 		v.setPosition(bounds.x, bounds.y);
 
 		Rectangle frame = new Rectangle(
-				0, 0, bounds.width, bounds.height, stateOuterContext.configuration,
+				0, 0, bounds.width, bounds.height, stateOuterContext.configuration.stateCornerArcSize, stateOuterContext.configuration,
 				stateOuterContext.normal);
+
 		frame.setFill(true);
 		v.addDrawingPrimitive(frame);
 
@@ -203,7 +237,6 @@ public class GraphFactory
 			Rectangle2D.Float statePosition = new Rectangle2D.Float(fh, fh, 0, 0);
 			statePosition.x += 2 * fh;
 
-
 			final Map<String, Rectangle2D.Float> statePositions = new HashMap<>();
 			statePositions.put(fsm.pseudoRoot.name, statePosition);
 
@@ -217,12 +250,14 @@ public class GraphFactory
 					statesByName.put(state.name, state);
 
 					Visual stateVisual = new GenericVisual(state.name, stateInnerStyles);
+
 					if (state.parent != null)
-						stateVisuals.get(state.parent.name)
-									.getInnerModel()
-									.addVisual(stateVisual);
+					{
+						stateVisuals.get(state.parent.name).getInnerModel().addVisual(stateVisual);
+					}
 					else
 						rootModel.addVisual(stateVisual);
+
 					stateVisuals.put(state.name, stateVisual);
 
 					if (!state.states.isEmpty())
@@ -242,6 +277,8 @@ public class GraphFactory
 				}
 			}
 
+
+			// We have now all information to create draw-primitives in the states-visuals.
 			for (var visualEntry : stateVisuals.entrySet())
 			{
 				Visual visual = visualEntry.getValue();
@@ -264,18 +301,20 @@ public class GraphFactory
 					}
 				}
 			}
+
+			// Create edges
 			for (Transition t : transitions.values())
 			{
-				Visual sourceVisual = stateVisuals.get(t.source.name);
 				for (State target : t.target)
 				{
 					stateVisuals.get(t.source.parent.name)
 								.getInnerModel()
 								.addEdge(
-										createEdge(t.docId, sourceVisual, stateVisuals.get(target.name), g2, edgeStyles));
+										createEdge(t.docId, t.source, target, g2, edgeStyles));
 				}
 			}
 
+			// Create start-visuals for all sub-models.
 			for (State state : statesByName.values())
 			{
 				if (!state.states.isEmpty())
@@ -303,7 +342,15 @@ public class GraphFactory
 					}
 					for (State initialState : initialStates)
 					{
-						Visual targetVisual = stateVisuals.get(initialState.name);
+						while (initialState != null && !state.states.contains(initialState))
+						{
+							initialState = initialState.parent;
+						}
+						Visual targetVisual = null;
+						if (initialState != null)
+						{
+							targetVisual = stateVisuals.get(initialState.name);
+						}
 						if (targetVisual == null)
 							log.warning(String.format("Target state %s of initial transition not found", initialState.name));
 						else

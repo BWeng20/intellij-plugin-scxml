@@ -151,8 +151,9 @@ public class GenericVisual extends Visual
 
 			if (innerModel != null)
 			{
-				x2 += innerModelDimension.width + innerModelInsets.left + innerModelInsets.right;
-				y2 += innerModelDimension.height + innerModelInsets.top + innerModelInsets.bottom;
+				GraphConfiguration cfg = context.configuration;
+				x2 += cfg.innerModelBoxDimension.width + cfg.innerModelBoxInsets.left + cfg.innerModelBoxInsets.right;
+				y2 += cfg.innerModelBoxDimension.height + cfg.innerModelBoxInsets.top + cfg.innerModelBoxInsets.bottom;
 			}
 
 			for (DrawPrimitive primitive : primitives)

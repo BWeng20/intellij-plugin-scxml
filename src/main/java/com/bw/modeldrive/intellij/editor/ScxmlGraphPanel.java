@@ -268,6 +268,8 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		startStyle.linePaint = Color.BLACK;
 		startStyle.fillPaint = Color.BLACK;
 
+		Color background = getBackground();
+
 		stateOutlineStyle.linePaint = Color.BLACK;
 		stateOutlineStyle.fillPaint = Color.GRAY;
 		stateOutlineStyle.lineStroke = new BasicStroke(2);
@@ -279,6 +281,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		stateInnerStyle.fillPaint = stateOutlineStyle.fillPaint;
 		stateInnerStyle.lineStroke = new BasicStroke(1);
 		stateInnerStyle.textPaint = stateOutlineStyle.textPaint;
+		stateInnerStyle.background = background;
 		stateInnerStyle.font = font;
 		stateInnerStyle.fontMetrics = fontMetrics;
 

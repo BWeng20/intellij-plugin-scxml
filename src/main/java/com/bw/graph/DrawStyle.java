@@ -39,6 +39,12 @@ public class DrawStyle
 
 
 	/**
+	 * Paint for background
+	 */
+	public Paint background = Color.LIGHT_GRAY;
+
+
+	/**
 	 * Paint for text
 	 */
 

@@ -261,7 +261,8 @@ public class XmlParser implements ScxmlTags
 
 	/**
 	 * Process unhandled attributes (with unknown namespaces).
-	 * @param e The parent-element of the attributes.
+	 *
+	 * @param e          The parent-element of the attributes.
 	 * @param fsmElement The current element.
 	 */
 	protected void processUnhandledAttributes(Element e, FsmElement fsmElement)

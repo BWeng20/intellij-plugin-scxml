@@ -2,9 +2,9 @@ package com.bw.graph.visual;
 
 import com.bw.graph.DrawContext;
 import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphConfiguration;
 import com.bw.graph.VisualModel;
 import com.bw.graph.util.Dimension2DFloat;
-import com.bw.graph.util.InsetsFloat;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
@@ -27,16 +27,6 @@ public abstract class Visual
 	 * A sub-model or null.
 	 */
 	protected VisualModel innerModel;
-
-	/**
-	 * The inner model target dimension inside this visual.
-	 */
-	protected Dimension2DFloat innerModelDimension = new Dimension2DFloat(200, 200);
-
-	/**
-	 * Insets for the inner model.
-	 */
-	protected InsetsFloat innerModelInsets = new InsetsFloat(20, 5, 5, 5);
 
 	/**
 	 * The parent the visual is bound to or null.
@@ -119,8 +109,12 @@ public abstract class Visual
 			Rectangle2D.Float bounds = getBounds2D(g2);
 			Rectangle2D.Float subBounds = innerModel.getBounds2D(g2);
 
+			final GraphConfiguration cfg = context.configuration;
+
 			// Calc scale, use minimum to keep aspect ratio
-			float scale = Math.min(innerModelDimension.width / subBounds.width, innerModelDimension.height / subBounds.height);
+			float scale = Math.min(
+					(cfg.innerModelBoxDimension.width - cfg.innerModelInsets.left - cfg.innerModelInsets.right) / subBounds.width,
+					(cfg.innerModelBoxDimension.height - cfg.innerModelInsets.top - cfg.innerModelInsets.bottom) / subBounds.height);
 			if (scale > 1f)
 				scale = 1f;
 			// Get resulting box for the sub-model.
@@ -129,17 +123,21 @@ public abstract class Visual
 			subBounds.width *= scale;
 			subBounds.height *= scale;
 
+
 			Rectangle2D.Float subModelBox = new Rectangle2D.Float(
-					bounds.x + (bounds.width - (subBounds.width + innerModelInsets.left + innerModelInsets.right)) / 2f,
-					bounds.y + bounds.height - (subBounds.height + innerModelInsets.bottom),
-					subBounds.width,
-					subBounds.height
-			);
+					bounds.x + cfg.innerModelBoxInsets.left,
+					bounds.y + cfg.innerModelBoxInsets.top, cfg.innerModelBoxDimension.width, cfg.innerModelBoxDimension.height);
+			g2.setPaint(style.background);
+			g2.fill(subModelBox);
+			g2.setStroke(style.lineStroke);
+			g2.setPaint(style.linePaint);
+			g2.draw(subModelBox);
 
 			AffineTransform orgAft = g2.getTransform();
 			try
 			{
-				g2.translate(subModelBox.x, subModelBox.y);
+				g2.translate(subModelBox.x + (subModelBox.width - subBounds.width) / 2f,
+						subModelBox.y + (subModelBox.width - subBounds.height) / 2f);
 				g2.scale(scale, scale);
 				innerModel.draw(g2);
 			}
@@ -153,7 +151,7 @@ public abstract class Visual
 
 	/**
 	 * Draw the visual.<br>
-	 * If a sub-model is set, the area described by {@link #innerModelDimension} and {@link #innerModelInsets} shall be spared,
+	 * If a sub-model is set, the area described by {@link GraphConfiguration#innerModelBoxInsets} and {@link GraphConfiguration#innerModelBoxDimension} shall be spared,
 	 * as this area will be over-drawn by {@link #draw(Graphics2D, DrawStyle)}.
 	 *
 	 * @param g2    The Graphics context
@@ -174,8 +172,7 @@ public abstract class Visual
 	}
 
 	/**
-	 * Updates {@link #x2} and {@link #y2}.<br>
-	 * If the visual supports sub-models, {@link #innerModelDimension} and {@link #innerModelInsets} needs to be considered.
+	 * Updates {@link #x2} and {@link #y2}.
 	 *
 	 * @param graphics The graphics context to use for calculations.
 	 */
@@ -303,51 +300,6 @@ public abstract class Visual
 	}
 
 	/**
-	 * Sets the insert for drawing the inner model.
-	 *
-	 * @param insets The insets
-	 */
-	public void setInnerModelInsets(InsetsFloat insets)
-	{
-		if (innerModel != null)
-			resetBounds();
-		this.innerModelInsets = insets;
-	}
-
-
-	/**
-	 * Gets the insert for drawing the inner model.
-	 *
-	 * @return The insets
-	 */
-	public InsetsFloat getInnerModelInsets()
-	{
-		return innerModelInsets;
-	}
-
-	/**
-	 * Gets the dimension of the box for the inner model.
-	 *
-	 * @return The dimension.
-	 */
-	public Dimension2DFloat getInnerModelDimension()
-	{
-		return innerModelDimension;
-	}
-
-	/**
-	 * Sets the dimension of the box for the inner model.
-	 *
-	 * @param innerModelDimension The dimension.
-	 */
-	public void setInnerModelDimension(Dimension2DFloat innerModelDimension)
-	{
-		this.innerModelDimension = innerModelDimension;
-		if (innerModel != null)
-			resetBounds();
-	}
-
-	/**
 	 * Gets the absolute center position.
 	 *
 	 * @param g2 The graphics context to use for calculations.
@@ -449,6 +401,16 @@ public abstract class Visual
 	public Dimension2DFloat getPreferredDimension()
 	{
 		return dimension;
+	}
+
+	/**
+	 * Get the parent.
+	 *
+	 * @return The parent or null.
+	 */
+	public Visual getParent()
+	{
+		return parent;
 	}
 
 }
