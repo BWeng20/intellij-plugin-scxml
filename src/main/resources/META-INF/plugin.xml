@@ -22,6 +22,9 @@
 
     <resource-bundle>messages.ScxmlSdkBundle</resource-bundle>
 
+    <applicationListeners>
+        <listener topic="com.intellij.ide.ui.LafManagerListener" class="com.bw.modeldrive.intellij.editor.GraphLafManagerListener"/>
+    </applicationListeners>
 
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->

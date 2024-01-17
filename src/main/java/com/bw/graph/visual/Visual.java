@@ -72,6 +72,11 @@ public abstract class Visual
 	protected boolean repaintTriggered = false;
 
 	/**
+	 * "Dirty" marker, true if model was externally modified.
+	 */
+	protected boolean dirty = false;
+
+	/**
 	 * Create a new empty visual.
 	 *
 	 * @param id      The identification. Can be null.
@@ -95,7 +100,7 @@ public abstract class Visual
 	}
 
 	/**
-	 * Draw the visual and (if availanble) the sub-model inside.<br>
+	 * Draw the visual and (if available) the sub-model inside.<br>
 	 *
 	 * @param g2    The Graphics context
 	 * @param style The style.
@@ -117,13 +122,12 @@ public abstract class Visual
 					(cfg.innerModelBoxDimension.height - cfg.innerModelInsets.top - cfg.innerModelInsets.bottom) / subBounds.height);
 			if (scale > 1f)
 				scale = 1f;
-			// Get resulting box for the sub-model.
 			subBounds.x *= scale;
 			subBounds.y *= scale;
 			subBounds.width *= scale;
 			subBounds.height *= scale;
 
-
+			// Get resulting box for the sub-model.
 			Rectangle2D.Float subModelBox = new Rectangle2D.Float(
 					bounds.x + cfg.innerModelBoxInsets.left,
 					bounds.y + cfg.innerModelBoxInsets.top, cfg.innerModelBoxDimension.width, cfg.innerModelBoxDimension.height);
@@ -186,12 +190,16 @@ public abstract class Visual
 	 */
 	public void moveBy(float x, float y)
 	{
-		position.x += x;
-		position.y += y;
-		if (x2 >= 0)
+		if (x != 0 || y != 0)
 		{
-			x2 += x;
-			y2 += y;
+			dirty = true;
+			position.x += x;
+			position.y += y;
+			if (x2 >= 0)
+			{
+				x2 += x;
+				y2 += y;
+			}
 		}
 	}
 
@@ -212,10 +220,12 @@ public abstract class Visual
 	public Rectangle2D.Float getBounds2D(Graphics2D g2)
 	{
 		if (x2 < 0)
+		{
 			updateBounds(g2);
+		}
 		Point2D.Float pos = new Point2D.Float();
 		getPosition(pos);
-		return new Rectangle2D.Float(pos.x, pos.y, x2 - position.x + 1, y2 - position.y + 1);
+		return new Rectangle2D.Float(pos.x, pos.y, x2 - position.x, y2 - position.y);
 	}
 
 	/**
@@ -249,16 +259,20 @@ public abstract class Visual
 	}
 
 	/**
-	 * Sets the base position.
+	 * Sets the base position.<br>
+	 * Doesn't set dirty as this method is used to set up the visual.
 	 *
 	 * @param x The new X ordinate.
 	 * @param y The new Y ordinate.
 	 */
 	public void setPosition(float x, float y)
 	{
-		position.x = x;
-		position.y = y;
-		resetBounds();
+		if (position.x != x || position.y != y)
+		{
+			position.x = x;
+			position.y = y;
+			resetBounds();
+		}
 	}
 
 	/**
@@ -387,6 +401,7 @@ public abstract class Visual
 	{
 		if (dimension == null || dimension.width != width || dimension.height != height)
 		{
+			dirty = true;
 			this.dimension = new Dimension2DFloat(width, height);
 			resetBounds();
 			repaint();
@@ -413,4 +428,31 @@ public abstract class Visual
 		return parent;
 	}
 
+	/**
+	 * Sets modified status.
+	 *
+	 * @param modified The new modified.
+	 */
+	public void setModified(boolean modified)
+	{
+		dirty = modified;
+		if (innerModel != null)
+			innerModel.setModified(modified);
+	}
+
+	/**
+	 * Checks if the visual itself or the inner model was modified
+	 *
+	 * @return true if modified.
+	 */
+	public boolean isModified()
+	{
+		return dirty || (innerModel != null && innerModel.isModified());
+	}
+
+	@Override
+	public String toString()
+	{
+		return String.valueOf(id);
+	}
 }

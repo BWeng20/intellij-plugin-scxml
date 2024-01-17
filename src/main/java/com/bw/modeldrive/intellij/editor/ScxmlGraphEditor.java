@@ -1,11 +1,17 @@
 package com.bw.modeldrive.intellij.editor;
 
+import com.bw.XmlWriter;
+import com.bw.graph.VisualModel;
+import com.bw.graph.visual.GenericVisual;
+import com.bw.graph.visual.Visual;
 import com.bw.modeldrive.fsm.model.FiniteStateMachine;
 import com.bw.modeldrive.fsm.parser.LogExtensionParser;
 import com.bw.modeldrive.fsm.parser.ParserException;
+import com.bw.modeldrive.fsm.parser.ScxmlTags;
 import com.bw.modeldrive.fsm.parser.XmlParser;
 import com.bw.modeldrive.fsm.ui.GraphExtension;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.event.DocumentEvent;
@@ -17,12 +23,22 @@ import com.intellij.openapi.util.UserDataHolderBase;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.xml.XmlAttribute;
+import com.intellij.psi.xml.XmlDocument;
+import com.intellij.psi.xml.XmlFile;
+import com.intellij.psi.xml.XmlTag;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.JComponent;
+import javax.swing.Timer;
+import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Graphical SCXML {@link FileEditor}.
@@ -54,8 +70,22 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	/**
 	 * True if an update of the graph was triggered.
 	 */
-	boolean updateTriggered = false;
+	boolean updateGraphTriggered = false;
 
+	/**
+	 * True if an update of the XML file was triggered.
+	 */
+	boolean updateXmlTriggered = false;
+
+	/**
+	 * Sync to document is in progress, if this flag is true.
+	 */
+	boolean inDocumentSync = false;
+
+	/**
+	 * Timer to trigger graph to document synchronization.
+	 */
+	Timer updateXmlTimer;
 
 	/**
 	 * Listener for document changes.
@@ -65,34 +95,161 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 		@Override
 		public void documentChanged(@NotNull DocumentEvent event)
 		{
-			log.warn("Document Event " + event);
-			triggerUpdate();
+			if (inDocumentSync)
+			{
+				log.warn("(Sync) Ignored Document Event " + event);
+			}
+			else
+			{
+				log.warn("Document Event " + event);
+				triggerGraphUpdate();
+			}
 		}
 	};
 
 	/**
 	 * Triggers a background update of the graph.
 	 */
-	protected void triggerUpdate()
+	protected void triggerGraphUpdate()
 	{
-		if (!updateTriggered)
+		if (!updateGraphTriggered)
 		{
-			updateTriggered = true;
+			updateGraphTriggered = true;
 			// Executes in worker thread with read-lock.
 			ApplicationManager.getApplication()
 							  .executeOnPooledThread(() -> ApplicationManager.getApplication()
-																			 .runReadAction(this::runUpdate));
+																			 .runReadAction(this::runGraphUpdate));
+		}
+	}
+
+	/**
+	 * Triggers a background update of the XML file.
+	 */
+	protected void triggerXmlUpdate()
+	{
+		if (!updateXmlTriggered)
+		{
+			updateXmlTriggered = true;
+			ApplicationManager.getApplication().invokeLater(() -> WriteCommandAction.runWriteCommandAction(xmlFile.getProject(), this::runXmlUpdate));
+		}
+	}
+
+
+	/**
+	 * This method is synchronized because it is possible that this method is called from different worker threads in parallel.
+	 */
+	private synchronized void runXmlUpdate()
+	{
+		// @TODO: move calculation of graphextensions to worker thread, then use the result here in write action.
+		if (updateXmlTriggered)
+		{
+			updateXmlTriggered = false;
+			try
+			{
+				inDocumentSync = true;
+				PsiDocumentManager.getInstance(xmlFile.getProject()).commitDocument(xmlDocument);
+
+				VisualModel model = (component.root == null) ? null : component.root.getInnerModel();
+				if (xmlFile != null && model != null)
+				{
+					HashMap<String, Rectangle2D.Float> bounds = new HashMap<>();
+
+					List<Visual> visuals = new ArrayList<>(model.getVisuals());
+
+					while (!visuals.isEmpty())
+					{
+						Visual v = visuals.remove(visuals.size() - 1);
+						if (v instanceof GenericVisual)
+						{
+							String id = (String) v.getId();
+							if (id != null)
+							{
+								bounds.put(id, v.getBounds2D(null));
+							}
+						}
+						VisualModel m = v.getInnerModel();
+						if (m != null)
+						{
+							visuals.addAll(m.getVisuals());
+						}
+					}
+					try
+					{
+						float precisionFactor = 1000;
+						XmlDocument doc = ((XmlFile) xmlFile).getDocument();
+						XmlTag root = doc.getRootTag();
+						if (root != null)
+						{
+							List<XmlTag> allStates = new ArrayList<>(100);
+							allStates.add(root);
+
+							while (!allStates.isEmpty())
+							{
+								XmlTag s = allStates.remove(allStates.size() - 1);
+								String id = s.getAttributeValue(ScxmlTags.ATTR_ID);
+
+								allStates.addAll(Arrays.asList(s.findSubTags(ScxmlTags.TAG_STATE, ScxmlTags.NS_SCXML)));
+								allStates.addAll(Arrays.asList(s.findSubTags(ScxmlTags.TAG_PARALLEL, ScxmlTags.NS_SCXML)));
+
+								if (id != null)
+								{
+									Rectangle2D.Float r = bounds.get(id);
+									if (r != null)
+									{
+										String bs = XmlWriter.floatToStringRestrictedPrecision(r.x, precisionFactor) + " " +
+												XmlWriter.floatToStringRestrictedPrecision(r.y, precisionFactor) + " " +
+												XmlWriter.floatToStringRestrictedPrecision(r.width, precisionFactor) + " " +
+												XmlWriter.floatToStringRestrictedPrecision(r.height, precisionFactor);
+										System.err.println("State " + id + " " + bs);
+
+										XmlAttribute attr = s.getAttribute(GraphExtension.ATTR_BOUNDS, GraphExtension.NS_GRAPH_EXTENSION);
+										if (attr == null)
+										{
+											s.setAttribute(GraphExtension.ATTR_BOUNDS, GraphExtension.NS_GRAPH_EXTENSION, bs);
+										}
+										else
+										{
+											if (!bs.equals(attr.getValue()))
+											{
+												System.err.println(attr.getValue() + " -> " + bs);
+												attr.setValue(bs);
+											}
+										}
+									}
+									else
+									{
+										System.err.println("No bounds for " + id);
+									}
+								}
+							}
+						}
+
+						PsiDocumentManager.getInstance(xmlFile.getProject()).commitDocument(xmlDocument);
+
+					}
+					catch (ProcessCanceledException pce)
+					{
+						// Shall never be caught
+						throw pce;
+					}
+				}
+			}
+			finally
+			{
+				inDocumentSync = false;
+				// @TODO some unlock?
+			}
 		}
 	}
 
 	/**
 	 * This method is synchronized because it is possible that this method is called from different worker threads in parallel.
 	 */
-	private synchronized void runUpdate()
+	private synchronized void runGraphUpdate()
 	{
-		if (updateTriggered)
+		if (updateGraphTriggered)
 		{
-			updateTriggered = false;
+			updateGraphTriggered = false;
 			if (file != null)
 			{
 				try
@@ -131,6 +288,20 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 		component = new ScxmlGraphPanel(psiFile == null ? null : psiFile.getProject());
 		this.file = file;
 		setXmlFile(psiFile);
+
+		updateXmlTimer = new Timer(500, e -> {
+			if (component.root != null)
+			{
+				VisualModel model = component.root.getInnerModel();
+				if (model != null && model.isModified())
+				{
+					log.warn("Model modified");
+					model.setModified(false);
+					triggerXmlUpdate();
+				}
+			}
+		});
+		updateXmlTimer.start();
 	}
 
 	/**
@@ -159,7 +330,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 																	  .getName());
 				xmlDocument.addDocumentListener(documentListener);
 			}
-			triggerUpdate();
+			triggerGraphUpdate();
 		}
 	}
 

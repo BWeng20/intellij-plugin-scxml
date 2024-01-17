@@ -1,27 +1,21 @@
 package com.bw.svg;
 
+import com.bw.XmlWriter;
+
 import java.awt.Color;
 import java.awt.Paint;
 import java.awt.geom.Rectangle2D;
-import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.Stack;
 
 /**
  * Printer to build SVG.
  */
-public class SVGWriter extends PrintWriter
+public class SVGWriter extends XmlWriter
 {
-	private final float precisionFactor = 10 * 10 * 10;
-
-	private final Stack<String> tagStack = new Stack<>();
-
 	private boolean inSvg = false;
 
 	private boolean inStyle = false;
 	private boolean atStyleStart = false;
-
-	private boolean elementHasContent = false;
 
 	/**
 	 * Creates an SVG Writer on top of some other writer.
@@ -156,56 +150,27 @@ public class SVGWriter extends PrintWriter
 	}
 
 	/**
-	 * Starts a new element.
-	 *
-	 * @param tag A SVG element tag name.
-	 */
-	public void startElement(String tag)
-	{
-		if (!(tagStack.empty() || elementHasContent))
-			write(">");
-		tagStack.push(tag);
-		write("\n<");
-		write(tag);
-		elementHasContent = false;
-	}
-
-	/**
 	 * Starts content area.
 	 */
+	@Override
 	public void startContent()
 	{
 		if (inStyle)
 			endStyle();
-		if (!elementHasContent)
-			write('>');
-		elementHasContent = true;
+		super.startContent();
 	}
 
 	/**
 	 * Ends the current element.
 	 */
+	@Override
 	public void endElement()
 	{
-		if (tagStack.empty())
-		{
-			throw new IllegalStateException("endElement called on empty element-stack.");
-		}
-		final String element = tagStack.pop();
 		if (inStyle)
 		{
 			endStyle();
 		}
-		if (elementHasContent)
-		{
-			write("</");
-			write(element);
-			write('>');
-		}
-		else
-		{
-			write("/>");
-		}
+		super.endElement();
 
 	}
 
@@ -243,94 +208,8 @@ public class SVGWriter extends PrintWriter
 		}
 	}
 
-	/**
-	 * Appends the attribute with the value.
-	 *
-	 * @param attribute The name of the attribute (without '=').
-	 * @param value     The value.
-	 */
-	public void writeAttribute(String attribute, String value)
-	{
-		if (value != null)
-		{
-			writeAttributeProlog();
-			write(attribute);
-			writeAssign();
-			writeEscapedAttributeValue(value);
-			writeAttributeEpilog();
-		}
-	}
-
-
-	/**
-	 * Appends the attribute with float value.
-	 *
-	 * @param attribute The name of the attribute (without ':').
-	 * @param value     The value.
-	 */
-	public void writeAttribute(String attribute, float value)
-	{
-		writeAttributeProlog();
-		write(attribute);
-		writeAssign();
-		writeRestrictedFloat(value);
-		writeAttributeEpilog();
-	}
-
-	/**
-	 * Write XML escaped Text. Escapes &lt;, &gt; and &amp;.
-	 * For attribute-values use {@link #writeEscapedAttributeValue(CharSequence)}
-	 *
-	 * @param text The unescaped text.
-	 */
-	public void writeEscaped(CharSequence text)
-	{
-		final int N = text.length();
-		for (int i = 0; i < N; ++i)
-		{
-			final char c = text.charAt(i);
-			switch (c)
-			{
-				case '<' -> write("&lt;");
-				case '>' -> write("&gt;");
-				case '&' -> write("&amp;");
-				default -> write(c);
-			}
-		}
-	}
-
-	/**
-	 * Writes an escaped attribute value. Only ' will be escaped as all attributes are enclosed with it.
-	 * For content text use {@link #writeEscaped(CharSequence)}.
-	 *
-	 * @param text The unescaped attribute text.
-	 */
-	public void writeEscapedAttributeValue(CharSequence text)
-	{
-		final int N = text.length();
-		for (int i = 0; i < N; ++i)
-		{
-			final char c = text.charAt(i);
-			if (c == '\'')
-				write("&apos;");
-			else
-				write(c);
-		}
-	}
-
-	/**
-	 * Appends a float with restricted precision to the SVG buffer.
-	 *
-	 * @param value The value.
-	 */
-	public void writeRestrictedFloat(float value)
-	{
-		value = (float) Math.floor(0.5f + (value * precisionFactor)) / precisionFactor;
-		write((value == Math.ceil(value))
-				? Long.toString((long) value) : Float.toString(value));
-	}
-
-	private void writeAttributeProlog()
+	@Override
+	protected void writeAttributeProlog()
 	{
 		if (inStyle)
 		{
@@ -343,18 +222,20 @@ public class SVGWriter extends PrintWriter
 				write(';');
 		}
 		else
-			write(' ');
+			super.writeAttributeProlog();
 	}
 
-	private void writeAttributeEpilog()
+	@Override
+	protected void writeAttributeEpilog()
 	{
 		if (!inStyle)
 		{
-			write("'");
+			super.writeAttributeEpilog();
 		}
 	}
 
-	private void writeAssign()
+	@Override
+	protected void writeAssign()
 	{
 		write(inStyle ? ":" : "='");
 	}

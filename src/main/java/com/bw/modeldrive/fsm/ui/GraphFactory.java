@@ -70,11 +70,12 @@ public class GraphFactory
 	 */
 	public Visual createStartVisual(State start, float x, float y, float radius, DrawContext style)
 	{
-		GenericVisual startNode = new GenericVisual(start.name, style);
+		GenericVisual startNode = new GenericVisual(null, style);
 		Circle circle = new Circle(radius, radius, radius, style.configuration, null);
 		circle.setFill(true);
 		startNode.setPosition(x, y);
 		startNode.addDrawingPrimitive(circle);
+		startNode.setModified(false);
 		return startNode;
 	}
 
@@ -95,13 +96,15 @@ public class GraphFactory
 		{
 			Visual sourceVisual = stateVisuals.get(source.name);
 
+			boolean toInnerModel = false;
 			while (target != null && !source.parent.states.contains(target))
 			{
 				target = target.parent;
+				toInnerModel = true;
 			}
 			if (target != null)
 			{
-				return createEdge(id, sourceVisual, stateVisuals.get(target.name), g2, style);
+				return createEdge(id, sourceVisual, stateVisuals.get(target.name), g2, style, toInnerModel);
 			}
 		}
 		return null;
@@ -111,14 +114,15 @@ public class GraphFactory
 	 * Creates an edge between two visuals.
 	 * Only the edge to the state or parent in the same model is created.
 	 *
-	 * @param id     The Identification, can be null.
-	 * @param source The source-visual
-	 * @param target The target-visual
-	 * @param g2     Graphics context for calculations.
-	 * @param style  The style to use.
+	 * @param id           The Identification, can be null.
+	 * @param source       The source-visual
+	 * @param target       The target-visual
+	 * @param g2           Graphics context for calculations.
+	 * @param style        The style to use.
+	 * @param toInnerModel True if the edge target the inner model of the state.
 	 * @return The edge visual created.
 	 */
-	public EdgeVisual createEdge(Integer id, Visual source, Visual target, Graphics2D g2, DrawContext style)
+	public EdgeVisual createEdge(Integer id, Visual source, Visual target, Graphics2D g2, DrawContext style, boolean toInnerModel)
 	{
 		if (source != null && target != null)
 		{
@@ -127,11 +131,15 @@ public class GraphFactory
 			ConnectorVisual sourceConnector = new ConnectorVisual(source, style);
 			Rectangle2D.Float sourceConnectorBounds = sourceConnector.getBounds2D(g2);
 			sourceConnector.setPosition(startBounds.width - (sourceConnectorBounds.width / 2f), (startBounds.height - sourceConnectorBounds.height) / 2f);
+			sourceConnector.setModified(false);
 
 			Rectangle2D.Float targetBounds = target.getBounds2D(g2);
 			ConnectorVisual targetConnector = new ConnectorVisual(target, style);
 			Rectangle2D.Float targetConnectorBounds = targetConnector.getBounds2D(g2);
-			targetConnector.setPosition(-targetConnectorBounds.width + (targetConnectorBounds.width / 2f), (targetBounds.height - targetConnectorBounds.height) / 2f);
+			if (toInnerModel)
+				targetConnector.setPosition(style.configuration.innerModelBoxInsets.left - targetConnectorBounds.width + (targetConnectorBounds.width / 2f), (targetBounds.height - targetConnectorBounds.height) / 2f);
+			else
+				targetConnector.setPosition(-targetConnectorBounds.width + (targetConnectorBounds.width / 2f), (targetBounds.height - targetConnectorBounds.height) / 2f);
 
 			return new EdgeVisual(id, sourceConnector, targetConnector, style);
 		}
@@ -167,10 +175,6 @@ public class GraphFactory
 			{
 				Dimension2DFloat dim = stateInnerContext.configuration.innerModelBoxDimension;
 				InsetsFloat insets = stateInnerContext.configuration.innerModelBoxInsets;
-				insets.top = fh * 2.5f;
-				insets.bottom = fh;
-				insets.left = fh;
-				insets.right = fh;
 
 				float w = dim.width + insets.right + insets.left;
 				float h = dim.height + insets.top + insets.bottom;
@@ -234,6 +238,12 @@ public class GraphFactory
 			final float gapY = 5;
 			float fh = stateOutlineStyles.normal.fontMetrics.getHeight();
 
+			InsetsFloat insets = stateInnerStyles.configuration.innerModelBoxInsets;
+			insets.top = fh * 2.5f;
+			insets.bottom = fh;
+			insets.left = fh;
+			insets.right = fh;
+
 			Rectangle2D.Float statePosition = new Rectangle2D.Float(fh, fh, 0, 0);
 			statePosition.x += 2 * fh;
 
@@ -290,14 +300,17 @@ public class GraphFactory
 					createStatePrimitives(visual, statePosition.x, statePosition.y, state, g2, stateOutlineStyles, stateInnerStyles);
 
 					Rectangle2D.Float bounds = visual.getBounds2D(g2);
-					statePosition.y += bounds.height + gapY;
-					if (bounds.width > statePosition.width)
-						statePosition.width = bounds.width;
-					if (statePosition.y > 600)
+					if (bounds != null)
 					{
-						statePosition.x += statePosition.width + fh;
-						statePosition.y = fh;
-						statePosition.width = 0;
+						statePosition.y += bounds.height + gapY;
+						if (bounds.width > statePosition.width)
+							statePosition.width = bounds.width;
+						if (statePosition.y > 600)
+						{
+							statePosition.x += statePosition.width + fh;
+							statePosition.y = fh;
+							statePosition.width = 0;
+						}
 					}
 				}
 			}
@@ -309,7 +322,7 @@ public class GraphFactory
 				{
 					stateVisuals.get(t.source.parent.name)
 								.getInnerModel()
-								.addEdge(
+								.addVisual(
 										createEdge(t.docId, t.source, target, g2, edgeStyles));
 				}
 			}
@@ -342,9 +355,11 @@ public class GraphFactory
 					}
 					for (State initialState : initialStates)
 					{
+						boolean toInnerModel = false;
 						while (initialState != null && !state.states.contains(initialState))
 						{
 							initialState = initialState.parent;
+							toInnerModel = true;
 						}
 						Visual targetVisual = null;
 						if (initialState != null)
@@ -355,13 +370,13 @@ public class GraphFactory
 							log.warning(String.format("Target state %s of initial transition not found", initialState.name));
 						else
 						{
-							innerModel.addEdge(createEdge(id, startVisual, targetVisual, g2, edgeStyles));
+							innerModel.addVisual(createEdge(id, startVisual, targetVisual, g2, edgeStyles, toInnerModel));
 						}
 					}
 				}
 			}
 		}
-
+		rootModel.setModified(false);
 		return rootModel;
 	}
 

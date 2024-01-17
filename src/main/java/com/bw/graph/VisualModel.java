@@ -1,6 +1,5 @@
 package com.bw.graph;
 
-import com.bw.graph.visual.EdgeVisual;
 import com.bw.graph.visual.Visual;
 
 import java.awt.Graphics2D;
@@ -32,31 +31,11 @@ public class VisualModel
 	 */
 	private final LinkedList<Visual> visuals = new LinkedList<>();
 
-	/**
-	 * List of Edges.
-	 */
-	private final LinkedList<EdgeVisual> edges = new LinkedList<>();
 
 	/**
-	 * Gets the edges. Modification of the returned list will lead to undefined behaviour.
-	 *
-	 * @return The edges.
+	 * Marks the model as modified.
 	 */
-	public List<EdgeVisual> getEdges()
-	{
-		return edges;
-	}
-
-	/**
-	 * Adds a new edge.
-	 *
-	 * @param edgeVisual The new edge.
-	 */
-	public void addEdge(EdgeVisual edgeVisual)
-	{
-		edges.add(edgeVisual);
-		fireModelChange();
-	}
+	private boolean dirty = false;
 
 	/**
 	 * Gets the visuals. Modification of the returned list will lead to undefined behaviour.
@@ -75,9 +54,13 @@ public class VisualModel
 	 */
 	public void addVisual(Visual visual)
 	{
-		visual.resetBounds();
-		visuals.add(visual);
-		fireModelChange();
+		if (visual != null)
+		{
+			dirty = true;
+			visual.resetBounds();
+			visuals.add(visual);
+			fireModelChange();
+		}
 	}
 
 	/**
@@ -87,14 +70,7 @@ public class VisualModel
 	 */
 	public void moveVisualToTop(Visual visual)
 	{
-		if (visual instanceof EdgeVisual)
-		{
-			if (edges.remove(visual))
-			{
-				edges.add((EdgeVisual) visual);
-			}
-		}
-		else if (visuals.remove(visual))
+		if (visuals.remove(visual))
 		{
 			visuals.add(visual);
 		}
@@ -108,8 +84,6 @@ public class VisualModel
 	{
 		visuals.forEach(Visual::dispose);
 		visuals.clear();
-		edges.forEach(Visual::dispose);
-		edges.clear();
 		listeners.clear();
 	}
 
@@ -151,8 +125,6 @@ public class VisualModel
 	 */
 	public void draw(Graphics2D g2)
 	{
-		for (EdgeVisual e : edges)
-			e.draw(g2);
 		for (Visual v : visuals)
 			v.draw(g2);
 	}
@@ -172,19 +144,16 @@ public class VisualModel
 		for (Visual visual : visuals)
 		{
 			Rectangle2D.Float visualBounds = visual.getBounds2D(g2);
-			if (visualBounds != null)
-			{
-				if (bounds.x > visualBounds.x)
-					bounds.x = visualBounds.x;
-				if (bounds.y > visualBounds.y)
-					bounds.y = visualBounds.y;
-				t2 = visualBounds.x + visualBounds.width;
-				if (x2 < t2)
-					x2 = t2;
-				t2 = visualBounds.y + visualBounds.height;
-				if (y2 < t2)
-					y2 = t2;
-			}
+			if (bounds.x > visualBounds.x)
+				bounds.x = visualBounds.x;
+			if (bounds.y > visualBounds.y)
+				bounds.y = visualBounds.y;
+			t2 = visualBounds.x + visualBounds.width;
+			if (x2 < t2)
+				x2 = t2;
+			t2 = visualBounds.y + visualBounds.height;
+			if (y2 < t2)
+				y2 = t2;
 		}
 		bounds.width = x2 - bounds.x;
 		bounds.height = y2 - bounds.y;
@@ -198,4 +167,29 @@ public class VisualModel
 	{
 		getVisuals().forEach(Visual::repaint);
 	}
+
+	/**
+	 * Checks if the model was modified
+	 *
+	 * @return true if modified.
+	 */
+	public boolean isModified()
+	{
+		return dirty ? true : visuals.stream().anyMatch(Visual::isModified);
+	}
+
+	/**
+	 * Sets modified status.
+	 *
+	 * @param modified The new modified.
+	 */
+	public void setModified(boolean modified)
+	{
+		dirty = modified;
+		if (!modified)
+		{
+			visuals.forEach(v -> v.setModified(false));
+		}
+	}
+
 }

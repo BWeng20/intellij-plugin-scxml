@@ -67,4 +67,10 @@ public final class Dimension2DFloat extends Dimension2D
 		this.width = (float) width;
 		this.height = (float) height;
 	}
+
+	@Override
+	public String toString()
+	{
+		return "Dimension[" + width + "," + height + "]";
+	}
 }

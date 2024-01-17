@@ -46,9 +46,16 @@ public class Text extends DrawPrimitive
 	@Override
 	protected Dimension2DFloat getInnerDimension(Graphics2D graphics, DrawStyle style)
 	{
-		Rectangle2D r = style.fontMetrics.getStringBounds(text, graphics);
+		if (graphics != null)
+		{
+			Rectangle2D r = style.fontMetrics.getStringBounds(text, graphics);
 
-		return new Dimension2DFloat((float) r.getWidth(), (float) r.getHeight());
+			return new Dimension2DFloat((float) r.getWidth(), (float) r.getHeight());
+		}
+		else
+		{
+			return new Dimension2DFloat(text.length() * 12, 12);
+		}
 	}
 
 	@Override

@@ -126,6 +126,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	@Override
 	public void dispose()
 	{
+		GraphLafManagerListener.removeGraphLafListener(lafListener);
 		mbCon.dispose();
 		pane.dispose();
 	}
@@ -257,13 +258,58 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		// add(bc, BorderLayout.NORTH);
 		add(new JScrollPane(pane), BorderLayout.CENTER);
 
+		updateLaf();
+
+		mbCon = theProject.getMessageBus()
+						  .connect();
+		mbCon.subscribe(ChangeConfigurationNotifier.CHANGE_CONFIG_TOPIC, (ChangeConfigurationNotifier) this::setConfiguration);
+
+		PersistenceService persistenceService = theProject.getService(PersistenceService.class);
+		if (persistenceService != null)
+		{
+			setConfiguration(persistenceService.getState());
+		}
+
+		pane.addInteractionListener(new InteractionListener()
+		{
+			@Override
+			public void selected(Visual visual)
+			{
+			}
+
+			@Override
+			public void deselected(Visual visual)
+			{
+			}
+
+			@Override
+			public void hierarchyChanged()
+			{
+				updatedStateBreadcrumbs();
+			}
+		});
+
+		GraphLafManagerListener.addGraphLafListener(lafListener);
+	}
+
+	/**
+	 * The Laf listener.
+	 */
+	protected LafListener lafListener = new LafListener();
+
+	/**
+	 * Updates graphical settings from current LAF.
+	 * This method doesn't call "repaint" itself.
+	 */
+	protected void updateLaf()
+	{
+		// @TODO: Make styles configurable.
+
 		Font font = getFont();
 		if (font == null)
 			font = new Font(Font.DIALOG, Font.PLAIN, 12);
 
 		FontMetrics fontMetrics = getFontMetrics(font);
-
-		// @TODO: Make styles configurable.
 
 		startStyle.linePaint = Color.BLACK;
 		startStyle.fillPaint = Color.BLACK;
@@ -298,34 +344,31 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		stateOutlineStyleHighlight.font = font;
 		stateOutlineStyleHighlight.fontMetrics = fontMetrics;
 
-		mbCon = theProject.getMessageBus()
-						  .connect();
-		mbCon.subscribe(ChangeConfigurationNotifier.CHANGE_CONFIG_TOPIC, (ChangeConfigurationNotifier) this::setConfiguration);
+	}
 
-		PersistenceService persistenceService = theProject.getService(PersistenceService.class);
-		if (persistenceService != null)
+	/**
+	 * Laf Listener implementation.
+	 *
+	 * @see GraphLafManagerListener
+	 */
+	protected class LafListener implements GraphLafListener
+	{
+		/**
+		 * Create a new instance of the listener.
+		 */
+		LafListener()
 		{
-			setConfiguration(persistenceService.getState());
+
 		}
 
-		pane.addInteractionListener(new InteractionListener()
+		@Override
+		public void lafChanged()
 		{
-			@Override
-			public void selected(Visual visual)
-			{
-			}
-
-			@Override
-			public void deselected(Visual visual)
-			{
-			}
-
-			@Override
-			public void hierarchyChanged()
-			{
-				updatedStateBreadcrumbs();
-			}
-		});
+			SwingUtilities.invokeLater(() -> {
+				updateLaf();
+				repaint();
+			});
+		}
 	}
 
 	/**

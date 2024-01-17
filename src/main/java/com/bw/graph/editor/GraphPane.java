@@ -197,15 +197,6 @@ public class GraphPane extends JComponent
 				return v;
 			}
 		}
-		var edges = model.getEdges();
-		for (var it = edges.listIterator(edges.size()); it.hasPrevious(); )
-		{
-			final Visual v = it.previous();
-			if (v.containsPoint(x, y))
-			{
-				return v;
-			}
-		}
 		return null;
 	}
 
@@ -264,7 +255,6 @@ public class GraphPane extends JComponent
 				char[] text = (Long.toString(lastPaintMS) + "ms").toCharArray();
 				g.drawChars(text, 0, text.length, 0, 20);
 			}
-
 		}
 	}
 
@@ -318,7 +308,11 @@ public class GraphPane extends JComponent
 			model.addListener(this::repaint);
 
 			if (oldSelected != null)
+			{
+				if (oldSelected.isHighlighted())
+					oldSelected.setHighlighted(false);
 				fireVisualDeselected(oldSelected);
+			}
 
 			if (fireHierarchy)
 				fireHierarchyChanged();

@@ -41,4 +41,10 @@ public final class InsetsFloat
 		this.bottom = bottom;
 		this.right = right;
 	}
+
+	@Override
+	public String toString()
+	{
+		return "Inserts[" + top + "," + left + "," + bottom + "," + right + "]";
+	}
 }
