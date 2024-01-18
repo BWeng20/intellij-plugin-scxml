@@ -52,6 +52,7 @@ public class GenericVisual extends Visual
 	 * Draw the visual.
 	 *
 	 * @param g2 The Graphics context
+	 * @param style The style to use.
 	 */
 	@Override
 	public void drawIntern(Graphics2D g2, final DrawStyle style)
@@ -136,6 +137,27 @@ public class GenericVisual extends Visual
 		}
 	}
 
+	@Override
+	public DrawPrimitive getEditablePrimitiveAt(float x, float y) {
+		Point2D.Float pt = new Point2D.Float();
+		getPosition(pt);
+		DrawStyle style = getStyle();
+		DrawPrimitive p = null;
+		for (DrawPrimitive pw : primitives) {
+			if (pw.isEditable())
+			{
+				Rectangle2D.Float rt = pw.getBounds2D(pt, null, style);
+				if (rt.contains(x, y))
+				{
+					p = pw;
+				}
+			}
+		}
+		if( p != null )
+			p.setVisual(this);
+		return p;
+	}
+
 	/**
 	 * Updates {@link #x2} and {@link #y2}.
 	 *
@@ -149,7 +171,7 @@ public class GenericVisual extends Visual
 			x2 = position.x;
 			y2 = position.y;
 
-			if (innerModel != null)
+			if (subModel != null)
 			{
 				GraphConfiguration cfg = context.configuration;
 				x2 += cfg.innerModelBoxDimension.width + cfg.innerModelBoxInsets.left + cfg.innerModelBoxInsets.right;
@@ -244,14 +266,15 @@ public class GenericVisual extends Visual
 		forAllPrimitives(g2, consumer, null, null);
 	}
 
-	/**
-	 * Calls a function on all primitives.
-	 *
-	 * @param g2       The graphics context.
-	 * @param consumer The consumer to call.
-	 * @param bounds   The bounds to adapt relative positions to.
-	 * @param style    The style to use.
-	 */
+		/**
+		 * Calls a function on all primitives.
+		 * Position is adapted according to alignment.
+		 *
+		 * @param g2       The graphics context.
+		 * @param consumer The consumer to call.
+		 * @param bounds   The bounds to adapt relative positions to.
+		 * @param style    The style to use.
+		 */
 	protected void forAllPrimitives(Graphics2D g2, PrimitiveConsumer consumer, Rectangle2D.Float bounds, DrawStyle style)
 	{
 		if (bounds == null && position != null)
@@ -261,27 +284,18 @@ public class GenericVisual extends Visual
 		{
 			final Point2D.Float pt = new Point2D.Float();
 			final Point2D.Float pos = new Point2D.Float(bounds.x, bounds.y);
+			final DrawStyle actualStyle = style == null ? (highlighted ? context.highlighted : context.normal) : style;
 			for (DrawPrimitive primitive : primitives)
 			{
-				final DrawStyle actualStyle = style == null ? (highlighted ? context.highlighted : context.normal) : style;
 				switch (primitive.getAlignment())
 				{
 					case Left:
 						consumer.consume(primitive, g2, pos, actualStyle);
 						break;
 					case Center:
-					{
-						Dimension2DFloat dim = primitive.getDimension(g2, actualStyle);
-						pt.x = bounds.x + (bounds.width - dim.width) / 2f - 1;
-						pt.y = bounds.y;
-						consumer.consume(primitive, g2, pt, actualStyle);
-					}
-					break;
 					case Right:
 					{
-						Dimension2DFloat dim = primitive.getDimension(g2, actualStyle);
-						pt.x = bounds.x + bounds.width - dim.width;
-						pt.y = bounds.y;
+						alignPosition( g2, primitive, bounds, actualStyle, pt );
 						consumer.consume(primitive, g2, pt, actualStyle);
 					}
 					break;

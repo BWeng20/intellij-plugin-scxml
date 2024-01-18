@@ -1,6 +1,10 @@
 package com.bw.modelthings.intellij.editor;
 
 import com.bw.modelthings.intellij.Icons;
+import com.bw.modelthings.intellij.settings.ChangeConfigurationNotifier;
+import com.bw.modelthings.intellij.settings.Configuration;
+import com.bw.modelthings.intellij.settings.EditorLayout;
+import com.bw.modelthings.intellij.settings.PersistenceService;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorState;
 import com.intellij.openapi.fileEditor.TextEditor;
@@ -10,14 +14,18 @@ import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.UserDataHolderBase;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiManager;
+import com.intellij.ui.JBSplitter;
 import com.intellij.ui.tabs.JBTabs;
 import com.intellij.ui.tabs.JBTabsFactory;
 import com.intellij.ui.tabs.TabInfo;
+import com.intellij.util.messages.MessageBusConnection;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.JComponent;
+import javax.swing.JPanel;
+import java.awt.BorderLayout;
 import java.beans.PropertyChangeListener;
 
 /**
@@ -26,19 +34,19 @@ import java.beans.PropertyChangeListener;
 public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 {
 	/**
+	 * Message bus for change notification.
+	 */
+	private MessageBusConnection mbCon;
+
+	/**
 	 * The editor component containing the two editors.
 	 */
 	JComponent component;
 
 	/**
-	 * The splitter between the editors.
-	 */
-	JBTabs tabs;
-
-	/**
 	 * Graphical editor.
 	 */
-	FileEditor scxmlEditor;
+	ScxmlGraphEditor scxmlEditor;
 
 	/**
 	 * Textual editor.
@@ -49,6 +57,16 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 	 * The file the editor is showing.
 	 */
 	final VirtualFile file;
+
+	/**
+	 * The project the current file comes from.
+	 */
+	final Project theProject;
+
+	/**
+	 * The layout of XML and Graph editor.
+	 */
+	EditorLayout editorLayout = EditorLayout.Tabs;
 
 	@Override
 	@NotNull
@@ -62,13 +80,26 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 	/**
 	 * Creates a new editor.
 	 *
-	 * @param file    The file to show.
-	 * @param project The project.
+	 * @param file       The file to show.
+	 * @param theProject The project.
 	 */
-	public ScxmlEditor(@NotNull VirtualFile file, @NotNull Project project)
+	public ScxmlEditor(@NotNull VirtualFile file, @NotNull Project theProject)
 	{
 		this.file = file;
-		component = createComponent(project);
+		this.theProject = theProject;
+
+		PersistenceService persistenceService = theProject.getService(PersistenceService.class);
+		if (persistenceService != null)
+		{
+			editorLayout = persistenceService.getState().editorLayout;
+		}
+
+		mbCon = theProject.getMessageBus()
+						  .connect();
+		mbCon.subscribe(ChangeConfigurationNotifier.CHANGE_CONFIG_TOPIC, (ChangeConfigurationNotifier) this::setConfiguration);
+
+		createComponent(theProject);
+
 	}
 
 
@@ -139,34 +170,92 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 	{
 		Disposer.dispose(xmlTextEditor);
 		Disposer.dispose(scxmlEditor);
+		Disposer.dispose(mbCon);
 	}
 
 	/**
 	 * Creates the editor component.
 	 *
 	 * @param project The current project.
-	 * @return The UI component for the editor.
 	 */
-	protected JComponent createComponent(@NotNull Project project)
+	protected void createComponent(@NotNull Project project)
 	{
-		tabs = JBTabsFactory.createEditorTabs(project, this);
-
 		scxmlEditor = new ScxmlGraphEditor(file, PsiManager.getInstance(project)
 														   .findFile(file));
 
 		xmlTextEditor = (TextEditor) TextEditorProvider.getInstance()
 													   .createEditor(project, file);
 
-		TabInfo xmlTabInfo = new TabInfo(xmlTextEditor.getComponent());
-		xmlTabInfo.setText("XML");
-		tabs.addTab(xmlTabInfo);
+		component = new JPanel(new BorderLayout());
 
-		TabInfo graphTabInfo = new TabInfo(scxmlEditor.getComponent());
-		graphTabInfo.setIcon(Icons.STATE_MACHINE);
+		applyLayout();
+	}
 
-		tabs.addTab(graphTabInfo);
-		tabs.select(graphTabInfo, false);
-		return tabs.getComponent();
+	/**
+	 * layout the editors.
+	 */
+	protected void applyLayout()
+	{
+		component.removeAll();
 
+		switch (editorLayout)
+		{
+			default:
+			case Tabs:
+			{
+				JBTabs tabs = JBTabsFactory.createEditorTabs(theProject, this);
+				TabInfo xmlTabInfo = new TabInfo(xmlTextEditor.getComponent());
+				xmlTabInfo.setText("XML");
+				tabs.addTab(xmlTabInfo);
+
+				TabInfo graphTabInfo = new TabInfo(scxmlEditor.getComponent());
+				graphTabInfo.setIcon(Icons.STATE_MACHINE);
+
+				tabs.addTab(graphTabInfo);
+				tabs.select(graphTabInfo, false);
+				component.add(tabs.getComponent(), BorderLayout.CENTER);
+			}
+			break;
+			case SplitHorizontal:
+			{
+				JBSplitter splitter = new JBSplitter(false);
+				splitter.setFirstComponent(xmlTextEditor.getComponent());
+				splitter.setSecondComponent(scxmlEditor.getComponent());
+				component.add(splitter, BorderLayout.CENTER);
+			}
+			break;
+			case SplitVertical:
+			{
+				JBSplitter splitter = new JBSplitter(true);
+				splitter.setFirstComponent(xmlTextEditor.getComponent());
+				splitter.setSecondComponent(scxmlEditor.getComponent());
+				component.add(splitter, BorderLayout.CENTER);
+			}
+			break;
+		}
+
+
+	}
+
+	/**
+	 * Sets the configuration.
+	 *
+	 * @param config The config to use.
+	 */
+	protected void setConfiguration(Configuration config)
+	{
+		if (config != null)
+		{
+			if (scxmlEditor != null && scxmlEditor.component != null)
+			{
+				scxmlEditor.component.setConfiguration(config);
+			}
+
+			if (config.editorLayout != editorLayout)
+			{
+				editorLayout = config.editorLayout;
+				applyLayout();
+			}
+		}
 	}
 }

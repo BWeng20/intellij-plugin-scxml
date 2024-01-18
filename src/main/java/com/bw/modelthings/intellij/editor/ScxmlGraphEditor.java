@@ -149,7 +149,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 				inDocumentSync = true;
 				PsiDocumentManager.getInstance(xmlFile.getProject()).commitDocument(xmlDocument);
 
-				VisualModel model = (component.root == null) ? null : component.root.getInnerModel();
+				VisualModel model = (component.root == null) ? null : component.root.getSubModel();
 				if (xmlFile != null && model != null)
 				{
 					HashMap<String, Rectangle2D.Float> bounds = new HashMap<>();
@@ -167,7 +167,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 								bounds.put(id, v.getBounds2D(null));
 							}
 						}
-						VisualModel m = v.getInnerModel();
+						VisualModel m = v.getSubModel();
 						if (m != null)
 						{
 							visuals.addAll(m.getVisuals());
@@ -292,7 +292,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 		updateXmlTimer = new Timer(500, e -> {
 			if (component.root != null)
 			{
-				VisualModel model = component.root.getInnerModel();
+				VisualModel model = component.root.getSubModel();
 				if (model != null && model.isModified())
 				{
 					log.warn("Model modified");

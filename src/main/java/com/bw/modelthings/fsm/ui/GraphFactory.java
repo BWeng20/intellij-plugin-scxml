@@ -17,6 +17,8 @@ import com.bw.modelthings.fsm.model.FiniteStateMachine;
 import com.bw.modelthings.fsm.model.State;
 import com.bw.modelthings.fsm.model.Transition;
 
+import javax.swing.JTextField;
+import javax.swing.text.JTextComponent;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -48,6 +50,8 @@ public class GraphFactory
 	 */
 	protected GraphExtension graphExtension;
 
+	protected JTextComponent stateNameTextField;
+
 	/**
 	 * Creates a new factory.
 	 *
@@ -56,6 +60,10 @@ public class GraphFactory
 	public GraphFactory(GraphExtension graphExtension)
 	{
 		this.graphExtension = graphExtension;
+	}
+
+	public void setStateNameEditorComponent(JTextComponent textEditor) {
+		stateNameTextField = textEditor;
 	}
 
 	/**
@@ -171,7 +179,7 @@ public class GraphFactory
 			float height = 5 * fh;
 			float width = (float) (stringBounds.getWidth() + 10);
 
-			if (visual.getInnerModel() != null)
+			if (visual.getSubModel() != null)
 			{
 				Dimension2DFloat dim = stateInnerContext.configuration.innerModelBoxDimension;
 				InsetsFloat insets = stateInnerContext.configuration.innerModelBoxInsets;
@@ -203,6 +211,11 @@ public class GraphFactory
 		v.addDrawingPrimitive(separator);
 
 		Text label = new Text(0, 0, state.name, stateInnerContext.configuration, stateInnerContext.normal);
+		label.setEditable(true);
+		if ( stateNameTextField != null)
+		{
+			label.setUserData(new StateNameProxy(state, stateNameTextField));
+		}
 		label.setAlignment(Alignment.Center);
 		label.setInsets(fh * 0.25f, 0, 0, 0);
 
@@ -263,7 +276,7 @@ public class GraphFactory
 
 					if (state.parent != null)
 					{
-						stateVisuals.get(state.parent.name).getInnerModel().addVisual(stateVisual);
+						stateVisuals.get(state.parent.name).getSubModel().addVisual(stateVisual);
 					}
 					else
 						rootModel.addVisual(stateVisual);
@@ -273,7 +286,7 @@ public class GraphFactory
 					if (!state.states.isEmpty())
 					{
 						VisualModel subModel = new VisualModel();
-						stateVisual.setInnerModel(subModel);
+						stateVisual.setSubModel(subModel);
 						statePosition = new Rectangle2D.Float(3 * fh, fh, 0, 0);
 						statePositions.put(state.name, statePosition);
 						states.addAll(state.states);
@@ -321,7 +334,7 @@ public class GraphFactory
 				for (State target : t.target)
 				{
 					stateVisuals.get(t.source.parent.name)
-								.getInnerModel()
+								.getSubModel()
 								.addVisual(
 										createEdge(t.docId, t.source, target, g2, edgeStyles));
 				}
@@ -335,7 +348,7 @@ public class GraphFactory
 					Visual startVisual = createStartVisual(state, fh / 2, fh, fh / 2, startStyles);
 
 					Visual stateVisual = stateVisuals.get(state.name);
-					VisualModel innerModel = stateVisual.getInnerModel();
+					VisualModel innerModel = stateVisual.getSubModel();
 					innerModel.addVisual(startVisual);
 
 					List<State> initialStates = new ArrayList<>();

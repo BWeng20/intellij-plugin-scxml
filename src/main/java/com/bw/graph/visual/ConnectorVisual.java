@@ -67,6 +67,20 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	}
 
 	@Override
+	public DrawPrimitive getEditablePrimitiveAt(float x, float y) {
+		Point2D.Float pt = new Point2D.Float();
+		getPosition(pt);
+		if ( primitive.getBounds2D(pt, null, getStyle()).contains(x,y) )
+		{
+			primitive.setVisual(this);
+			return primitive;
+		}
+		else
+			return null;
+	}
+
+
+	@Override
 	protected void updateBounds(Graphics2D graphics)
 	{
 		Dimension2DFloat dim = primitive.getDimension(graphics, getStyle());

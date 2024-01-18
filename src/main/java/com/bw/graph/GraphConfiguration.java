@@ -3,6 +3,8 @@ package com.bw.graph;
 import com.bw.graph.util.Dimension2DFloat;
 import com.bw.graph.util.InsetsFloat;
 
+import java.awt.Paint;
+
 /**
  * Graph configuration.
  */
@@ -64,5 +66,10 @@ public class GraphConfiguration
 	 * The current scale of the graph.
 	 */
 	public float scale = 1f;
+
+	/**
+	 * Background for the graph.
+	 */
+	public Paint graphBackground;
 
 }

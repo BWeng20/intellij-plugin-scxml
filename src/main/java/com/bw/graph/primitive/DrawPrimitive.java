@@ -5,6 +5,7 @@ import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.util.Dimension2DFloat;
 import com.bw.graph.util.InsetsFloat;
+import com.bw.graph.visual.Visual;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
@@ -21,6 +22,10 @@ public abstract class DrawPrimitive
 	private final DrawStyle style;
 	private final Point2D.Float relativePosition;
 	private final Point2D.Float tempPosition = new Point2D.Float();
+	private boolean editable;
+	private Visual visual;
+
+	private Object userData;
 
 	/**
 	 * The insets of the component.
@@ -63,6 +68,41 @@ public abstract class DrawPrimitive
 		this.relativePosition = new Point2D.Float(x, y);
 		this.config = config;
 	}
+
+	/**
+	 * Sets visual.<br>
+	 * The visual is only set during event handling or similar operations.
+	 * @param v The visual or null.
+	 */
+	public void setVisual( Visual v) {
+		visual = v;
+	}
+
+	/**
+	 * Gets the current assigned visual.<br>
+	 * The visual is only set during event handling or similar operations.
+	 * @return  The visual or null.
+	 */
+	public Visual getVisual() {
+		return visual;
+	}
+
+	/**
+	 * Sets a payload object.
+	 * @param userData The data object or null.
+	 */
+	public void setUserData( Object userData ) {
+		this.userData = userData;
+	}
+
+	/**
+	 * Gets the payload object.
+	 * @return The data object or null.
+	 */
+	public Object getUserData( ) {
+		return userData;
+	}
+
 
 	/**
 	 * Draws for given context.<br>
@@ -271,5 +311,26 @@ public abstract class DrawPrimitive
 	{
 		return insets;
 	}
+
+	/**
+	 * Checks if this primitive is editable.
+	 *
+	 * @return True if editable, false if readonly.
+	 */
+	public boolean isEditable()
+	{
+		return editable;
+	}
+
+	/**
+	 * Sets editable property.
+	 *
+	 * @param editable true if editable.
+	 */
+	public void setEditable(boolean editable)
+	{
+		this.editable = editable;
+	}
+
 
 }

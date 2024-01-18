@@ -9,18 +9,19 @@ import com.bw.graph.visual.Visual;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
 import com.bw.modelthings.fsm.ui.GraphExtension;
 import com.bw.modelthings.fsm.ui.GraphFactory;
-import com.bw.modelthings.intellij.settings.ChangeConfigurationNotifier;
 import com.bw.modelthings.intellij.settings.Configuration;
 import com.bw.modelthings.intellij.settings.PersistenceService;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.editor.HighlighterColors;
 import com.intellij.openapi.editor.colors.EditorColors;
 import com.intellij.openapi.editor.colors.EditorColorsManager;
+import com.intellij.openapi.editor.colors.EditorColorsScheme;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.project.Project;
+import com.intellij.ui.components.JBTextField;
 import com.intellij.ui.components.breadcrumbs.Breadcrumbs;
 import com.intellij.ui.components.breadcrumbs.Crumb;
-import com.intellij.util.messages.MessageBusConnection;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -44,6 +45,8 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 * Dummy to show something
 	 */
 	protected JLabel info;
+
+	protected JBTextField stateNameEditorComponent = new JBTextField();
 
 	/**
 	 * Breadcrumbs to show and select the parent states of the current model.
@@ -101,12 +104,10 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	protected DrawContext stateInnerContext = new DrawContext(pane.getGraphConfiguration(),
 			stateInnerStyle, stateInnerStyle);
 
-
 	/**
 	 * Context for edges.
 	 */
 	protected DrawContext edgeContext = new DrawContext(pane.getGraphConfiguration(), stateInnerStyle, edgeHighlightStyle);
-
 
 	/**
 	 * Context for start node.
@@ -118,16 +119,10 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 */
 	protected Project theProject;
 
-	/**
-	 * Message bus for change notification.
-	 */
-	private MessageBusConnection mbCon;
-
 	@Override
 	public void dispose()
 	{
 		GraphLafManagerListener.removeGraphLafListener(lafListener);
-		mbCon.dispose();
 		pane.dispose();
 	}
 
@@ -136,7 +131,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 *
 	 * @param config The config to use.
 	 */
-	protected void setConfiguration(Configuration config)
+	public void setConfiguration(Configuration config)
 	{
 		if (config != null)
 		{
@@ -252,17 +247,13 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		{
 			StateCrumb sc = (StateCrumb) crumb;
 			if (sc != null)
-				pane.setModel(sc.state.getInnerModel());
+				pane.setModel(sc.state.getSubModel());
 		});
 
 		// add(bc, BorderLayout.NORTH);
 		add(new JScrollPane(pane), BorderLayout.CENTER);
 
 		updateLaf();
-
-		mbCon = theProject.getMessageBus()
-						  .connect();
-		mbCon.subscribe(ChangeConfigurationNotifier.CHANGE_CONFIG_TOPIC, (ChangeConfigurationNotifier) this::setConfiguration);
 
 		PersistenceService persistenceService = theProject.getService(PersistenceService.class);
 		if (persistenceService != null)
@@ -305,21 +296,31 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	{
 		// @TODO: Make styles configurable.
 
+		EditorColorsScheme colorsScheme = EditorColorsManager.getInstance().getSchemeForCurrentUITheme();
+
+		TextAttributes textAttribute = EditorColorsManager.getInstance().getSchemeForCurrentUITheme().getAttributes(HighlighterColors.TEXT);
+		Color background = textAttribute.getBackgroundColor();
+
+		pane.setOpaque(true);
+		pane.getGraphConfiguration().graphBackground = background;
+		pane.setBackground(background);
+
+		stateHierarchyBreadCrumbs.setBackground(background);
+
 		Font font = getFont();
 		if (font == null)
 			font = new Font(Font.DIALOG, Font.PLAIN, 12);
 
 		FontMetrics fontMetrics = getFontMetrics(font);
 
-		startStyle.linePaint = Color.BLACK;
-		startStyle.fillPaint = Color.BLACK;
+		startStyle.linePaint = textAttribute.getForegroundColor();
+		startStyle.fillPaint = textAttribute.getForegroundColor();
 
-		Color background = getBackground();
-
-		stateOutlineStyle.linePaint = Color.BLACK;
-		stateOutlineStyle.fillPaint = Color.GRAY;
+		stateOutlineStyle.linePaint = textAttribute.getForegroundColor();
+		stateOutlineStyle.fillPaint = textAttribute.getBackgroundColor();
 		stateOutlineStyle.lineStroke = new BasicStroke(2);
-		stateOutlineStyle.textPaint = getForeground();
+		stateOutlineStyle.textPaint = textAttribute.getForegroundColor();
+		;
 		stateOutlineStyle.font = font;
 		stateOutlineStyle.fontMetrics = fontMetrics;
 
@@ -344,6 +345,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		stateOutlineStyleHighlight.font = font;
 		stateOutlineStyleHighlight.fontMetrics = fontMetrics;
 
+		pane.getModel().repaint();
 	}
 
 	/**
@@ -397,6 +399,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	public void setStateMachine(FiniteStateMachine fsm, GraphExtension graphExtension)
 	{
 		GraphFactory factory = new GraphFactory(graphExtension);
+		factory.setStateNameEditorComponent(stateNameEditorComponent);
 
 		pane.setModel(null);
 		if (root != null)
@@ -413,7 +416,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		{
 			root = rootModel.getVisuals()
 							.get(0);
-			pane.setModel(root.getInnerModel());
+			pane.setModel(root.getSubModel());
 		}
 		else
 		{

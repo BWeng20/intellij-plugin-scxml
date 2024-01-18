@@ -122,4 +122,5 @@ public class State implements FsmElement
 		Arrays.sort(statesArray, (s1, s2) -> s1.docId - s2.docId);
 		return Arrays.asList(statesArray);
 	}
+
 }

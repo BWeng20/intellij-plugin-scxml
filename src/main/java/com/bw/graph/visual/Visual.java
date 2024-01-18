@@ -4,6 +4,7 @@ import com.bw.graph.DrawContext;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.VisualModel;
+import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.util.Dimension2DFloat;
 import com.bw.svg.SVGWriter;
 
@@ -26,7 +27,7 @@ public abstract class Visual
 	/**
 	 * A sub-model or null.
 	 */
-	protected VisualModel innerModel;
+	protected VisualModel subModel;
 
 	/**
 	 * The parent the visual is bound to or null.
@@ -109,13 +110,11 @@ public abstract class Visual
 	{
 		drawIntern(g2, style);
 
-		if (innerModel != null)
+		if (subModel != null)
 		{
-			Rectangle2D.Float bounds = getBounds2D(g2);
-			Rectangle2D.Float subBounds = innerModel.getBounds2D(g2);
-
 			final GraphConfiguration cfg = context.configuration;
 
+			Rectangle2D.Float subBounds = subModel.getBounds2D(g2);
 			// Calc scale, use minimum to keep aspect ratio
 			float scale = Math.min(
 					(cfg.innerModelBoxDimension.width - cfg.innerModelInsets.left - cfg.innerModelInsets.right) / subBounds.width,
@@ -127,10 +126,8 @@ public abstract class Visual
 			subBounds.width *= scale;
 			subBounds.height *= scale;
 
-			// Get resulting box for the sub-model.
-			Rectangle2D.Float subModelBox = new Rectangle2D.Float(
-					bounds.x + cfg.innerModelBoxInsets.left,
-					bounds.y + cfg.innerModelBoxInsets.top, cfg.innerModelBoxDimension.width, cfg.innerModelBoxDimension.height);
+			Rectangle2D.Float subModelBox = getSubModelBounds(g2);
+
 			g2.setPaint(style.background);
 			g2.fill(subModelBox);
 			g2.setStroke(style.lineStroke);
@@ -143,7 +140,7 @@ public abstract class Visual
 				g2.translate(subModelBox.x + (subModelBox.width - subBounds.width) / 2f,
 						subModelBox.y + (subModelBox.width - subBounds.height) / 2f);
 				g2.scale(scale, scale);
-				innerModel.draw(g2);
+				subModel.draw(g2);
 			}
 			finally
 			{
@@ -223,8 +220,7 @@ public abstract class Visual
 		{
 			updateBounds(g2);
 		}
-		Point2D.Float pos = new Point2D.Float();
-		getPosition(pos);
+		Point2D.Float pos = getPosition();
 		return new Rectangle2D.Float(pos.x, pos.y, x2 - position.x, y2 - position.y);
 	}
 
@@ -278,6 +274,18 @@ public abstract class Visual
 	/**
 	 * Gets the absolute base position.
 	 *
+	 * @return pt The Point to set.
+	 */
+	public Point2D.Float getPosition()
+	{
+		Point2D.Float p = new Point2D.Float();
+		getPosition(p);
+		return p;
+	}
+
+	/**
+	 * Gets the absolute base position.
+	 *
 	 * @param pt The Point to set.
 	 */
 	public void getPosition(Point2D.Float pt)
@@ -294,23 +302,93 @@ public abstract class Visual
 	}
 
 	/**
-	 * Sets the inner model.
+	 * Sets the sub model.
 	 *
-	 * @param model The model
+	 * @param model The model or null
 	 */
-	public void setInnerModel(VisualModel model)
+	public void setSubModel(VisualModel model)
 	{
-		innerModel = model;
+		subModel = model;
 	}
 
 	/**
-	 * Gets the inner model.
+	 * Gets the sub-model.
 	 *
-	 * @return The model
+	 * @return The model or null
 	 */
-	public VisualModel getInnerModel()
+	public VisualModel getSubModel()
 	{
-		return innerModel;
+		return subModel;
+	}
+
+	/**
+	 * Gets the absolute bounds of the sub-model area.
+	 * @param g2 The graphics context to use or null.
+	 * @return The rectangle or null if not sub-model exists.
+	 */
+	public Rectangle2D.Float getSubModelBounds(Graphics2D g2) {
+
+		if ( subModel != null ) {
+			final GraphConfiguration cfg = context.configuration;
+			Rectangle2D.Float bounds = getBounds2D(g2);
+			return new Rectangle2D.Float(
+					bounds.x + cfg.innerModelBoxInsets.left,
+					bounds.y + cfg.innerModelBoxInsets.top, cfg.innerModelBoxDimension.width, cfg.innerModelBoxDimension.height);
+		}
+		return null;
+	}
+
+	/**
+	 * Gets the primitive at the absolute position.
+	 * @param x The x ordinate.
+	 * @param y The y ordinate.
+	 * @return The found primitive or null.
+	 */
+	public abstract DrawPrimitive getEditablePrimitiveAt(float x, float y);
+
+	/**
+	 * Get bounds of primitive according to style and alignment.
+	 *
+	 * @param g2       The graphics context.
+	 * @param primitive    The primitive to measure.
+	 * @return The bounds or null.
+	 */
+	public Rectangle2D.Float getBoundsOfPrimitive(Graphics2D g2, DrawPrimitive primitive, DrawStyle style ) {
+
+		if ( position != null && primitive != null ) {
+			Rectangle2D.Float bounds = new Rectangle2D.Float(position.x, position.y, x2 - position.x, y2 - position.y);
+			final DrawStyle actualStyle = style == null ? (highlighted ? context.highlighted : context.normal) : style;
+			final Point2D.Float pt = alignPosition( g2, primitive, bounds, actualStyle, new Point2D.Float() );
+			return primitive.getBounds2D(pt,g2,actualStyle);
+		}
+		return null;
+	}
+
+	protected Point2D.Float alignPosition( Graphics2D g2, DrawPrimitive primitive,
+										   Rectangle2D.Float bounds,
+										   DrawStyle actualStyle, Point2D.Float pt ) {
+		switch (primitive.getAlignment())
+		{
+			case Left:
+				pt.x = bounds.x;
+				break;
+			case Center:
+			{
+				Dimension2DFloat dim = primitive.getDimension(g2, actualStyle);
+				pt.x = bounds.x + (bounds.width - dim.width) / 2f - 1;
+			}
+			break;
+			case Right:
+			{
+				Dimension2DFloat dim = primitive.getDimension(g2, actualStyle);
+				pt.x = bounds.x + bounds.width - dim.width;
+			}
+			break;
+			case Hidden:
+				return null;
+		}
+		pt.y = bounds.y;
+		return pt;
 	}
 
 	/**
@@ -331,9 +409,9 @@ public abstract class Visual
 	public void repaint()
 	{
 		repaintTriggered = true;
-		if (innerModel != null)
+		if (subModel != null)
 		{
-			innerModel.repaint();
+			subModel.repaint();
 		}
 	}
 
@@ -360,10 +438,10 @@ public abstract class Visual
 	 */
 	public void dispose()
 	{
-		if (innerModel != null)
+		if (subModel != null)
 		{
-			innerModel.dispose();
-			innerModel = null;
+			subModel.dispose();
+			subModel = null;
 		}
 		parent = null;
 		id = null;
@@ -436,8 +514,8 @@ public abstract class Visual
 	public void setModified(boolean modified)
 	{
 		dirty = modified;
-		if (innerModel != null)
-			innerModel.setModified(modified);
+		if (subModel != null)
+			subModel.setModified(modified);
 	}
 
 	/**
@@ -447,7 +525,7 @@ public abstract class Visual
 	 */
 	public boolean isModified()
 	{
-		return dirty || (innerModel != null && innerModel.isModified());
+		return dirty || (subModel != null && subModel.isModified());
 	}
 
 	@Override

@@ -49,7 +49,6 @@ public class Text extends DrawPrimitive
 		if (graphics != null)
 		{
 			Rectangle2D r = style.fontMetrics.getStringBounds(text, graphics);
-
 			return new Dimension2DFloat((float) r.getWidth(), (float) r.getHeight());
 		}
 		else

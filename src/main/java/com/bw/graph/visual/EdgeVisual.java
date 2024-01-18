@@ -2,6 +2,7 @@ package com.bw.graph.visual;
 
 import com.bw.graph.DrawContext;
 import com.bw.graph.DrawStyle;
+import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.primitive.Path;
 import com.bw.svg.SVGWriter;
 
@@ -72,7 +73,18 @@ public class EdgeVisual extends Visual
 			targetConnector.draw(g2, actualStyle);
 		}
 		sourceConnector.draw(g2, actualStyle);
+	}
 
+	@Override
+	public DrawPrimitive getEditablePrimitiveAt(float x, float y) {
+		DrawPrimitive p = path;
+		if ( targetConnector != null )
+			p = targetConnector.getEditablePrimitiveAt(x,y);
+		if ( p == null && sourceConnector != null )
+			p = sourceConnector.getEditablePrimitiveAt(x,y);
+		if (path != null )
+			path.setVisual(this);
+		return path;
 	}
 
 	@Override

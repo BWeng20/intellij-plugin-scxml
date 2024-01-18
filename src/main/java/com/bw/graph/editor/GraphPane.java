@@ -2,12 +2,15 @@ package com.bw.graph.editor;
 
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.VisualModel;
+import com.bw.graph.primitive.DrawPrimitive;
+import com.bw.graph.visual.EdgeVisual;
 import com.bw.graph.visual.Visual;
 import com.bw.svg.SVGWriter;
 
 import javax.swing.JComponent;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -69,15 +72,27 @@ public class GraphPane extends JComponent
 		@Override
 		public void mouseClicked(MouseEvent e)
 		{
-			Visual clicked = getVisualAt(e.getX(), e.getY());
+			int x = e.getX();
+			int y = e.getY();
+
+			Visual clicked = getVisualAt(x,y);
 			if (clicked != null && e.getClickCount() > 1)
 			{
-				if (clicked.getInnerModel() != null)
+				x -= offsetX;
+				y -= offsetY;
+
+				x /= configuration.scale;
+				y /= configuration.scale;
+
+				Rectangle2D.Float sunModelBox = clicked.getSubModelBounds(null);
+				if (sunModelBox != null && sunModelBox.contains(x,y))
 				{
 					parents.add(clicked);
 					clicked.setHighlighted(false);
-					setModel(clicked.getInnerModel());
+					setModel(clicked.getSubModel());
 					fireHierarchyChanged();
+				} else {
+					setSelectedPrimitive( clicked.getEditablePrimitiveAt(x,y) );
 				}
 			}
 		}
@@ -220,6 +235,9 @@ public class GraphPane extends JComponent
 	 */
 	protected Visual selectedVisual;
 
+	protected DrawPrimitive selectedPrimitive;
+
+
 	@Override
 	protected void paintComponent(Graphics g)
 	{
@@ -233,13 +251,16 @@ public class GraphPane extends JComponent
 		{
 			if (isOpaque())
 			{
-				g2.setColor(getBackground());
+				g2.setPaint(configuration.graphBackground == null ? getBackground() : configuration.graphBackground);
 				g2.fillRect(0, 0, getWidth(), getHeight());
 			}
 
 			g2.scale(configuration.scale, configuration.scale);
 
 			model.draw(g2);
+			if ( selectedPrimitive != null )
+				drawPrimitiveCursor(g2, selectedPrimitive);
+
 		}
 		finally
 		{
@@ -290,7 +311,7 @@ public class GraphPane extends JComponent
 			boolean fireHierarchy = false;
 			while (!parents.isEmpty())
 			{
-				if (parents.peekLast().getInnerModel() == model)
+				if (parents.peekLast().getSubModel() == model)
 					break;
 				parents.removeLast();
 				fireHierarchy = true;
@@ -298,6 +319,7 @@ public class GraphPane extends JComponent
 
 			Visual oldSelected = selectedVisual;
 			selectedVisual = null;
+			selectedPrimitive = null;
 			if (this.model != null)
 			{
 				this.model.removeListener(this::repaint);
@@ -340,6 +362,9 @@ public class GraphPane extends JComponent
 	 */
 	public void setSelectedVisual(Visual visual)
 	{
+		cancelEdit();
+		setSelectedPrimitive(null);
+
 		boolean triggerRepaint = false;
 
 		Visual oldSelected = selectedVisual;
@@ -378,6 +403,54 @@ public class GraphPane extends JComponent
 		if (triggerRepaint)
 		{
 			repaint();
+		}
+	}
+
+	public void setSelectedPrimitive( DrawPrimitive p) {
+
+		if ( p != selectedPrimitive ) {
+
+			cancelEdit();
+
+			Graphics2D g2 = (Graphics2D)getGraphics();
+			try
+			{
+				g2.translate(offsetX, offsetY);
+				g2.scale(configuration.scale, configuration.scale);
+
+				if (selectedPrimitive != null)
+				{
+					drawPrimitiveCursor(g2, selectedPrimitive);
+				}
+				selectedPrimitive = p;
+				if (selectedPrimitive != null)
+				{
+					drawPrimitiveCursor(g2, selectedPrimitive);
+				}
+			}finally
+			{
+				g2.dispose();
+			}
+		}
+
+	}
+
+	protected void drawPrimitiveCursor(Graphics2D g2, DrawPrimitive primitive) {
+		Visual v = primitive.getVisual();
+
+		g2.setStroke(new BasicStroke(3));
+		g2.setColor(Color.BLUE);
+		g2.setXORMode(Color.RED);
+		Point.Float pt = v.getPosition();
+
+		Rectangle2D.Float rt = v.getBoundsOfPrimitive(g2, primitive, v.getStyle() );
+		if ( rt != null )
+		{
+			rt.x -= 2;
+			rt.y -= 2;
+			rt.width += 4;
+			rt.height += 4;
+			g2.draw(rt);
 		}
 	}
 
@@ -494,4 +567,8 @@ public class GraphPane extends JComponent
 		return Collections.unmodifiableList(parents);
 	}
 
+
+	protected void cancelEdit() {
+
+	}
 }

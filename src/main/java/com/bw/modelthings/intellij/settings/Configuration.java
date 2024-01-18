@@ -29,4 +29,9 @@ public class Configuration
 	 */
 	public boolean zoomByMetaMouseWheelEnabled;
 
+	/**
+	 * Editor Layout mode.
+	 */
+	public EditorLayout editorLayout = EditorLayout.Tabs;
+
 }

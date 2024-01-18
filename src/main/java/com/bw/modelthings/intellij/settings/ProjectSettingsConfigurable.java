@@ -1,6 +1,8 @@
 package com.bw.modelthings.intellij.settings;
 
+import com.bw.modelthings.intellij.ScXmlSdkBundle;
 import com.intellij.openapi.options.ConfigurationException;
+import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.util.ui.FormBuilder;
 import org.jetbrains.annotations.Nullable;
@@ -37,17 +39,21 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 	private JBCheckBox buffered;
 	private JBCheckBox zoomByMouseWheel;
 
+	private ComboBox editorLayout;
+
 	@Override
 	public @Nullable JComponent createComponent()
 	{
 		if (editorComponent == null)
 		{
-			antialiasing = new JBCheckBox("Antialiasing");
-			buffered = new JBCheckBox("Draw States Buffered");
-			zoomByMouseWheel = new JBCheckBox("Zoom by Meta/Ctrl-Key + MouseWheel");
+			antialiasing = new JBCheckBox(ScXmlSdkBundle.message("settings.antialiasing"));
+			buffered = new JBCheckBox(ScXmlSdkBundle.message("settings.states.buffered"));
+			zoomByMouseWheel = new JBCheckBox(ScXmlSdkBundle.message("settings.zoomByCtrlKey"));
+			editorLayout = new ComboBox(EditorLayout.values());
 
 
 			editorComponent = FormBuilder.createFormBuilder()
+										 .addLabeledComponent(ScXmlSdkBundle.message("settings.editorLayoutLabel"), editorLayout, 1)
 										 .addComponent(antialiasing, 1)
 										 .addComponent(buffered, 1)
 										 .addComponent(zoomByMouseWheel, 1)
@@ -66,7 +72,8 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 			Configuration configuration = service.getState();
 			return configuration.buffered != buffered.isSelected() ||
 					configuration.antialiasing != antialiasing.isSelected() ||
-					configuration.zoomByMetaMouseWheelEnabled != zoomByMouseWheel.isSelected();
+					configuration.zoomByMetaMouseWheelEnabled != zoomByMouseWheel.isSelected() ||
+					configuration.editorLayout != editorLayout.getSelectedItem();
 		}
 		return false;
 	}
@@ -84,6 +91,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 			configuration.buffered = buffered.isSelected();
 			configuration.antialiasing = antialiasing.isSelected();
 			configuration.zoomByMetaMouseWheelEnabled = zoomByMouseWheel.isSelected();
+			configuration.editorLayout = (EditorLayout) editorLayout.getSelectedItem();
 
 			ChangeConfigurationNotifier publisher = theProject.getMessageBus()
 															  .syncPublisher(ChangeConfigurationNotifier.CHANGE_CONFIG_TOPIC);
@@ -101,6 +109,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 			buffered.setSelected(configuration.buffered);
 			antialiasing.setSelected(configuration.antialiasing);
 			zoomByMouseWheel.setSelected(configuration.zoomByMetaMouseWheelEnabled);
+			editorLayout.setSelectedItem(configuration.editorLayout);
 		}
 	}
 
