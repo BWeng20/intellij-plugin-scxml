@@ -23,7 +23,7 @@
     <resource-bundle>messages.ScxmlSdkBundle</resource-bundle>
 
     <applicationListeners>
-        <listener topic="com.intellij.ide.ui.LafManagerListener" class="com.bw.modeldrive.intellij.editor.GraphLafManagerListener"/>
+        <listener topic="com.intellij.ide.ui.LafManagerListener" class="com.bw.modelthings.intellij.editor.GraphLafManagerListener"/>
     </applicationListeners>
 
     <!-- Extension points defined by the plugin.
@@ -31,10 +31,10 @@
     <extensions defaultExtensionNs="com.intellij">
         <standardResource url="http://berndwengenroth.de/GraphExtension/1.0" path="xsd/graph.xsd"/>
         <standardResource url="http://www.w3.org/2005/07/scxml" path="xsd/scxml.xsd"/>
-        <fileEditorProvider implementation="com.bw.modeldrive.intellij.editor.ScxmlEditorProvider"/>
+        <fileEditorProvider implementation="com.bw.modelthings.intellij.editor.ScxmlEditorProvider"/>
         <projectConfigurable
                 parentId="language"
-                instance="com.bw.modeldrive.intellij.settings.ProjectSettingsConfigurable"
+                instance="com.bw.modelthings.intellij.settings.ProjectSettingsConfigurable"
                 id="com.bw.idea.scxml.settings"
                 displayName="ScXML SDK"
                 nonDefaultProject="true"/>
@@ -43,7 +43,7 @@
     </extensions>
 
     <actions>
-        <action id="Create.SCXML" class="com.bw.modeldrive.intellij.actions.ScxmlNewFileAction" icon="com.bw.modeldrive.intellij.Icons.SCXML">
+        <action id="Create.SCXML" class="com.bw.modelthings.intellij.actions.ScxmlNewFileAction" icon="com.bw.modelthings.intellij.Icons.SCXML">
             <add-to-group group-id="NewGroup"/>
         </action>
     </actions>
