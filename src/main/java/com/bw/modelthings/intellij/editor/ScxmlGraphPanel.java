@@ -15,7 +15,6 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.editor.HighlighterColors;
 import com.intellij.openapi.editor.colors.EditorColors;
 import com.intellij.openapi.editor.colors.EditorColorsManager;
-import com.intellij.openapi.editor.colors.EditorColorsScheme;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.editor.markup.TextAttributes;
 import com.intellij.openapi.project.Project;
@@ -46,6 +45,9 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 */
 	protected JLabel info;
 
+	/**
+	 * The in-place editor for state-names.
+	 */
 	protected JBTextField stateNameEditorComponent = new JBTextField();
 
 	/**
@@ -296,8 +298,6 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	{
 		// @TODO: Make styles configurable.
 
-		EditorColorsScheme colorsScheme = EditorColorsManager.getInstance().getSchemeForCurrentUITheme();
-
 		TextAttributes textAttribute = EditorColorsManager.getInstance().getSchemeForCurrentUITheme().getAttributes(HighlighterColors.TEXT);
 		Color background = textAttribute.getBackgroundColor();
 
@@ -320,7 +320,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		stateOutlineStyle.fillPaint = textAttribute.getBackgroundColor();
 		stateOutlineStyle.lineStroke = new BasicStroke(2);
 		stateOutlineStyle.textPaint = textAttribute.getForegroundColor();
-		;
+
 		stateOutlineStyle.font = font;
 		stateOutlineStyle.fontMetrics = fontMetrics;
 

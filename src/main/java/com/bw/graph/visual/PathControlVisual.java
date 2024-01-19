@@ -45,8 +45,10 @@ public class PathControlVisual extends Visual implements PathControlPoint
 			primitive.draw(g2, position, actualStyle);
 		}
 	}
+
 	@Override
-	public DrawPrimitive getEditablePrimitiveAt(float x, float y) {
+	public DrawPrimitive getEditablePrimitiveAt(float x, float y)
+	{
 		primitive.setVisual(this);
 		return primitive;
 	}

@@ -112,13 +112,13 @@ public abstract class Visual
 
 		if (subModel != null)
 		{
-			final GraphConfiguration cfg = context.configuration;
-
 			Rectangle2D.Float subBounds = subModel.getBounds2D(g2);
+			Rectangle2D.Float subModelBox = getSubModelBounds(g2);
+
+			float innerInset2 = 10;
+
 			// Calc scale, use minimum to keep aspect ratio
-			float scale = Math.min(
-					(cfg.innerModelBoxDimension.width - cfg.innerModelInsets.left - cfg.innerModelInsets.right) / subBounds.width,
-					(cfg.innerModelBoxDimension.height - cfg.innerModelInsets.top - cfg.innerModelInsets.bottom) / subBounds.height);
+			float scale = Math.min((subModelBox.width - innerInset2) / subBounds.width, (subModelBox.height - innerInset2) / subBounds.height);
 			if (scale > 1f)
 				scale = 1f;
 			subBounds.x *= scale;
@@ -126,7 +126,6 @@ public abstract class Visual
 			subBounds.width *= scale;
 			subBounds.height *= scale;
 
-			Rectangle2D.Float subModelBox = getSubModelBounds(g2);
 
 			g2.setPaint(style.background);
 			g2.fill(subModelBox);
@@ -138,7 +137,7 @@ public abstract class Visual
 			try
 			{
 				g2.translate(subModelBox.x + (subModelBox.width - subBounds.width) / 2f,
-						subModelBox.y + (subModelBox.width - subBounds.height) / 2f);
+						subModelBox.y + (subModelBox.height - subBounds.height) / 2f);
 				g2.scale(scale, scale);
 				subModel.draw(g2);
 			}
@@ -152,7 +151,7 @@ public abstract class Visual
 
 	/**
 	 * Draw the visual.<br>
-	 * If a sub-model is set, the area described by {@link GraphConfiguration#innerModelBoxInsets} and {@link GraphConfiguration#innerModelBoxDimension} shall be spared,
+	 * If a sub-model is set, the area described by {@link GraphConfiguration#innerModelBoxInsets} and {@link GraphConfiguration#innerModelBoxMinDimension} shall be spared,
 	 * as this area will be over-drawn by {@link #draw(Graphics2D, DrawStyle)}.
 	 *
 	 * @param g2    The Graphics context
@@ -323,23 +322,29 @@ public abstract class Visual
 
 	/**
 	 * Gets the absolute bounds of the sub-model area.
+	 *
 	 * @param g2 The graphics context to use or null.
 	 * @return The rectangle or null if not sub-model exists.
 	 */
-	public Rectangle2D.Float getSubModelBounds(Graphics2D g2) {
+	public Rectangle2D.Float getSubModelBounds(Graphics2D g2)
+	{
 
-		if ( subModel != null ) {
+		if (subModel != null)
+		{
 			final GraphConfiguration cfg = context.configuration;
 			Rectangle2D.Float bounds = getBounds2D(g2);
 			return new Rectangle2D.Float(
 					bounds.x + cfg.innerModelBoxInsets.left,
-					bounds.y + cfg.innerModelBoxInsets.top, cfg.innerModelBoxDimension.width, cfg.innerModelBoxDimension.height);
+					bounds.y + cfg.innerModelBoxInsets.top,
+					bounds.width - cfg.innerModelBoxInsets.left - cfg.innerModelBoxInsets.right,
+					bounds.height - cfg.innerModelBoxInsets.top - cfg.innerModelBoxInsets.bottom);
 		}
 		return null;
 	}
 
 	/**
 	 * Gets the primitive at the absolute position.
+	 *
 	 * @param x The x ordinate.
 	 * @param y The y ordinate.
 	 * @return The found primitive or null.
@@ -349,24 +354,39 @@ public abstract class Visual
 	/**
 	 * Get bounds of primitive according to style and alignment.
 	 *
-	 * @param g2       The graphics context.
-	 * @param primitive    The primitive to measure.
+	 * @param g2        The graphics context.
+	 * @param primitive The primitive to measure.
+	 * @param style     The style to use for calculation.
 	 * @return The bounds or null.
 	 */
-	public Rectangle2D.Float getBoundsOfPrimitive(Graphics2D g2, DrawPrimitive primitive, DrawStyle style ) {
+	public Rectangle2D.Float getBoundsOfPrimitive(Graphics2D g2, DrawPrimitive primitive, DrawStyle style)
+	{
 
-		if ( position != null && primitive != null ) {
+		if (position != null && primitive != null)
+		{
 			Rectangle2D.Float bounds = new Rectangle2D.Float(position.x, position.y, x2 - position.x, y2 - position.y);
 			final DrawStyle actualStyle = style == null ? (highlighted ? context.highlighted : context.normal) : style;
-			final Point2D.Float pt = alignPosition( g2, primitive, bounds, actualStyle, new Point2D.Float() );
-			return primitive.getBounds2D(pt,g2,actualStyle);
+			final Point2D.Float pt = alignPosition(g2, primitive, bounds, actualStyle, new Point2D.Float());
+			return primitive.getBounds2D(pt, g2, actualStyle);
 		}
 		return null;
 	}
 
-	protected Point2D.Float alignPosition( Graphics2D g2, DrawPrimitive primitive,
-										   Rectangle2D.Float bounds,
-										   DrawStyle actualStyle, Point2D.Float pt ) {
+	/**
+	 * Helper to get a aligned position according to alignment mode.
+	 *
+	 * @param g2          The graphics context to use for dimension calculations.
+	 * @param primitive   The primitive
+	 * @param bounds      The bounds to align to.
+	 * @param actualStyle The style to use for dimension calculations.
+	 * @param pt          The point to store the result.
+	 * @return The aligned base point or null if {@link com.bw.graph.Alignment#Hidden}. Always same as pt if not null.
+	 * @see DrawPrimitive#getAlignment()
+	 */
+	protected Point2D.Float alignPosition(Graphics2D g2, DrawPrimitive primitive,
+										  Rectangle2D.Float bounds,
+										  DrawStyle actualStyle, Point2D.Float pt)
+	{
 		switch (primitive.getAlignment())
 		{
 			case Left:
@@ -431,6 +451,16 @@ public abstract class Visual
 	public Object getId()
 	{
 		return id;
+	}
+
+	/**
+	 * Set the identification.
+	 *
+	 * @param id The identification Object.
+	 */
+	public void setId(Object id)
+	{
+		this.id = id;
 	}
 
 	/**
@@ -507,6 +537,28 @@ public abstract class Visual
 	}
 
 	/**
+	 * Get the GraphConfiguration from current context.<br>
+	 * Same as {@link #getDrawContext()}.configuration.
+	 *
+	 * @return the GraphConfiguration
+	 */
+	public GraphConfiguration getConfiguration()
+	{
+		return context.configuration;
+	}
+
+	/**
+	 * Get DrawContext
+	 *
+	 * @return The context.
+	 */
+	public DrawContext getDrawContext()
+	{
+		return context;
+	}
+
+
+	/**
 	 * Sets modified status.
 	 *
 	 * @param modified The new modified.
@@ -533,4 +585,5 @@ public abstract class Visual
 	{
 		return String.valueOf(id);
 	}
+
 }

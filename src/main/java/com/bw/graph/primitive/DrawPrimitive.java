@@ -72,34 +72,42 @@ public abstract class DrawPrimitive
 	/**
 	 * Sets visual.<br>
 	 * The visual is only set during event handling or similar operations.
+	 *
 	 * @param v The visual or null.
 	 */
-	public void setVisual( Visual v) {
+	public void setVisual(Visual v)
+	{
 		visual = v;
 	}
 
 	/**
 	 * Gets the current assigned visual.<br>
 	 * The visual is only set during event handling or similar operations.
-	 * @return  The visual or null.
+	 *
+	 * @return The visual or null.
 	 */
-	public Visual getVisual() {
+	public Visual getVisual()
+	{
 		return visual;
 	}
 
 	/**
 	 * Sets a payload object.
+	 *
 	 * @param userData The data object or null.
 	 */
-	public void setUserData( Object userData ) {
+	public void setUserData(Object userData)
+	{
 		this.userData = userData;
 	}
 
 	/**
 	 * Gets the payload object.
+	 *
 	 * @return The data object or null.
 	 */
-	public Object getUserData( ) {
+	public Object getUserData()
+	{
 		return userData;
 	}
 

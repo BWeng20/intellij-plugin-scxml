@@ -51,7 +51,7 @@ public class GenericVisual extends Visual
 	/**
 	 * Draw the visual.
 	 *
-	 * @param g2 The Graphics context
+	 * @param g2    The Graphics context
 	 * @param style The style to use.
 	 */
 	@Override
@@ -138,12 +138,14 @@ public class GenericVisual extends Visual
 	}
 
 	@Override
-	public DrawPrimitive getEditablePrimitiveAt(float x, float y) {
+	public DrawPrimitive getEditablePrimitiveAt(float x, float y)
+	{
 		Point2D.Float pt = new Point2D.Float();
 		getPosition(pt);
 		DrawStyle style = getStyle();
 		DrawPrimitive p = null;
-		for (DrawPrimitive pw : primitives) {
+		for (DrawPrimitive pw : primitives)
+		{
 			if (pw.isEditable())
 			{
 				Rectangle2D.Float rt = pw.getBounds2D(pt, null, style);
@@ -153,7 +155,7 @@ public class GenericVisual extends Visual
 				}
 			}
 		}
-		if( p != null )
+		if (p != null)
 			p.setVisual(this);
 		return p;
 	}
@@ -174,8 +176,8 @@ public class GenericVisual extends Visual
 			if (subModel != null)
 			{
 				GraphConfiguration cfg = context.configuration;
-				x2 += cfg.innerModelBoxDimension.width + cfg.innerModelBoxInsets.left + cfg.innerModelBoxInsets.right;
-				y2 += cfg.innerModelBoxDimension.height + cfg.innerModelBoxInsets.top + cfg.innerModelBoxInsets.bottom;
+				x2 += cfg.innerModelBoxMinDimension.width + cfg.innerModelBoxInsets.left + cfg.innerModelBoxInsets.right;
+				y2 += cfg.innerModelBoxMinDimension.height + cfg.innerModelBoxInsets.top + cfg.innerModelBoxInsets.bottom;
 			}
 
 			for (DrawPrimitive primitive : primitives)
@@ -217,6 +219,17 @@ public class GenericVisual extends Visual
 		primitives.remove(primitive);
 		primitives.add(primitive);
 		resetBounds();
+		repaint();
+	}
+
+	/**
+	 * Removes all Draw-Primitives.
+	 */
+	public void removeAllDrawingPrimitives()
+	{
+		primitives.clear();
+		resetBounds();
+		repaint();
 	}
 
 	/**
@@ -266,15 +279,15 @@ public class GenericVisual extends Visual
 		forAllPrimitives(g2, consumer, null, null);
 	}
 
-		/**
-		 * Calls a function on all primitives.
-		 * Position is adapted according to alignment.
-		 *
-		 * @param g2       The graphics context.
-		 * @param consumer The consumer to call.
-		 * @param bounds   The bounds to adapt relative positions to.
-		 * @param style    The style to use.
-		 */
+	/**
+	 * Calls a function on all primitives.
+	 * Position is adapted according to alignment.
+	 *
+	 * @param g2       The graphics context.
+	 * @param consumer The consumer to call.
+	 * @param bounds   The bounds to adapt relative positions to.
+	 * @param style    The style to use.
+	 */
 	protected void forAllPrimitives(Graphics2D g2, PrimitiveConsumer consumer, Rectangle2D.Float bounds, DrawStyle style)
 	{
 		if (bounds == null && position != null)
@@ -295,7 +308,7 @@ public class GenericVisual extends Visual
 					case Center:
 					case Right:
 					{
-						alignPosition( g2, primitive, bounds, actualStyle, pt );
+						alignPosition(g2, primitive, bounds, actualStyle, pt);
 						consumer.consume(primitive, g2, pt, actualStyle);
 					}
 					break;
@@ -304,13 +317,6 @@ public class GenericVisual extends Visual
 				}
 			}
 		}
-	}
-
-	@Override
-	public void resetBounds()
-	{
-		super.resetBounds();
-		repaint();
 	}
 
 	@Override

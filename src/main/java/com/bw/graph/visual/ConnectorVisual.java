@@ -31,7 +31,6 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	{
 		super(null, context);
 		this.parent = parent;
-		this.edgeVisual = edgeVisual;
 		this.radius = context.configuration.connectorSize;
 		this.primitive = new Circle(radius, radius, radius, context.configuration, null);
 	}
@@ -67,10 +66,11 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	}
 
 	@Override
-	public DrawPrimitive getEditablePrimitiveAt(float x, float y) {
+	public DrawPrimitive getEditablePrimitiveAt(float x, float y)
+	{
 		Point2D.Float pt = new Point2D.Float();
 		getPosition(pt);
-		if ( primitive.getBounds2D(pt, null, getStyle()).contains(x,y) )
+		if (primitive.getBounds2D(pt, null, getStyle()).contains(x, y))
 		{
 			primitive.setVisual(this);
 			return primitive;

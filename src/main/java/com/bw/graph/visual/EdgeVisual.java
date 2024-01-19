@@ -76,15 +76,20 @@ public class EdgeVisual extends Visual
 	}
 
 	@Override
-	public DrawPrimitive getEditablePrimitiveAt(float x, float y) {
+	public DrawPrimitive getEditablePrimitiveAt(float x, float y)
+	{
 		DrawPrimitive p = path;
-		if ( targetConnector != null )
-			p = targetConnector.getEditablePrimitiveAt(x,y);
-		if ( p == null && sourceConnector != null )
-			p = sourceConnector.getEditablePrimitiveAt(x,y);
-		if (path != null )
-			path.setVisual(this);
-		return path;
+		if (targetConnector != null)
+			p = targetConnector.getEditablePrimitiveAt(x, y);
+		if (p == null && sourceConnector != null)
+			p = sourceConnector.getEditablePrimitiveAt(x, y);
+		if (p == null)
+		{
+			p = path;
+			if (p != null)
+				p.setVisual(this);
+		}
+		return p;
 	}
 
 	@Override

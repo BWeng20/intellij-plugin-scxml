@@ -1,13 +1,8 @@
 package com.bw.modelthings.fsm.ui;
 
-import com.bw.graph.Alignment;
 import com.bw.graph.DrawContext;
 import com.bw.graph.VisualModel;
 import com.bw.graph.primitive.Circle;
-import com.bw.graph.primitive.Line;
-import com.bw.graph.primitive.Rectangle;
-import com.bw.graph.primitive.Text;
-import com.bw.graph.util.Dimension2DFloat;
 import com.bw.graph.util.InsetsFloat;
 import com.bw.graph.visual.ConnectorVisual;
 import com.bw.graph.visual.EdgeVisual;
@@ -17,7 +12,6 @@ import com.bw.modelthings.fsm.model.FiniteStateMachine;
 import com.bw.modelthings.fsm.model.State;
 import com.bw.modelthings.fsm.model.Transition;
 
-import javax.swing.JTextField;
 import javax.swing.text.JTextComponent;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
@@ -50,6 +44,9 @@ public class GraphFactory
 	 */
 	protected GraphExtension graphExtension;
 
+	/**
+	 * The text field to use as state name editor.
+	 */
 	protected JTextComponent stateNameTextField;
 
 	/**
@@ -62,7 +59,13 @@ public class GraphFactory
 		this.graphExtension = graphExtension;
 	}
 
-	public void setStateNameEditorComponent(JTextComponent textEditor) {
+	/**
+	 * Sets the text editor component for state names.
+	 *
+	 * @param textEditor The editor component to use.
+	 */
+	public void setStateNameEditorComponent(JTextComponent textEditor)
+	{
 		stateNameTextField = textEditor;
 	}
 
@@ -167,61 +170,9 @@ public class GraphFactory
 	 */
 	public void createStatePrimitives(Visual visual, float x, float y, State state, Graphics2D g2, DrawContext stateOuterContext, DrawContext stateInnerContext)
 	{
-		GenericVisual v = (GenericVisual) visual;
-
-		float fh = stateInnerContext.normal.fontMetrics.getHeight();
-		Rectangle2D.Float bounds = graphExtension.bounds.get(state.docId);
-
-		if (bounds == null)
-		{
-			Rectangle2D stringBounds = stateInnerContext.normal.fontMetrics.getStringBounds(state.name, g2);
-
-			float height = 5 * fh;
-			float width = (float) (stringBounds.getWidth() + 10);
-
-			if (visual.getSubModel() != null)
-			{
-				Dimension2DFloat dim = stateInnerContext.configuration.innerModelBoxDimension;
-				InsetsFloat insets = stateInnerContext.configuration.innerModelBoxInsets;
-
-				float w = dim.width + insets.right + insets.left;
-				float h = dim.height + insets.top + insets.bottom;
-
-				if (width < w) width = w;
-				if (height < h) height = h;
-			}
-			bounds = new Rectangle2D.Float(x, y, width, height);
-		}
-		else
-		{
-			v.setPreferredDimension(bounds.width, bounds.height);
-		}
-
-		v.setPosition(bounds.x, bounds.y);
-
-		Rectangle frame = new Rectangle(
-				0, 0, bounds.width, bounds.height, stateOuterContext.configuration.stateCornerArcSize, stateOuterContext.configuration,
-				stateOuterContext.normal);
-
-		frame.setFill(true);
-		v.addDrawingPrimitive(frame);
-
-		Line separator = new Line(0, fh * 1.5f, bounds.width, fh * 1.5f
-				, stateInnerContext.configuration, stateInnerContext.normal);
-		v.addDrawingPrimitive(separator);
-
-		Text label = new Text(0, 0, state.name, stateInnerContext.configuration, stateInnerContext.normal);
-		label.setEditable(true);
-		if ( stateNameTextField != null)
-		{
-			label.setUserData(new StateNameProxy(state, stateNameTextField));
-		}
-		label.setAlignment(Alignment.Center);
-		label.setInsets(fh * 0.25f, 0, 0, 0);
-
-		v.addDrawingPrimitive(label);
+		new StateNameProxy(state, stateNameTextField, stateOuterContext, stateInnerContext)
+				.createStatePrimitives(visual, x, y, g2, graphExtension.bounds.get(state.docId));
 	}
-
 
 	/**
 	 * Creates a visual model for a state machine.
@@ -238,8 +189,7 @@ public class GraphFactory
 										 DrawContext startStyles,
 										 DrawContext stateOutlineStyles,
 										 DrawContext stateInnerStyles,
-										 DrawContext edgeStyles
-	)
+										 DrawContext edgeStyles)
 	{
 		VisualModel rootModel = new VisualModel();
 		if (fsm != null && fsm.pseudoRoot != null)
@@ -299,7 +249,6 @@ public class GraphFactory
 					}
 				}
 			}
-
 
 			// We have now all information to create draw-primitives in the states-visuals.
 			for (var visualEntry : stateVisuals.entrySet())

@@ -33,19 +33,19 @@ public class GraphConfiguration
 	public float selectEdgeMaxDistance = 10;
 
 	/**
-	 * The inner model box dimension inside the parent visual.
+	 * Minimal width of states in pixel.
 	 */
-	public Dimension2DFloat innerModelBoxDimension = new Dimension2DFloat(200, 200);
+	public float stateMinimalWidth = 50;
+
+	/**
+	 * The minimal inner model box dimension inside the parent visual.
+	 */
+	public Dimension2DFloat innerModelBoxMinDimension = new Dimension2DFloat(200, 200);
 
 	/**
 	 * Insets of the inner model box inside the parent visual.
 	 */
 	public InsetsFloat innerModelBoxInsets = new InsetsFloat(20, 10, 10, 10);
-
-	/**
-	 * Insets of the inner model inside its box.
-	 */
-	public InsetsFloat innerModelInsets = new InsetsFloat(5, 5, 5, 5);
 
 	/**
 	 * Graph use buffering for complex figures.

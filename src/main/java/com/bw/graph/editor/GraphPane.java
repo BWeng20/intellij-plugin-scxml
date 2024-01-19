@@ -1,9 +1,9 @@
 package com.bw.graph.editor;
 
+import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.VisualModel;
 import com.bw.graph.primitive.DrawPrimitive;
-import com.bw.graph.visual.EdgeVisual;
 import com.bw.graph.visual.Visual;
 import com.bw.svg.SVGWriter;
 
@@ -13,11 +13,14 @@ import javax.swing.SwingUtilities;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
@@ -59,6 +62,42 @@ public class GraphPane extends JComponent
 	private boolean showDrawSpeed = true;
 
 	/**
+	 * Listen to key events.
+	 */
+	protected KeyAdapter keyAdapter = new KeyAdapter()
+	{
+		@Override
+		public void keyPressed(KeyEvent e)
+		{
+			System.err.println("Pressed key " + e);
+		}
+	};
+
+	/**
+	 * Key adapter, used to control editors.
+	 */
+	protected KeyAdapter editorKeyAdapter = new KeyAdapter()
+	{
+		@Override
+		public void keyTyped(KeyEvent e)
+		{
+			switch (e.getKeyChar())
+			{
+				case KeyEvent.VK_ESCAPE:
+				{
+					cancelEdit();
+				}
+				break;
+				case KeyEvent.VK_ENTER:
+				{
+					endEdit();
+				}
+				break;
+			}
+		}
+	};
+
+	/**
 	 * Listens to clicks and drags on visuals.
 	 */
 	protected MouseAdapter mouseAdapter = new MouseAdapter()
@@ -72,10 +111,10 @@ public class GraphPane extends JComponent
 		@Override
 		public void mouseClicked(MouseEvent e)
 		{
-			int x = e.getX();
-			int y = e.getY();
+			float x = e.getX();
+			float y = e.getY();
 
-			Visual clicked = getVisualAt(x,y);
+			Visual clicked = getVisualAt(x, y);
 			if (clicked != null && e.getClickCount() > 1)
 			{
 				x -= offsetX;
@@ -85,14 +124,16 @@ public class GraphPane extends JComponent
 				y /= configuration.scale;
 
 				Rectangle2D.Float sunModelBox = clicked.getSubModelBounds(null);
-				if (sunModelBox != null && sunModelBox.contains(x,y))
+				if (sunModelBox != null && sunModelBox.contains(x, y))
 				{
 					parents.add(clicked);
 					clicked.setHighlighted(false);
 					setModel(clicked.getSubModel());
 					fireHierarchyChanged();
-				} else {
-					setSelectedPrimitive( clicked.getEditablePrimitiveAt(x,y) );
+				}
+				else
+				{
+					setSelectedPrimitive(clicked.getEditablePrimitiveAt(x, y));
 				}
 			}
 		}
@@ -132,6 +173,7 @@ public class GraphPane extends JComponent
 							{
 								if (configuration.buffered)
 									model.repaint();
+								cancelEdit();
 								revalidate();
 								repaint();
 							});
@@ -182,10 +224,12 @@ public class GraphPane extends JComponent
 	 */
 	public GraphPane()
 	{
+		setLayout(null);
 		setModel(new VisualModel());
 		addMouseListener(mouseAdapter);
 		addMouseMotionListener(mouseAdapter);
 		addMouseWheelListener(mouseAdapter);
+		addKeyListener(keyAdapter);
 	}
 
 	/**
@@ -235,7 +279,20 @@ public class GraphPane extends JComponent
 	 */
 	protected Visual selectedVisual;
 
+	/**
+	 * The current selected primitive.
+	 */
 	protected DrawPrimitive selectedPrimitive;
+
+	/**
+	 * The current active editor.
+	 */
+	protected JComponent selectedPrimitiveEditor;
+
+	/**
+	 * The proxy of the current active editor.
+	 */
+	protected EditorProxy selectedPrimitiveEditorProxy;
 
 
 	@Override
@@ -254,11 +311,10 @@ public class GraphPane extends JComponent
 				g2.setPaint(configuration.graphBackground == null ? getBackground() : configuration.graphBackground);
 				g2.fillRect(0, 0, getWidth(), getHeight());
 			}
-
 			g2.scale(configuration.scale, configuration.scale);
 
 			model.draw(g2);
-			if ( selectedPrimitive != null )
+			if (selectedPrimitive != null && selectedPrimitiveEditor == null)
 				drawPrimitiveCursor(g2, selectedPrimitive);
 
 		}
@@ -308,6 +364,8 @@ public class GraphPane extends JComponent
 	{
 		if (model != this.model)
 		{
+			cancelEdit();
+
 			boolean fireHierarchy = false;
 			while (!parents.isEmpty())
 			{
@@ -406,28 +464,32 @@ public class GraphPane extends JComponent
 		}
 	}
 
-	public void setSelectedPrimitive( DrawPrimitive p) {
+	/**
+	 * Sets the current selected primitive.
+	 *
+	 * @param p The primitive
+	 */
+	public void setSelectedPrimitive(DrawPrimitive p)
+	{
 
-		if ( p != selectedPrimitive ) {
+		if (p != selectedPrimitive)
+		{
 
 			cancelEdit();
-
-			Graphics2D g2 = (Graphics2D)getGraphics();
+			Graphics2D g2 = (Graphics2D) getGraphics();
 			try
 			{
 				g2.translate(offsetX, offsetY);
 				g2.scale(configuration.scale, configuration.scale);
 
-				if (selectedPrimitive != null)
+				if (selectedPrimitive != null && selectedPrimitiveEditor == null)
 				{
 					drawPrimitiveCursor(g2, selectedPrimitive);
 				}
 				selectedPrimitive = p;
-				if (selectedPrimitive != null)
-				{
-					drawPrimitiveCursor(g2, selectedPrimitive);
-				}
-			}finally
+				startEdit(g2);
+			}
+			finally
 			{
 				g2.dispose();
 			}
@@ -435,7 +497,14 @@ public class GraphPane extends JComponent
 
 	}
 
-	protected void drawPrimitiveCursor(Graphics2D g2, DrawPrimitive primitive) {
+	/**
+	 * Draw the cursor for the current primitive in XOR mode.
+	 *
+	 * @param g2        Graphics to use.
+	 * @param primitive thr primitive.
+	 */
+	protected void drawPrimitiveCursor(Graphics2D g2, DrawPrimitive primitive)
+	{
 		Visual v = primitive.getVisual();
 
 		g2.setStroke(new BasicStroke(3));
@@ -443,8 +512,8 @@ public class GraphPane extends JComponent
 		g2.setXORMode(Color.RED);
 		Point.Float pt = v.getPosition();
 
-		Rectangle2D.Float rt = v.getBoundsOfPrimitive(g2, primitive, v.getStyle() );
-		if ( rt != null )
+		Rectangle2D.Float rt = v.getBoundsOfPrimitive(g2, primitive, v.getStyle());
+		if (rt != null)
 		{
 			rt.x -= 2;
 			rt.y -= 2;
@@ -567,8 +636,113 @@ public class GraphPane extends JComponent
 		return Collections.unmodifiableList(parents);
 	}
 
+	/**
+	 * Start edit of a primitive. There can be only one active edit.
+	 *
+	 * @param g2 The graphics context to use.
+	 */
+	protected void startEdit(Graphics2D g2)
+	{
+		cancelEdit();
+		if (selectedPrimitive != null)
+		{
+			Object userData = selectedPrimitive.getUserData();
 
-	protected void cancelEdit() {
+			if (userData instanceof EditorProxy editorProxy)
+			{
+				selectedPrimitiveEditorProxy = editorProxy;
+				Visual v = selectedPrimitive.getVisual();
+				if (selectedPrimitiveEditor != null)
+				{
+					// This should not happen...
+					System.err.println("Editor still set in new selection!");
+					remove(selectedPrimitiveEditor);
+				}
+				selectedPrimitiveEditor = selectedPrimitiveEditorProxy.getEditor(selectedPrimitive);
+				DrawStyle style = v.getStyle();
+				Rectangle2D.Float rt = v.getBoundsOfPrimitive(g2, selectedPrimitive, style);
 
+				final float scale = configuration.scale;
+				rt.x *= scale;
+				rt.y *= scale;
+				rt.width *= scale;
+				rt.height *= scale;
+				rt.x += offsetX;
+				rt.y += offsetY;
+
+				Font font = getFont();
+				if (style != null && style.fontMetrics != null)
+				{
+					font = style.font;
+				}
+				font = font.deriveFont((float) (int) (0.5 + font.getSize() * configuration.scale));
+				selectedPrimitiveEditor.setFont(font);
+				Dimension d = selectedPrimitiveEditor.getPreferredSize();
+				if (style != null && style.fontMetrics != null)
+				{
+					float minWidth = style.fontMetrics.charWidth('X') * 20 * configuration.scale;
+					d.width = (int) (0.5 + Math.max(minWidth, d.width));
+					selectedPrimitiveEditor.setPreferredSize(d);
+				}
+
+				rt.x += (rt.width - d.width) / 2f;
+				rt.y += (rt.height - d.height) / 2f;
+				rt.width = d.width;
+				rt.height = d.height;
+
+				selectedPrimitiveEditor.setBounds(rt.getBounds());
+				selectedPrimitiveEditor.addKeyListener(editorKeyAdapter);
+				add(selectedPrimitiveEditor);
+				selectedPrimitiveEditor.requestFocus();
+			}
+			else
+				drawPrimitiveCursor(g2, selectedPrimitive);
+		}
+	}
+
+	/**
+	 * Cancel any active editor.
+	 *
+	 * @see EditorProxy#cancelEdit(DrawPrimitive)
+	 */
+	protected void cancelEdit()
+	{
+		if (selectedPrimitiveEditor != null)
+		{
+			remove(selectedPrimitiveEditor);
+			selectedPrimitiveEditor.removeKeyListener(editorKeyAdapter);
+			selectedPrimitiveEditor = null;
+			if (selectedPrimitiveEditorProxy != null)
+			{
+				selectedPrimitiveEditorProxy.cancelEdit(selectedPrimitive);
+				selectedPrimitiveEditorProxy = null;
+			}
+			// Suppress any cursor updates.
+			selectedPrimitive = null;
+		}
+	}
+
+	/**
+	 * End and commits the active editor.
+	 *
+	 * @see EditorProxy#endEdit(DrawPrimitive, Graphics2D)
+	 */
+	protected void endEdit()
+	{
+		if (selectedPrimitiveEditor != null)
+		{
+			selectedPrimitiveEditor.removeKeyListener(editorKeyAdapter);
+			if (selectedPrimitiveEditorProxy != null)
+			{
+				Graphics2D g2 = (Graphics2D) getGraphics();
+				g2.translate(offsetX, offsetY);
+				g2.scale(configuration.scale, configuration.scale);
+				selectedPrimitiveEditorProxy.endEdit(selectedPrimitive, g2);
+			}
+			// Suppress any cursor updates.
+			selectedPrimitive = null;
+			remove(selectedPrimitiveEditor);
+			selectedPrimitiveEditor = null;
+		}
 	}
 }
