@@ -142,13 +142,19 @@ public class GenericVisual extends Visual
 	{
 		Point2D.Float pt = new Point2D.Float();
 		getPosition(pt);
+		Rectangle2D.Float bounds = getBounds2D(null);
 		DrawStyle style = getStyle();
 		DrawPrimitive p = null;
+		Point2D.Float alignedPos = new Point2D.Float();
 		for (DrawPrimitive pw : primitives)
 		{
 			if (pw.isEditable())
 			{
 				Rectangle2D.Float rt = pw.getBounds2D(pt, null, style);
+				alignPosition(null, pw, bounds, style, alignedPos);
+				rt.x = alignedPos.x;
+				rt.y = alignedPos.y;
+
 				if (rt.contains(x, y))
 				{
 					p = pw;
