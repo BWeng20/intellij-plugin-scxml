@@ -249,9 +249,8 @@ public class SVGWriter extends XmlWriter
 	 * @param fill        Fill paint or null for none.
 	 * @param stroke      Stroke paint or null for none.
 	 * @param strokeWidth Stroke width.
-	 * @param closed      If true the path is closed.
 	 */
-	public void writeShape(Shape shape, float flatness, Paint fill, Paint stroke, float strokeWidth, boolean closed)
+	public void writeShape(Shape shape, float flatness, Paint fill, Paint stroke, float strokeWidth)
 	{
 		startElement(SVGElement.path);
 		writeAttribute(SVGAttribute.Fill, fill);

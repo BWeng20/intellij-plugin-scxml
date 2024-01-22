@@ -298,28 +298,25 @@ public class GenericPrimitiveVisual extends Visual
 		if (dimension == null)
 			dimension = new Dimension2DFloat(absoluteBounds);
 
-		if (dimension != null)
+		final Point2D.Float pt = new Point2D.Float();
+		final Point2D.Float zero = new Point2D.Float();
+		for (DrawPrimitive primitive : primitives)
 		{
-			final Point2D.Float pt = new Point2D.Float();
-			final Point2D.Float zero = new Point2D.Float();
-			for (DrawPrimitive primitive : primitives)
+			// Optimized to spare the call to getAlignmentOffset if not needed.
+			switch (primitive.getAlignment())
 			{
-				// Optimized to spare the call to getAlignmentOffset if not needed.
-				switch (primitive.getAlignment())
-				{
-					case Left:
-						consumer.consume(primitive, g2, zero);
-						break;
-					case Center:
-					case Right:
-					{
-						getAlignmentOffset(g2, primitive, dimension, pt);
-						consumer.consume(primitive, g2, pt);
-					}
+				case Left:
+					consumer.consume(primitive, g2, zero);
 					break;
-					case Hidden:
-						break;
+				case Center:
+				case Right:
+				{
+					getAlignmentOffset(g2, primitive, dimension, pt);
+					consumer.consume(primitive, g2, pt);
 				}
+				break;
+				case Hidden:
+					break;
 			}
 		}
 	}

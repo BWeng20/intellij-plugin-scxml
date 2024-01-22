@@ -51,8 +51,6 @@
         <action
                 id="ScXmlEditor.SvgExport"
                 class="com.bw.modelthings.intellij.actions.ExportSVG"
-                text="Export as SVG"
-                description="Exports the current graph as SVG."
                 icon="com.bw.modelthings.intellij.Icons.SCXML">
             <add-to-group group-id="ScXMLPopupMenu" anchor="first"/>
         </action>

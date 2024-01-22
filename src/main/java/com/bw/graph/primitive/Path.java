@@ -217,7 +217,7 @@ public class Path extends DrawPrimitive
 		sw.writeStrokeWidth(style.getStrokeWidth());
 		sw.writeAttribute(SVGAttribute.D, pathB.toString());
 		sw.endElement();
-		sw.writeShape(arrowEndTranslated, 1, style.linePaint, null, 0, true);
+		sw.writeShape(arrowEndTranslated, 1, style.linePaint, null, 0);
 		sw.endElement();
 	}
 
