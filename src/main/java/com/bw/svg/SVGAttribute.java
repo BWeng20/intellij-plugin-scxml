@@ -15,10 +15,9 @@ public enum SVGAttribute
 	ClipPath("clip-path"),
 	D("d"),
 	Opacity("opacity"),
-	Marker_Start("marker-start"),
-	Marker_Mid("marker-mid"),
-	Marker_End("marker-end"),
-	Font_Weight("font-weight"),
+	MarkerStart("marker-start"),
+	MarkerMid("marker-mid"),
+	MarkerEnd("marker-end"),
 
 	Rx("rx"),
 	Ry("ry"),
@@ -72,6 +71,7 @@ public enum SVGAttribute
 	XmlSpace("xml:space"),
 	FontSize("font-size"),
 	FontFamily("font-family"),
+	FontWeight("font-weight"),
 
 	RefX("refX"),
 	RefY("refY"),

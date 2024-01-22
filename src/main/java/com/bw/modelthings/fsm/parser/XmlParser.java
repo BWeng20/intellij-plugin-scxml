@@ -5,6 +5,7 @@ import com.bw.modelthings.fsm.model.ExecutableContent;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
 import com.bw.modelthings.fsm.model.FsmElement;
 import com.bw.modelthings.fsm.model.Invoke;
+import com.bw.modelthings.fsm.model.PseudoRoot;
 import com.bw.modelthings.fsm.model.State;
 import com.bw.modelthings.fsm.model.Transition;
 import com.bw.modelthings.fsm.model.TransitionType;
@@ -709,9 +710,20 @@ public class XmlParser implements ScxmlTags
 	protected State getOrCreateStateWithAttributes(Element node, boolean parallel, State parent)
 	{
 		String sname = getAttributeOrCompute(node, ATTR_ID, this::generateId);
-		State state = getOrCreateState(sname, parallel);
+		State state;
+		if (TAG_SCXML.equals(node.getLocalName()))
+		{
+			PseudoRoot pseudoRoot = new PseudoRoot();
+			pseudoRoot.name = sname;
+			fsm.states.put(sname, pseudoRoot);
+			pseudoRoot.fsmName = getOptionalAttribute(node, ATTR_NAME);
+			state = pseudoRoot;
+		}
+		else
+		{
+			state = getOrCreateState(sname, parallel);
+		}
 		String initial = getSCXMLAttribute(node, ATTR_INITIAL);
-
 		state.docId = ++docIdCounter;
 
 		if (initial != null)

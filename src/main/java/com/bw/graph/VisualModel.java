@@ -15,10 +15,18 @@ public class VisualModel
 {
 	/**
 	 * Creates a new empty model.
+	 *
+	 * @param name The name, can be null
 	 */
-	public VisualModel()
+	public VisualModel(String name)
 	{
+		this.name = name;
 	}
+
+	/**
+	 * The name of the model.
+	 */
+	public final String name;
 
 	/**
 	 * Listeners
@@ -191,6 +199,12 @@ public class VisualModel
 		{
 			visuals.forEach(v -> v.setModified(false));
 		}
+	}
+
+	@Override
+	public String toString()
+	{
+		return name == null ? "none" : name;
 	}
 
 }

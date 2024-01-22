@@ -222,7 +222,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		@Override
 		public String getText()
 		{
-			return String.valueOf(state.getId());
+			return state.getDisplayName();
 		}
 
 		/**

@@ -13,7 +13,8 @@ import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 
 /**
- * Draws an SVG Shape.
+ * Draws an SVG Shape.<br>
+ * <b>DRAFT and absolutely untested. Don't use yet!</b>
  */
 public class Svg extends DrawPrimitive
 {

@@ -93,9 +93,7 @@ public class Path extends DrawPrimitive
 	 * Paths don't use relative positions or insets.
 	 * This override draws a path along the absolute points of the control points.
 	 *
-	 * @param g2          The graphics context
-	 * @param position    not used.
-	 * @param parentStyle The style of parent, used if primitive has no own style.
+	 * @param g2 The graphics context
 	 */
 	@Override
 	public void draw(Graphics2D g2)
@@ -227,9 +225,9 @@ public class Path extends DrawPrimitive
 
 	private void appendPoint(StringBuilder pathB, Point2D.Float pt)
 	{
-		pathB.append(SVGWriter.floatToStringRestrictedPrecision(pt.x, precisionFactor))
+		pathB.append(SVGWriter.floatToString(pt.x, precisionFactor))
 			 .append(' ')
-			 .append(SVGWriter.floatToStringRestrictedPrecision(pt.y, precisionFactor));
+			 .append(SVGWriter.floatToString(pt.y, precisionFactor));
 	}
 
 	/**

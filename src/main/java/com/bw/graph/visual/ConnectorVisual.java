@@ -134,18 +134,26 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 		pt.y += relativePosition.y + radius;
 	}
 
+	@Override
 	public <T extends DrawPrimitive> T getPrimitiveOf(Class<T> primitiveClass)
 	{
 		if (primitiveClass.isAssignableFrom(primitive.getClass()))
 			return (T) primitive;
-		return
-				null;
+		else
+			return null;
 	}
 
+	/**
+	 * Sets the position of the connector, relative to its parent.
+	 *
+	 * @param x The X offset.
+	 * @param y The Y offset.
+	 */
 	public void setRelativePosition(float x, float y)
 	{
 		relativePosition.x = x;
 		relativePosition.y = y;
+		resetBounds();
 	}
 }
 

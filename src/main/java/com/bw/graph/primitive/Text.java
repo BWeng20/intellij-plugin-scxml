@@ -3,8 +3,11 @@ package com.bw.graph.primitive;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.util.Dimension2DFloat;
+import com.bw.svg.SVGAttribute;
+import com.bw.svg.SVGElement;
 import com.bw.svg.SVGWriter;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -61,12 +64,14 @@ public class Text extends DrawPrimitive
 	@Override
 	protected void toSVGIntern(SVGWriter sw, Graphics2D g2, Point2D.Float pos)
 	{
-		sw.startElement("text");
-		sw.writeAttribute("x", pos.x);
-		sw.writeAttribute("y", pos.y + style.fontMetrics.getAscent());
+		sw.startElement(SVGElement.text);
+		sw.writeAttribute(SVGAttribute.X, pos.x);
+		sw.writeAttribute(SVGAttribute.Y, pos.y + style.fontMetrics.getAscent());
 		sw.startStyle();
-		sw.writeAttribute("font-family", style.font.getFamily());
-		sw.writeAttribute("font-size", style.font.getSize2D());
+		sw.writeAttribute(SVGAttribute.Stroke, (Color) null);
+		sw.writeAttribute(SVGAttribute.Fill, style.textPaint);
+		sw.writeAttribute(SVGAttribute.FontFamily, style.font.getFamily());
+		sw.writeAttribute(SVGAttribute.FontSize, style.font.getSize2D());
 		sw.startContent();
 		sw.writeEscaped(text);
 		sw.endElement();

@@ -1,5 +1,6 @@
 package com.bw.graph.primitive;
 
+import com.bw.XmlWriter;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.VisualModel;
@@ -14,6 +15,9 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
+/**
+ * Primitive that carries a Sub-Model. The primitive draws a thumb of it.
+ */
 public class ModelPrimitive extends DrawPrimitive
 {
 	/**
@@ -116,13 +120,30 @@ public class ModelPrimitive extends DrawPrimitive
 		if (subModel != null)
 		{
 			sw.startElement(SVGElement.g);
-			sw.writeAttribute(SVGAttribute.ViewBox, sw.toBox(getInnerDimension(g2).getBounds()));
+
+			Rectangle2D.Float subBounds = subModel.getBounds2D(g2);
+			Rectangle2D.Float subModelBox = getInnerDimension(g2).getBounds();
+
+			float innerInset2 = 10;
+
+			// Calc scale, use minimum to keep aspect ratio
+			float scale = Math.min((subModelBox.width - innerInset2) / subBounds.width, (subModelBox.height - innerInset2) / subBounds.height);
+			// Don't zoom bigger.
+			if (scale > 1f)
+				scale = 1f;
+
+			float offsetX = basePos.x + (subModelBox.width - subBounds.width * scale) / 2f;
+			float offsetY = basePos.y + (subModelBox.height - subBounds.height * scale) / 2f;
+
+			sw.writeAttribute(SVGAttribute.Transform,
+					"translate(" + XmlWriter.floatToString(offsetX, config.precisionFactor)
+							+ " " + XmlWriter.floatToString(offsetY, config.precisionFactor) + ") scale("
+							+ XmlWriter.floatToString(scale, config.precisionFactor) + ")");
 
 			for (Visual v : subModel.getVisuals())
 			{
 				v.toSVG(sw, g2);
 			}
-			// TODO
 			sw.endElement();
 		}
 	}
@@ -144,6 +165,11 @@ public class ModelPrimitive extends DrawPrimitive
 		return subModel != null && subModel.isModified();
 	}
 
+	/**
+	 * Sets the modified state of the sub-model. Has no effect if no sub-model is set.
+	 *
+	 * @param modified The new modified state.
+	 */
 	@Override
 	public void setModified(boolean modified)
 	{
@@ -152,11 +178,23 @@ public class ModelPrimitive extends DrawPrimitive
 	}
 
 
+	/**
+	 * Checks if the visual contains a sub-model.
+	 *
+	 * @param visual The visual to check.
+	 * @return True if the visual contains a sub-model.
+	 */
 	public static boolean hasSubModel(Visual visual)
 	{
 		return getSubModel(visual) != null;
 	}
 
+	/**
+	 * Gets a sub-model from visual.
+	 *
+	 * @param visual The visual.
+	 * @return The sub-model or null.
+	 */
 	public static VisualModel getSubModel(Visual visual)
 	{
 		if (visual != null)

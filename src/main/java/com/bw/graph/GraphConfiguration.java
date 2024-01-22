@@ -72,4 +72,8 @@ public class GraphConfiguration
 	 */
 	public Paint graphBackground;
 
+	/**
+	 * Factor for rounding floats.
+	 */
+	public float precisionFactor = 10 * 10 * 10;
 }

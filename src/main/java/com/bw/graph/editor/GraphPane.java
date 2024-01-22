@@ -6,20 +6,13 @@ import com.bw.graph.VisualModel;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.visual.Visual;
+import com.bw.svg.SVGAttribute;
 import com.bw.svg.SVGWriter;
 
 import javax.swing.JComponent;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -228,7 +221,7 @@ public class GraphPane extends JComponent
 	public GraphPane()
 	{
 		setLayout(null);
-		setModel(new VisualModel());
+		setModel(new VisualModel("none"));
 		addMouseListener(mouseAdapter);
 		addMouseMotionListener(mouseAdapter);
 		addMouseWheelListener(mouseAdapter);
@@ -348,9 +341,25 @@ public class GraphPane extends JComponent
 		Graphics2D g2 = (Graphics2D) getGraphics();
 		StringWriter ssw = new StringWriter();
 		SVGWriter sw = new SVGWriter(ssw);
+		sw.precisionFactor = configuration.precisionFactor;
 
 		Rectangle2D.Float bounds = getBounds2D();
-		sw.startSVG(bounds, null);
+		sw.startSVG(bounds);
+
+		Paint bg = configuration.graphBackground == null ? getBackground() : configuration.graphBackground;
+		if (bg != null)
+		{
+			sw.startStyle();
+			sw.writeAttribute(SVGAttribute.BackgroundColor, bg);
+			sw.endStyle();
+		}
+		if (model.name != null)
+		{
+			sw.startElement("title");
+			sw.startContent();
+			sw.writeEscaped(model.name);
+			sw.endElement();
+		}
 		for (Visual v : model.getVisuals())
 			v.toSVG(sw, g2);
 		sw.endSVG();
@@ -386,7 +395,7 @@ public class GraphPane extends JComponent
 				this.model.removeListener(this::repaint);
 			}
 			if (model == null)
-				model = new VisualModel();
+				model = new VisualModel("none");
 			this.model = model;
 			model.addListener(this::repaint);
 

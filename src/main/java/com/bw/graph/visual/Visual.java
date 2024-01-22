@@ -23,6 +23,14 @@ public abstract class Visual
 	protected Object id;
 
 	/**
+	 * Name for UI. If null, string-representation of {@link #id} is used.<br>
+	 * Can be used of the id is not suitable for UI.
+	 *
+	 * @see #getDisplayName()
+	 */
+	protected String displayName;
+
+	/**
 	 * True of the visual is high-lighted.
 	 */
 	protected boolean highlighted;
@@ -64,6 +72,18 @@ public abstract class Visual
 		Objects.requireNonNull(context);
 		this.id = id;
 		this.context = context;
+	}
+
+
+	/**
+	 * Sets the diplay name.
+	 *
+	 * @param displayName The display-name or null to restore default behaviour.
+	 * @see #getDisplayName()
+	 */
+	public void setDisplayName(String displayName)
+	{
+		this.displayName = displayName;
 	}
 
 	/**
@@ -256,7 +276,8 @@ public abstract class Visual
 	 * Helper to get a aligned position according to alignment mode.
 	 *
 	 * @param g2        The graphics context to use for dimension calculations.
-	 * @param primitive The primitive
+	 * @param primitive The primitive.
+	 * @param dimension The dimension of the target box to align in.
 	 * @param pt        The point to store the result.
 	 * @return The aligned base point or null if {@link com.bw.graph.Alignment#Hidden}. Always same as pt if not null.
 	 * @see DrawPrimitive#getAlignment()
@@ -441,5 +462,26 @@ public abstract class Visual
 		return String.valueOf(id);
 	}
 
+	/**
+	 * Gets the first primitive with the specified class oder super-class.
+	 *
+	 * @param primitiveClass The class to search for.
+	 * @param <T>            The type of the class.
+	 * @return The primitive or null.
+	 */
 	public abstract <T extends DrawPrimitive> T getPrimitiveOf(Class<T> primitiveClass);
+
+	/**
+	 * Gets the display name.
+	 * If {@link #displayName} is null, the string representation of {@link #id} is returned.
+	 *
+	 * @return The display name.
+	 * @see #setDisplayName(String)
+	 * @see #displayName
+	 */
+	public String getDisplayName()
+	{
+		return displayName == null ? String.valueOf(getId()) : displayName;
+
+	}
 }

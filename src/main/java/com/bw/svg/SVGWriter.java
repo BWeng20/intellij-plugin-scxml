@@ -15,8 +15,6 @@ import java.io.Writer;
  */
 public class SVGWriter extends XmlWriter
 {
-	private boolean inSvg = false;
-
 	private boolean inStyle = false;
 	private boolean atStyleStart = false;
 
@@ -104,52 +102,27 @@ public class SVGWriter extends XmlWriter
 	 *
 	 * @param width  The Width of the document.
 	 * @param height The height of the document.
-	 * @param title  The optional title. Can be null.
 	 */
-	public void startSVG(float width, float height, String title)
+	public void startSVG(float width, float height)
 	{
-		inSvg = true;
-		write("<svg xmlns=\"http://www.w3.org/2000/svg\"" +
-				" version=\"1.1\" width=\"");
-		writeRestrictedFloat(width);
-		write("\" height=\"");
-		writeRestrictedFloat(height);
-		write("\">");
-		if (title != null)
-		{
-			startElement("title");
-			startContent();
-			writeEscaped(title);
-			endElement();
-		}
+		startElement(SVGElement.svg);
+		writeAttribute("xmlns", "http://www.w3.org/2000/svg");
+		writeAttribute("version", "1.1");
+		writeAttribute(SVGAttribute.Width, width);
+		writeAttribute(SVGAttribute.Height, height);
 	}
 
 	/**
 	 * Starts the SVG document. Must be the first call.
 	 *
 	 * @param viewport The viewport coordinates of the document.
-	 * @param title    The optional title. Can be null.
 	 */
-	public void startSVG(Rectangle2D viewport, String title)
+	public void startSVG(Rectangle2D.Float viewport)
 	{
-		inSvg = true;
-		write("<svg xmlns=\"http://www.w3.org/2000/svg\"" +
-				" version=\"1.1\" viewBox=\"");
-		writeRestrictedFloat((float) viewport.getX());
-		write(' ');
-		writeRestrictedFloat((float) viewport.getY());
-		write(' ');
-		writeRestrictedFloat((float) viewport.getWidth());
-		write(' ');
-		writeRestrictedFloat((float) viewport.getHeight());
-		write("\">");
-		if (title != null)
-		{
-			startElement("title");
-			startContent();
-			writeEscaped(title);
-			endElement();
-		}
+		startElement(SVGElement.svg);
+		writeAttribute("xmlns", "http://www.w3.org/2000/svg");
+		writeAttribute("version", "1.1");
+		writeAttribute(SVGAttribute.ViewBox, toBox(viewport));
 	}
 
 	/**
@@ -204,14 +177,10 @@ public class SVGWriter extends XmlWriter
 	 */
 	public void endSVG()
 	{
-		if (!inSvg)
-			throw new IllegalStateException("endSVG called outside svg");
 		while (!tagStack.empty())
 		{
 			endElement();
 		}
-		write("\n</svg>");
-		inSvg = false;
 	}
 
 	/**
@@ -339,14 +308,16 @@ public class SVGWriter extends XmlWriter
 	/**
 	 * Create a box string from the rectangle.
 	 *
-	 * @param box The rectangle.
+	 * @param box             The rectangle.
+	 * @param precisionFactor The precision factor.
 	 * @return The box string
+	 * @see #floatToString(float, float)
 	 */
 	public static String toBox(Rectangle2D.Float box, float precisionFactor)
 	{
-		return floatToStringRestrictedPrecision(box.x, precisionFactor) + " " +
-				floatToStringRestrictedPrecision(box.y, precisionFactor) + " " +
-				floatToStringRestrictedPrecision(box.width, precisionFactor) + " " +
-				floatToStringRestrictedPrecision(box.height, precisionFactor);
+		return floatToString(box.x, precisionFactor) + " " +
+				floatToString(box.y, precisionFactor) + " " +
+				floatToString(box.width, precisionFactor) + " " +
+				floatToString(box.height, precisionFactor);
 	}
 }

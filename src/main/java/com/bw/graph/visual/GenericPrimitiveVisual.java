@@ -47,6 +47,13 @@ public class GenericPrimitiveVisual extends Visual
 		super(id, context);
 	}
 
+	private PrimitiveConsumer drawWithAlignment = (primitive, g2, offset) ->
+	{
+		g2.translate(offset.x, offset.y);
+		primitive.draw(g2);
+		g2.translate(-offset.x, -offset.y);
+	};
+
 	/**
 	 * Draw the visual.
 	 *
@@ -94,7 +101,7 @@ public class GenericPrimitiveVisual extends Visual
 					g2Buffered.translate(offset, offset);
 
 					// g2Buffered.translate(offset, offset);
-					forAllPrimitives(g2Buffered, DrawPrimitive::draw,
+					forAllPrimitives(g2Buffered, drawWithAlignment,
 							new Dimension2DFloat(width, height));
 				}
 				finally
@@ -117,7 +124,7 @@ public class GenericPrimitiveVisual extends Visual
 		}
 		else
 		{
-			forAllPrimitives(g2, DrawPrimitive::draw, null);
+			forAllPrimitives(g2, drawWithAlignment, null);
 		}
 	}
 
@@ -180,8 +187,10 @@ public class GenericPrimitiveVisual extends Visual
 				final float x2 = primitiveBounds.x + primitiveBounds.width;
 				final float y2 = primitiveBounds.y + primitiveBounds.height;
 
-				if ((this.absoluteBounds.x + this.absoluteBounds.width) < x2) this.absoluteBounds.width = x2 - this.absoluteBounds.x;
-				if ((this.absoluteBounds.y + this.absoluteBounds.height) < y2) this.absoluteBounds.height = y2 - this.absoluteBounds.y;
+				if ((this.absoluteBounds.x + this.absoluteBounds.width) < x2)
+					this.absoluteBounds.width = x2 - this.absoluteBounds.x;
+				if ((this.absoluteBounds.y + this.absoluteBounds.height) < y2)
+					this.absoluteBounds.height = y2 - this.absoluteBounds.y;
 			}
 		}
 		else
@@ -237,9 +246,11 @@ public class GenericPrimitiveVisual extends Visual
 	public void toSVG(SVGWriter sw, Graphics2D g2)
 	{
 		sw.startElement(SVGElement.g);
-		Point2D.Float pt = getAbsolutePosition();
-		forAllPrimitives(g2,
-				(primitive, g) -> primitive.toSVG(sw, g, pt));
+		final Point2D.Float pt = getAbsolutePosition();
+		forAllPrimitives(g2, (primitive, g, offset) -> {
+			Point2D.Float tempPos = new Point2D.Float(offset.x + pt.x, offset.y + pt.y);
+			primitive.toSVG(sw, g, tempPos);
+		});
 		sw.endElement();
 	}
 
@@ -253,11 +264,11 @@ public class GenericPrimitiveVisual extends Visual
 		 *
 		 * @param primitive The primitive.
 		 * @param g2        The graphics context to use.
+		 * @param offset    Additional alignment offset
 		 */
-		void consume(DrawPrimitive primitive, Graphics2D g2);
+		void consume(DrawPrimitive primitive, Graphics2D g2, Point2D.Float offset);
 
 	}
-
 
 	/**
 	 * Calls a function on all primitives.
@@ -290,21 +301,20 @@ public class GenericPrimitiveVisual extends Visual
 		if (dimension != null)
 		{
 			final Point2D.Float pt = new Point2D.Float();
+			final Point2D.Float zero = new Point2D.Float();
 			for (DrawPrimitive primitive : primitives)
 			{
 				// Optimized to spare the call to getAlignmentOffset if not needed.
 				switch (primitive.getAlignment())
 				{
 					case Left:
-						consumer.consume(primitive, g2);
+						consumer.consume(primitive, g2, zero);
 						break;
 					case Center:
 					case Right:
 					{
 						getAlignmentOffset(g2, primitive, dimension, pt);
-						g2.translate(pt.x, pt.y);
-						consumer.consume(primitive, g2);
-						g2.translate(-pt.x, -pt.y);
+						consumer.consume(primitive, g2, pt);
 					}
 					break;
 					case Hidden:

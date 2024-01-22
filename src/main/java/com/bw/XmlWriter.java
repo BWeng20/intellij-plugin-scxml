@@ -12,7 +12,7 @@ public class XmlWriter extends PrintWriter
 	/**
 	 * Precision factor for float values.
 	 */
-	protected final float precisionFactor = 10 * 10 * 10;
+	public float precisionFactor = 10 * 10 * 10;
 
 	private StringBuilder lineIndent = new StringBuilder(20);
 
@@ -174,7 +174,7 @@ public class XmlWriter extends PrintWriter
 	 */
 	public void writeRestrictedFloat(float value)
 	{
-		write(floatToStringRestrictedPrecision(value, precisionFactor));
+		write(floatToString(value, precisionFactor));
 	}
 
 	/**
@@ -184,7 +184,7 @@ public class XmlWriter extends PrintWriter
 	 * @param precisionFactor The precision factor. E.g. 1000 for 3 digits
 	 * @return The string representation.
 	 */
-	public static String floatToStringRestrictedPrecision(float value, float precisionFactor)
+	public static String floatToString(float value, float precisionFactor)
 	{
 		value = (float) Math.floor(0.5f + (value * precisionFactor)) / precisionFactor;
 		return (value == Math.ceil(value)) ? Long.toString((long) value) : Float.toString(value);

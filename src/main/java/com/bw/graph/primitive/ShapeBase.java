@@ -39,10 +39,9 @@ public abstract class ShapeBase extends DrawPrimitive
 	}
 
 	/**
-	 * Draws thr shape at given absolute position.
+	 * Draws the shape.
 	 *
-	 * @param g2    The graphics context, with (0,0) at final position.
-	 * @param style The style to use.
+	 * @param g2 The graphics context, translates to target position.
 	 */
 	@Override
 	protected void drawIntern(Graphics2D g2)
@@ -64,7 +63,6 @@ public abstract class ShapeBase extends DrawPrimitive
 	 * Gets the bounds of the shape. Without insets.
 	 *
 	 * @param graphics The graphics context to use for calculations.
-	 * @param style    The style to use.
 	 * @return The dimension.
 	 */
 	@Override

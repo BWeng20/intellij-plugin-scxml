@@ -48,6 +48,11 @@ public final class Dimension2DFloat extends Dimension2D
 		}
 	}
 
+	/**
+	 * Create a copy.
+	 *
+	 * @param other The source dimension to copy from.
+	 */
 	public Dimension2DFloat(Dimension2DFloat other)
 	{
 		width = other.width;
@@ -80,6 +85,11 @@ public final class Dimension2DFloat extends Dimension2D
 		return "Dimension[" + width + "," + height + "]";
 	}
 
+	/**
+	 * Gets a rectangle with same dimensions, which position at (0,0).
+	 *
+	 * @return The rectangle.
+	 */
 	public Rectangle2D.Float getBounds()
 	{
 		return new Rectangle2D.Float(0, 0, width, height);

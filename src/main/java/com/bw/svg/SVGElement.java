@@ -9,6 +9,11 @@ import java.util.HashMap;
 public enum SVGElement
 {
 	/**
+	 * root element
+	 */
+	svg,
+
+	/**
 	 * Group element
 	 */
 	g,

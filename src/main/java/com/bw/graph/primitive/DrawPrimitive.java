@@ -20,12 +20,24 @@ import java.util.Objects;
  */
 public abstract class DrawPrimitive
 {
+	/**
+	 * Style to use.
+	 */
 	protected final DrawStyle style;
+
 	private final Point2D.Float relativePosition;
 	private final Point2D.Float tempPosition = new Point2D.Float();
 	private boolean editable;
+
+	/**
+	 * Assigned Visual. Will be set temporary during event handling.
+	 * Not reliable during draw-calls.
+	 */
 	private Visual visual;
 
+	/**
+	 *
+	 */
 	private Object userData;
 
 	/**
@@ -84,7 +96,7 @@ public abstract class DrawPrimitive
 
 	/**
 	 * Gets the current assigned visual.<br>
-	 * The visual is only set during event handling or similar operations.
+	 * The visual is only reliable during event handling or similar operations.
 	 *
 	 * @return The visual or null.
 	 */
@@ -148,6 +160,8 @@ public abstract class DrawPrimitive
 
 	/**
 	 * Force a repaint.
+	 * Needs to be implemented by affected primitives.
+	 * Base implementation does nothing and doesn't need to be called from overrides.
 	 */
 	public void repaint()
 	{
@@ -179,7 +193,6 @@ public abstract class DrawPrimitive
 	 *
 	 * @param basePosition The absolute base position
 	 * @param graphics     The graphics context to use for calculations.
-	 * @param parentStyle  The style of parent, used of primitive has no own style.
 	 * @return The bounds as rectangle.
 	 */
 	public Rectangle2D.Float getBounds2D(Point2D.Float basePosition, Graphics2D graphics)
@@ -187,6 +200,14 @@ public abstract class DrawPrimitive
 		return getBounds2D(basePosition.x, basePosition.y, graphics);
 	}
 
+	/**
+	 * Gets the bounds of the primitive, including space for insets.
+	 *
+	 * @param basePositionX The absolute base X position.
+	 * @param basePositionY The absolute base Y position.
+	 * @param graphics      The graphics context to use for calculations.
+	 * @return The bounds as rectangle.
+	 */
 	public Rectangle2D.Float getBounds2D(float basePositionX, float basePositionY, Graphics2D graphics)
 	{
 		final Dimension2DFloat dim = getDimension(graphics);
@@ -235,7 +256,6 @@ public abstract class DrawPrimitive
 	 * Gets the bounds of the primitive. Without insets.
 	 *
 	 * @param graphics The graphics context to use for calculations.
-	 * @param style    The style to use.
 	 * @return The dimension.
 	 */
 	protected abstract Dimension2DFloat getInnerDimension(Graphics2D graphics);
@@ -243,9 +263,9 @@ public abstract class DrawPrimitive
 	/**
 	 * Adds the primitive as SVG element to the string builder.
 	 *
-	 * @param sw          The Writer to write to.
-	 * @param position    Base position.
-	 * @param parentStyle Style of parent.
+	 * @param sw       The Writer to write to.
+	 * @param g2       The Graphic context - only for calculations.
+	 * @param position Target position.
 	 */
 	public void toSVG(SVGWriter sw, Graphics2D g2,
 					  Point2D.Float position)
@@ -266,9 +286,9 @@ public abstract class DrawPrimitive
 	/**
 	 * Internal implementation from inheritances.
 	 *
-	 * @param sw    The Writer to write to.
-	 * @param style The resulting style to use.
-	 * @param pos   The calculated position (including the relative position).
+	 * @param sw  The Writer to write to.
+	 * @param g2  The Graphic context - only for calculations.
+	 * @param pos The calculated position (including the relative position).
 	 */
 	protected abstract void toSVGIntern(SVGWriter sw, Graphics2D g2, Point2D.Float pos);
 
@@ -356,11 +376,24 @@ public abstract class DrawPrimitive
 		visual = null;
 	}
 
+	/**
+	 * Check if the primitive is modified.<br>
+	 * Needs to be overwritten for primitives that carry modifiable data.
+	 *
+	 * @return in base implementation always false
+	 */
 	public boolean isModified()
 	{
 		return false;
 	}
 
+	/**
+	 * Sets modified flag.<br>
+	 * Needs to be overwritten for primitives that carry modifiable data.<br>
+	 * Base implementation does nothing.
+	 *
+	 * @param modified The new modified state.
+	 */
 	public void setModified(boolean modified)
 	{
 	}

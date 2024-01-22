@@ -11,6 +11,7 @@ import com.bw.graph.visual.EdgeVisual;
 import com.bw.graph.visual.GenericPrimitiveVisual;
 import com.bw.graph.visual.Visual;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
+import com.bw.modelthings.fsm.model.PseudoRoot;
 import com.bw.modelthings.fsm.model.State;
 import com.bw.modelthings.fsm.model.Transition;
 
@@ -193,7 +194,7 @@ public class GraphFactory
 										 DrawContext stateInnerStyles,
 										 DrawContext edgeStyles)
 	{
-		VisualModel rootModel = new VisualModel();
+		VisualModel rootModel = new VisualModel(fsm == null ? "none" : fsm.name);
 		if (fsm != null && fsm.pseudoRoot != null)
 		{
 			java.util.Queue<State> states = new LinkedList<>();
@@ -225,6 +226,10 @@ public class GraphFactory
 					statesByName.put(state.name, state);
 
 					GenericPrimitiveVisual stateVisual = new GenericPrimitiveVisual(state.name, stateInnerStyles);
+					if (state instanceof PseudoRoot pseudoRoot)
+					{
+						stateVisual.setDisplayName(pseudoRoot.fsmName);
+					}
 
 					if (state.parent != null)
 					{
@@ -238,7 +243,12 @@ public class GraphFactory
 
 					if (!state.states.isEmpty())
 					{
-						VisualModel subModel = new VisualModel();
+						String modelName = state.name;
+						if (state instanceof PseudoRoot pseudoRoot && pseudoRoot.fsmName != null)
+						{
+							modelName = pseudoRoot.fsmName;
+						}
+						VisualModel subModel = new VisualModel(modelName);
 						ModelPrimitive modelPrimitive = new ModelPrimitive(0, 0, stateInnerStyles.configuration, stateInnerStyles.normal);
 						modelPrimitive.setAlignment(Alignment.Center);
 						modelPrimitive.setInsets(stateInnerStyles.configuration.innerModelBoxInsets);
