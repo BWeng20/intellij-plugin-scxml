@@ -4,6 +4,7 @@ import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.VisualModel;
 import com.bw.graph.primitive.DrawPrimitive;
+import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.visual.Visual;
 import com.bw.svg.SVGWriter;
 
@@ -14,6 +15,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -123,18 +125,19 @@ public class GraphPane extends JComponent
 				x /= configuration.scale;
 				y /= configuration.scale;
 
-				Rectangle2D.Float sunModelBox = clicked.getSubModelBounds(null);
-				if (sunModelBox != null && sunModelBox.contains(x, y))
+				ModelPrimitive modelPrimitive = clicked.getPrimitiveOf(ModelPrimitive.class);
+				if (modelPrimitive != null)
 				{
-					parents.add(clicked);
-					clicked.setHighlighted(false);
-					setModel(clicked.getSubModel());
-					fireHierarchyChanged();
+					Rectangle2D.Float subModelBox = clicked.getBoundsOfPrimitive(null, modelPrimitive);
+					if (subModelBox != null && subModelBox.contains(x, y))
+					{
+						parents.add(clicked);
+						setModel(modelPrimitive.getSubModel());
+						fireHierarchyChanged();
+						return;
+					}
 				}
-				else
-				{
-					setSelectedPrimitive(clicked.getEditablePrimitiveAt(x, y));
-				}
+				setSelectedPrimitive(clicked.getEditablePrimitiveAt(x, y));
 			}
 		}
 
@@ -369,7 +372,7 @@ public class GraphPane extends JComponent
 			boolean fireHierarchy = false;
 			while (!parents.isEmpty())
 			{
-				if (parents.peekLast().getSubModel() == model)
+				if (ModelPrimitive.getSubModel(parents.peekLast()) == model)
 					break;
 				parents.removeLast();
 				fireHierarchy = true;
@@ -510,9 +513,9 @@ public class GraphPane extends JComponent
 		g2.setStroke(new BasicStroke(3));
 		g2.setColor(Color.BLUE);
 		g2.setXORMode(Color.RED);
-		Point.Float pt = v.getPosition();
+		Point.Float pt = v.getAbsolutePosition();
 
-		Rectangle2D.Float rt = v.getBoundsOfPrimitive(g2, primitive, v.getStyle());
+		Rectangle2D.Float rt = v.getBoundsOfPrimitive(g2, primitive);
 		if (rt != null)
 		{
 			rt.x -= 2;
@@ -659,8 +662,7 @@ public class GraphPane extends JComponent
 					remove(selectedPrimitiveEditor);
 				}
 				selectedPrimitiveEditor = selectedPrimitiveEditorProxy.getEditor(selectedPrimitive);
-				DrawStyle style = v.getStyle();
-				Rectangle2D.Float rt = v.getBoundsOfPrimitive(g2, selectedPrimitive, style);
+				Rectangle2D.Float rt = v.getBoundsOfPrimitive(g2, selectedPrimitive);
 
 				final float scale = configuration.scale;
 				rt.x *= scale;
@@ -670,20 +672,27 @@ public class GraphPane extends JComponent
 				rt.x += offsetX;
 				rt.y += offsetY;
 
-				Font font = getFont();
-				if (style != null && style.fontMetrics != null)
+				Font font;
+				FontMetrics fontMetrics;
+				DrawStyle style = selectedPrimitive.getStyle();
+				if (style.fontMetrics != null)
 				{
 					font = style.font;
+					fontMetrics = style.fontMetrics;
+
+				}
+				else
+				{
+					font = getFont();
+					fontMetrics = getFontMetrics(font);
 				}
 				font = font.deriveFont((float) (int) (0.5 + font.getSize() * configuration.scale));
 				selectedPrimitiveEditor.setFont(font);
 				Dimension d = selectedPrimitiveEditor.getPreferredSize();
-				if (style != null && style.fontMetrics != null)
-				{
-					float minWidth = style.fontMetrics.charWidth('X') * 20 * configuration.scale;
-					d.width = (int) (0.5 + Math.max(minWidth, d.width));
-					selectedPrimitiveEditor.setPreferredSize(d);
-				}
+
+				float minWidth = fontMetrics.charWidth('X') * 20 * configuration.scale;
+				d.width = (int) (0.5 + Math.max(minWidth, d.width));
+				selectedPrimitiveEditor.setPreferredSize(d);
 
 				rt.x += (rt.width - d.width) / 2f;
 				rt.y += (rt.height - d.height) / 2f;

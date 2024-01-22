@@ -5,6 +5,7 @@ import com.bw.graph.DrawStyle;
 import com.bw.graph.VisualModel;
 import com.bw.graph.editor.GraphPane;
 import com.bw.graph.editor.InteractionListener;
+import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.visual.Visual;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
 import com.bw.modelthings.fsm.ui.GraphExtension;
@@ -61,7 +62,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	protected List<Crumb> stateHierarchyCrumbs = new ArrayList<>();
 
 	/**
-	 * Root visual.
+	 * Root model.
 	 */
 	protected Visual root;
 
@@ -153,6 +154,16 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 				});
 			}
 		}
+	}
+
+	/**
+	 * Get the SVG for the current model.
+	 *
+	 * @return The SVG source code.
+	 */
+	public String getSVG()
+	{
+		return pane.toSVG();
 	}
 
 
@@ -249,7 +260,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		{
 			StateCrumb sc = (StateCrumb) crumb;
 			if (sc != null)
-				pane.setModel(sc.state.getSubModel());
+				pane.setModel(ModelPrimitive.getSubModel(sc.state));
 		});
 
 		// add(bc, BorderLayout.NORTH);
@@ -298,7 +309,9 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	{
 		// @TODO: Make styles configurable.
 
-		TextAttributes textAttribute = EditorColorsManager.getInstance().getSchemeForCurrentUITheme().getAttributes(HighlighterColors.TEXT);
+		TextAttributes textAttribute = EditorColorsManager.getInstance()
+														  .getSchemeForCurrentUITheme()
+														  .getAttributes(HighlighterColors.TEXT);
 		Color background = textAttribute.getBackgroundColor();
 
 		pane.setOpaque(true);
@@ -345,7 +358,8 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		stateOutlineStyleHighlight.font = font;
 		stateOutlineStyleHighlight.fontMetrics = fontMetrics;
 
-		pane.getModel().repaint();
+		pane.getModel()
+			.repaint();
 	}
 
 	/**
@@ -366,7 +380,8 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		@Override
 		public void lafChanged()
 		{
-			SwingUtilities.invokeLater(() -> {
+			SwingUtilities.invokeLater(() ->
+			{
 				updateLaf();
 				repaint();
 			});
@@ -416,7 +431,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		{
 			root = rootModel.getVisuals()
 							.get(0);
-			pane.setModel(root.getSubModel());
+			pane.setModel(ModelPrimitive.getSubModel(root));
 		}
 		else
 		{

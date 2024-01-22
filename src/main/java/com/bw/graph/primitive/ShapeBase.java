@@ -44,7 +44,8 @@ public abstract class ShapeBase extends DrawPrimitive
 	 * @param g2    The graphics context, with (0,0) at final position.
 	 * @param style The style to use.
 	 */
-	protected void drawIntern(Graphics2D g2, DrawStyle style)
+	@Override
+	protected void drawIntern(Graphics2D g2)
 	{
 		if (shape != null)
 		{
@@ -67,7 +68,7 @@ public abstract class ShapeBase extends DrawPrimitive
 	 * @return The dimension.
 	 */
 	@Override
-	protected Dimension2DFloat getInnerDimension(Graphics2D graphics, DrawStyle style)
+	protected Dimension2DFloat getInnerDimension(Graphics2D graphics)
 	{
 		if (shape != null)
 		{

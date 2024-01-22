@@ -2,8 +2,11 @@ package com.bw.graph.primitive;
 
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
+import com.bw.svg.SVGAttribute;
+import com.bw.svg.SVGElement;
 import com.bw.svg.SVGWriter;
 
+import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
@@ -37,18 +40,23 @@ public class Rectangle extends ShapeBase
 	}
 
 	@Override
-	protected void toSVGIntern(SVGWriter sw, DrawStyle style, Point2D.Float pos)
+	protected void toSVGIntern(SVGWriter sw, Graphics2D g2, Point2D.Float pos)
 	{
-		sw.startElement("rect");
-		sw.writeAttribute("x", pos.x);
-		sw.writeAttribute("y", pos.y);
-		sw.writeAttribute("width", ((Rectangle2D.Float) shape).width);
-		sw.writeAttribute("height", ((Rectangle2D.Float) shape).height);
+		sw.startElement(SVGElement.rect);
+		sw.writeAttribute(SVGAttribute.X, pos.x);
+		sw.writeAttribute(SVGAttribute.Y, pos.y);
+		sw.writeAttribute(SVGAttribute.Width, (float) shape.getBounds2D()
+														   .getWidth());
+		sw.writeAttribute(SVGAttribute.Height, (float) shape.getBounds2D()
+															.getHeight());
+		if (shape instanceof RoundRectangle2D.Float)
+			sw.writeAttribute(SVGAttribute.Rx, ((RoundRectangle2D.Float) shape).arcwidth / 2f);
+
 		sw.startStyle();
 		if (isFill())
-			sw.writeAttribute("fill", style.fillPaint);
-		sw.writeAttribute("stroke", style.linePaint);
-		sw.writeStrokeWith(style.getStrokeWidth());
+			sw.writeAttribute(SVGAttribute.Fill, style.fillPaint);
+		sw.writeAttribute(SVGAttribute.Stroke, style.linePaint);
+		sw.writeStrokeWidth(style.getStrokeWidth());
 		sw.endElement();
 	}
 

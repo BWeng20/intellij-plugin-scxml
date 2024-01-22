@@ -1,7 +1,6 @@
 package com.bw.graph.visual;
 
 import com.bw.graph.DrawContext;
-import com.bw.graph.DrawStyle;
 import com.bw.graph.primitive.Circle;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.primitive.PathControlPoint;
@@ -21,6 +20,10 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	private float radius;
 	private EdgeVisual edgeVisual;
 
+	private Point2D.Float relativePosition = new Point2D.Float(0, 0);
+
+	private Visual parent;
+
 	/**
 	 * Creates a new Primitive.
 	 *
@@ -32,7 +35,7 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 		super(null, context);
 		this.parent = parent;
 		this.radius = context.configuration.connectorSize;
-		this.primitive = new Circle(radius, radius, radius, context.configuration, null);
+		this.primitive = new Circle(radius, radius, radius, context.configuration, context.normal);
 	}
 
 	/**
@@ -47,30 +50,52 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 
 
 	/**
-	 * Draws for given context.
+	 * Connectors don't use relative positions or insets.
 	 *
-	 * @param g2          The graphics context
-	 * @param parentStyle The style of Edge, used if primitive has no own style.
+	 * @param g2 The graphics context
 	 */
-	protected void drawIntern(Graphics2D g2, DrawStyle parentStyle)
+	@Override
+	public void draw(Graphics2D g2)
 	{
 		if ((parent != null && parent.isHighlighted()) || (edgeVisual != null && edgeVisual.isHighlighted()))
 		{
-			DrawStyle style = getStyle();
-			final DrawStyle actualStyle = style == null ? parentStyle : style;
+			Point2D.Float pt = parent.getAbsolutePosition();
 
-			Point2D.Float pt = new Point2D.Float();
-			getPosition(pt);
-			primitive.draw(g2, pt, actualStyle);
+			pt.x += relativePosition.x;
+			pt.y += relativePosition.y;
+
+			absoluteBounds.x = pt.x;
+			absoluteBounds.y = pt.y;
+
+			g2.translate(pt.x, pt.y);
+			try
+			{
+				primitive.draw(g2);
+			}
+			finally
+			{
+				g2.translate(-pt.x, -pt.y);
+			}
 		}
+	}
+
+	/**
+	 * Draws for given context.
+	 *
+	 * @param g2 The graphics context
+	 */
+	@Override
+	protected void drawRelative(Graphics2D g2)
+	{
 	}
 
 	@Override
 	public DrawPrimitive getEditablePrimitiveAt(float x, float y)
 	{
 		Point2D.Float pt = new Point2D.Float();
-		getPosition(pt);
-		if (primitive.getBounds2D(pt, null, getStyle()).contains(x, y))
+		getAbsolutePosition(pt);
+		if (primitive.getBounds2D(pt, null)
+					 .contains(x, y))
 		{
 			primitive.setVisual(this);
 			return primitive;
@@ -83,14 +108,15 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	@Override
 	protected void updateBounds(Graphics2D graphics)
 	{
-		Dimension2DFloat dim = primitive.getDimension(graphics, getStyle());
-		x2 = position.x + dim.width;
-		y2 = position.y + dim.height;
+		Dimension2DFloat dim = primitive.getDimension(graphics);
+		absoluteBounds.width = dim.width;
+		absoluteBounds.height = dim.height;
 	}
 
 	@Override
 	public void toSVG(SVGWriter sw, Graphics2D g2)
 	{
+		// Nothing to do
 	}
 
 	@Override
@@ -103,8 +129,23 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	@Override
 	public void getControlPosition(Point2D.Float pt)
 	{
-		getPosition(pt);
-		pt.x += radius;
-		pt.y += radius;
+		parent.getAbsolutePosition(pt);
+		pt.x += relativePosition.x + radius;
+		pt.y += relativePosition.y + radius;
+	}
+
+	public <T extends DrawPrimitive> T getPrimitiveOf(Class<T> primitiveClass)
+	{
+		if (primitiveClass.isAssignableFrom(primitive.getClass()))
+			return (T) primitive;
+		return
+				null;
+	}
+
+	public void setRelativePosition(float x, float y)
+	{
+		relativePosition.x = x;
+		relativePosition.y = y;
 	}
 }
+

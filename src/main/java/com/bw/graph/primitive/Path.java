@@ -5,9 +5,12 @@ import com.bw.graph.GraphConfiguration;
 import com.bw.graph.util.Dimension2DFloat;
 import com.bw.graph.util.Geometry;
 import com.bw.jtools.svg.ShapeHelper;
+import com.bw.svg.SVGAttribute;
+import com.bw.svg.SVGElement;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
+import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
@@ -95,11 +98,8 @@ public class Path extends DrawPrimitive
 	 * @param parentStyle The style of parent, used if primitive has no own style.
 	 */
 	@Override
-	public void draw(Graphics2D g2, Point2D.Float position, DrawStyle parentStyle)
+	public void draw(Graphics2D g2)
 	{
-		DrawStyle style = getStyle();
-		final DrawStyle actualStyle = style == null ? parentStyle : style;
-
 		Point2D.Float pt = new Point2D.Float();
 		boolean recreatePath = path2D == null;
 
@@ -159,29 +159,77 @@ public class Path extends DrawPrimitive
 			}
 		}
 
-		g2.setStroke(actualStyle.lineStroke);
-		g2.setPaint(actualStyle.linePaint);
+		g2.setStroke(style.lineStroke);
+		g2.setPaint(style.linePaint);
 		g2.draw(path2D);
 		if (arrowEndTranslated != null)
 			g2.fill(arrowEndTranslated);
 	}
 
 	@Override
-	protected void drawIntern(Graphics2D g2, DrawStyle style)
+	protected void drawIntern(Graphics2D g2)
 	{
 		// unused
 	}
 
 	@Override
-	protected Dimension2DFloat getInnerDimension(Graphics2D graphics, DrawStyle style)
+	protected Dimension2DFloat getInnerDimension(Graphics2D graphics)
 	{
 		return new Dimension2DFloat(0, 0);
 	}
 
 	@Override
-	protected void toSVGIntern(SVGWriter sw, DrawStyle style, Point2D.Float pos)
+	protected void toSVGIntern(SVGWriter sw, Graphics2D g2, Point2D.Float pos)
 	{
-		// @TODO
+		final int LI = coordinates.length - 1;
+		for (int i = 0; i <= LI; ++i)
+		{
+			controlPoints.get(i)
+						 .getControlPosition(coordinates[i]);
+		}
+		StringBuilder pathB = new StringBuilder();
+		pathB.append('M');
+		appendPoint(pathB, coordinates[0]);
+
+		Point2D.Float pt = new Point2D.Float();
+		for (int i = 1; i <= LI; ++i)
+		{
+			switch (mode)
+			{
+				case Quad ->
+				{
+					pt.x = coordinates[i - 1].x + (coordinates[i].x - coordinates[i - 1].x) / 2f;
+					pt.y = coordinates[i].y;
+					pathB.append('Q');
+					appendPoint(pathB, pt);
+					pathB.append(' ');
+					appendPoint(pathB, coordinates[i]);
+				}
+				case Straight ->
+				{
+					pathB.append('L');
+					appendPoint(pathB, coordinates[i]);
+				}
+			}
+		}
+		sw.startElement(SVGElement.g);
+		sw.startElement(SVGElement.path);
+		sw.writeAttribute(SVGAttribute.Fill, (Paint) null);
+		sw.writeAttribute(SVGAttribute.Stroke, style.linePaint);
+		sw.writeStrokeWidth(style.getStrokeWidth());
+		sw.writeAttribute(SVGAttribute.D, pathB.toString());
+		sw.endElement();
+		sw.writeShape(arrowEndTranslated, 1, style.linePaint, null, 0, true);
+		sw.endElement();
+	}
+
+	static final float precisionFactor = 10 * 10 * 10;
+
+	private void appendPoint(StringBuilder pathB, Point2D.Float pt)
+	{
+		pathB.append(SVGWriter.floatToStringRestrictedPrecision(pt.x, precisionFactor))
+			 .append(' ')
+			 .append(SVGWriter.floatToStringRestrictedPrecision(pt.y, precisionFactor));
 	}
 
 	/**

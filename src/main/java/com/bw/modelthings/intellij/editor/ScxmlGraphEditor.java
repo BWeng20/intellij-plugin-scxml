@@ -1,8 +1,8 @@
 package com.bw.modelthings.intellij.editor;
 
-import com.bw.XmlWriter;
 import com.bw.graph.VisualModel;
-import com.bw.graph.visual.GenericVisual;
+import com.bw.graph.primitive.ModelPrimitive;
+import com.bw.graph.visual.GenericPrimitiveVisual;
 import com.bw.graph.visual.Visual;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
 import com.bw.modelthings.fsm.parser.LogExtensionParser;
@@ -10,6 +10,11 @@ import com.bw.modelthings.fsm.parser.ParserException;
 import com.bw.modelthings.fsm.parser.ScxmlTags;
 import com.bw.modelthings.fsm.parser.XmlParser;
 import com.bw.modelthings.fsm.ui.GraphExtension;
+import com.bw.svg.SVGWriter;
+import com.intellij.ide.ui.customization.CustomActionsSchema;
+import com.intellij.openapi.actionSystem.ActionGroup;
+import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.actionSystem.ActionPlaces;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.diagnostic.Logger;
@@ -32,7 +37,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.JComponent;
+import javax.swing.JPopupMenu;
 import javax.swing.Timer;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
@@ -87,6 +95,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	 */
 	Timer updateXmlTimer;
 
+
 	/**
 	 * Listener for document changes.
 	 */
@@ -130,7 +139,8 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 		if (!updateXmlTriggered)
 		{
 			updateXmlTriggered = true;
-			ApplicationManager.getApplication().invokeLater(() -> WriteCommandAction.runWriteCommandAction(xmlFile.getProject(), this::runXmlUpdate));
+			ApplicationManager.getApplication()
+							  .invokeLater(() -> WriteCommandAction.runWriteCommandAction(xmlFile.getProject(), this::runXmlUpdate));
 		}
 	}
 
@@ -147,9 +157,11 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 			try
 			{
 				inDocumentSync = true;
-				PsiDocumentManager.getInstance(xmlFile.getProject()).commitDocument(xmlDocument);
+				// @TODO Try to avoid to write to disk every time we update!
+				PsiDocumentManager.getInstance(xmlFile.getProject())
+								  .commitDocument(xmlDocument);
 
-				VisualModel model = (component.root == null) ? null : component.root.getSubModel();
+				VisualModel model = (component.root == null) ? null : ModelPrimitive.getSubModel(component.root);
 				if (xmlFile != null && model != null)
 				{
 					HashMap<String, Rectangle2D.Float> bounds = new HashMap<>();
@@ -159,15 +171,15 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 					while (!visuals.isEmpty())
 					{
 						Visual v = visuals.remove(visuals.size() - 1);
-						if (v instanceof GenericVisual)
+						if (v instanceof GenericPrimitiveVisual)
 						{
 							String id = (String) v.getId();
 							if (id != null)
 							{
-								bounds.put(id, v.getBounds2D(null));
+								bounds.put(id, v.getAbsoluteBounds2D(null));
 							}
 						}
-						VisualModel m = v.getSubModel();
+						VisualModel m = ModelPrimitive.getSubModel(v);
 						if (m != null)
 						{
 							visuals.addAll(m.getVisuals());
@@ -196,11 +208,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 									Rectangle2D.Float r = bounds.get(id);
 									if (r != null)
 									{
-										String bs = XmlWriter.floatToStringRestrictedPrecision(r.x, precisionFactor) + " " +
-												XmlWriter.floatToStringRestrictedPrecision(r.y, precisionFactor) + " " +
-												XmlWriter.floatToStringRestrictedPrecision(r.width, precisionFactor) + " " +
-												XmlWriter.floatToStringRestrictedPrecision(r.height, precisionFactor);
-										System.err.println("State " + id + " " + bs);
+										String bs = SVGWriter.toBox(r, precisionFactor);
 
 										XmlAttribute attr = s.getAttribute(GraphExtension.ATTR_BOUNDS, GraphExtension.NS_GRAPH_EXTENSION);
 										if (attr == null)
@@ -216,16 +224,11 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 											}
 										}
 									}
-									else
-									{
-										System.err.println("No bounds for " + id);
-									}
 								}
 							}
 						}
-
-						PsiDocumentManager.getInstance(xmlFile.getProject()).commitDocument(xmlDocument);
-
+						PsiDocumentManager.getInstance(xmlFile.getProject())
+										  .commitDocument(xmlDocument);
 					}
 					catch (ProcessCanceledException pce)
 					{
@@ -237,6 +240,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 			finally
 			{
 				inDocumentSync = false;
+				log.warn("XML updated");
 				// @TODO some unlock?
 			}
 		}
@@ -289,10 +293,11 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 		this.file = file;
 		setXmlFile(psiFile);
 
-		updateXmlTimer = new Timer(500, e -> {
+		updateXmlTimer = new Timer(2000, e ->
+		{
 			if (component.root != null)
 			{
-				VisualModel model = component.root.getSubModel();
+				VisualModel model = ModelPrimitive.getSubModel(component.root);
 				if (model != null && model.isModified())
 				{
 					log.warn("Model modified");
@@ -302,6 +307,25 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 			}
 		});
 		updateXmlTimer.start();
+
+		component.pane.addMouseListener(new MouseAdapter()
+		{
+			@Override
+			public void mouseReleased(MouseEvent event)
+			{
+				if (event.isPopupTrigger() && !event.isConsumed())
+				{
+					ActionGroup ag = (ActionGroup) CustomActionsSchema.getInstance()
+																	  .getCorrectedAction("ScXMLPopupMenu");
+					JPopupMenu popupMenu = ActionManager.getInstance()
+														.createActionPopupMenu(ActionPlaces.EDITOR_POPUP, ag)
+														.getComponent();
+					popupMenu.show(component, event.getX(), event.getY());
+				}
+
+			}
+		});
+
 	}
 
 	/**

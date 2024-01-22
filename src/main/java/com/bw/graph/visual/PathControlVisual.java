@@ -1,7 +1,6 @@
 package com.bw.graph.visual;
 
 import com.bw.graph.DrawContext;
-import com.bw.graph.DrawStyle;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.primitive.PathControlPoint;
 import com.bw.graph.primitive.Rectangle;
@@ -33,16 +32,14 @@ public class PathControlVisual extends Visual implements PathControlPoint
 	/**
 	 * Draws for given context.
 	 *
-	 * @param g2          The graphics context
-	 * @param parentStyle The style of parent, used if primitive has no own style.
+	 * @param g2 The graphics context
 	 */
 	@Override
-	protected void drawIntern(Graphics2D g2, DrawStyle parentStyle)
+	protected void drawRelative(Graphics2D g2)
 	{
 		if (isHighlighted())
 		{
-			final DrawStyle actualStyle = context == null ? parentStyle : context.highlighted;
-			primitive.draw(g2, position, actualStyle);
+			primitive.draw(g2);
 		}
 	}
 
@@ -56,14 +53,15 @@ public class PathControlVisual extends Visual implements PathControlPoint
 	@Override
 	protected void updateBounds(Graphics2D graphics)
 	{
-		Rectangle2D.Float primitiveBounds = primitive.getBounds2D(position, graphics, context.highlighted);
-		x2 = primitiveBounds.x + primitiveBounds.width;
-		y2 = primitiveBounds.y + primitiveBounds.height;
+		Rectangle2D.Float primitiveBounds = primitive.getBounds2D(absoluteBounds.x, absoluteBounds.y, graphics);
+		absoluteBounds.width = primitiveBounds.x + primitiveBounds.width;
+		absoluteBounds.height = primitiveBounds.y + primitiveBounds.height;
 	}
 
 	@Override
 	public void toSVG(SVGWriter sw, Graphics2D g2)
 	{
+		// Nothing to do
 	}
 
 	@Override
@@ -76,8 +74,17 @@ public class PathControlVisual extends Visual implements PathControlPoint
 	@Override
 	public void getControlPosition(Point2D.Float pt)
 	{
-		getPosition(pt);
+		getAbsolutePosition(pt);
 		pt.x += radius;
 		pt.y += radius;
+	}
+
+	public <T extends DrawPrimitive> T getPrimitiveOf(Class<T> primitiveClass)
+	{
+		if (primitiveClass.isAssignableFrom(primitive.getClass()))
+			return (T) primitive;
+		return
+				null;
+
 	}
 }

@@ -143,7 +143,7 @@ public class VisualModel
 		float t2;
 		for (Visual visual : visuals)
 		{
-			Rectangle2D.Float visualBounds = visual.getBounds2D(g2);
+			Rectangle2D.Float visualBounds = visual.getAbsoluteBounds2D(g2);
 			if (bounds.x > visualBounds.x)
 				bounds.x = visualBounds.x;
 			if (bounds.y > visualBounds.y)
@@ -175,7 +175,8 @@ public class VisualModel
 	 */
 	public boolean isModified()
 	{
-		return dirty ? true : visuals.stream().anyMatch(Visual::isModified);
+		return dirty ? true : visuals.stream()
+									 .anyMatch(Visual::isModified);
 	}
 
 	/**

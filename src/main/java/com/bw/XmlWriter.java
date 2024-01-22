@@ -12,7 +12,9 @@ public class XmlWriter extends PrintWriter
 	/**
 	 * Precision factor for float values.
 	 */
-	private final float precisionFactor = 10 * 10 * 10;
+	protected final float precisionFactor = 10 * 10 * 10;
+
+	private StringBuilder lineIndent = new StringBuilder(20);
 
 	/**
 	 * The stack of currently open tags.
@@ -32,6 +34,7 @@ public class XmlWriter extends PrintWriter
 	public XmlWriter(Writer out)
 	{
 		super(out);
+		lineIndent.append("\n ");
 	}
 
 	/**
@@ -41,11 +44,13 @@ public class XmlWriter extends PrintWriter
 	 */
 	public void startElement(String tag)
 	{
-		if (!(tagStack.empty() || elementHasContent))
+		if ((!tagStack.empty()) && !elementHasContent)
 			write(">");
 		tagStack.push(tag);
-		write("\n<");
+		write(lineIndent.toString());
+		write('<');
 		write(tag);
+		lineIndent.append('\t');
 		elementHasContent = false;
 	}
 
@@ -55,7 +60,10 @@ public class XmlWriter extends PrintWriter
 	public void startContent()
 	{
 		if (!elementHasContent)
+		{
 			write('>');
+			write(lineIndent.toString());
+		}
 		elementHasContent = true;
 	}
 
@@ -69,8 +77,10 @@ public class XmlWriter extends PrintWriter
 			throw new IllegalStateException("endElement called on empty element-stack.");
 		}
 		final String element = tagStack.pop();
+		lineIndent.setLength(lineIndent.length() - 1);
 		if (elementHasContent)
 		{
+			write(lineIndent.toString());
 			write("</");
 			write(element);
 			write('>');
@@ -79,7 +89,7 @@ public class XmlWriter extends PrintWriter
 		{
 			write("/>");
 		}
-
+		elementHasContent = true;
 	}
 
 	/**

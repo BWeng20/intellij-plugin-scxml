@@ -12,6 +12,7 @@ import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.Objects;
 
 /**
  * A draw primitive.<br>
@@ -19,7 +20,7 @@ import java.awt.geom.Rectangle2D;
  */
 public abstract class DrawPrimitive
 {
-	private final DrawStyle style;
+	protected final DrawStyle style;
 	private final Point2D.Float relativePosition;
 	private final Point2D.Float tempPosition = new Point2D.Float();
 	private boolean editable;
@@ -60,10 +61,11 @@ public abstract class DrawPrimitive
 	 * @param x      The relative x-position
 	 * @param y      The relative y-position
 	 * @param config The configuration to use.
-	 * @param style  The local style or null if parent style shall be used.
+	 * @param style  The local style.
 	 */
 	protected DrawPrimitive(float x, float y, GraphConfiguration config, DrawStyle style)
 	{
+		Objects.requireNonNull(style);
 		this.style = style;
 		this.relativePosition = new Point2D.Float(x, y);
 		this.config = config;
@@ -114,32 +116,21 @@ public abstract class DrawPrimitive
 
 	/**
 	 * Draws for given context.<br>
-	 * This method calls {@link #drawIntern(Graphics2D, DrawStyle)}
-	 * with adapted position and DrawStyle.
+	 * This method calls {@link #drawIntern(Graphics2D)}
+	 * with adapted position.
 	 *
-	 * @param g2          The graphics context
-	 * @param position    The base position to draw at.
-	 * @param parentStyle The style of parent, used if primitive has no own style.
+	 * @param g2 The graphics context
 	 */
-	public void draw(Graphics2D g2, Point2D.Float position, DrawStyle parentStyle)
+	public void draw(Graphics2D g2)
 	{
-		final DrawStyle actualStyle = style == null ? parentStyle : style;
-
 		tempPosition.x = relativePosition.x + insets.left;
 		tempPosition.y = relativePosition.y + insets.top;
-
-		if (position != null)
-		{
-			// Primitive has a base position
-			tempPosition.x += position.x;
-			tempPosition.y += position.y;
-		}
 
 		AffineTransform orgTransform = g2.getTransform();
 		try
 		{
 			g2.translate(tempPosition.x, tempPosition.y);
-			drawIntern(g2, actualStyle);
+			drawIntern(g2);
 		}
 		finally
 		{
@@ -150,10 +141,18 @@ public abstract class DrawPrimitive
 	/**
 	 * Draws at given absolute position.
 	 *
-	 * @param g2    The graphics context, with (0,0) at final position.
-	 * @param style The style to use.
+	 * @param g2 The graphics context, with (0,0) at final position.
 	 */
-	protected abstract void drawIntern(Graphics2D g2, DrawStyle style);
+	protected abstract void drawIntern(Graphics2D g2);
+
+
+	/**
+	 * Force a repaint.
+	 */
+	public void repaint()
+	{
+	}
+
 
 	/**
 	 * Get the local style if independent of parent.
@@ -183,12 +182,17 @@ public abstract class DrawPrimitive
 	 * @param parentStyle  The style of parent, used of primitive has no own style.
 	 * @return The bounds as rectangle.
 	 */
-	public Rectangle2D.Float getBounds2D(Point2D.Float basePosition, Graphics2D graphics, DrawStyle parentStyle)
+	public Rectangle2D.Float getBounds2D(Point2D.Float basePosition, Graphics2D graphics)
 	{
-		final Dimension2DFloat dim = getDimension(graphics, style == null ? parentStyle : style);
+		return getBounds2D(basePosition.x, basePosition.y, graphics);
+	}
+
+	public Rectangle2D.Float getBounds2D(float basePositionX, float basePositionY, Graphics2D graphics)
+	{
+		final Dimension2DFloat dim = getDimension(graphics);
 		return new Rectangle2D.Float(
-				basePosition.x + relativePosition.x,
-				basePosition.y + relativePosition.y, dim.width, dim.height);
+				basePositionX + relativePosition.x,
+				basePositionY + relativePosition.y, dim.width, dim.height);
 	}
 
 	/**
@@ -215,12 +219,11 @@ public abstract class DrawPrimitive
 	 * Gets the bounds of the primitive, including insets.
 	 *
 	 * @param graphics The graphics context to use for calculations.
-	 * @param style    The style to use.
 	 * @return The bounds as rectangle.
 	 */
-	public Dimension2DFloat getDimension(Graphics2D graphics, DrawStyle style)
+	public Dimension2DFloat getDimension(Graphics2D graphics)
 	{
-		Dimension2DFloat dim = getInnerDimension(graphics, style);
+		Dimension2DFloat dim = getInnerDimension(graphics);
 		dim.width += insets.left + insets.right;
 		dim.height += insets.top + insets.bottom;
 
@@ -235,7 +238,7 @@ public abstract class DrawPrimitive
 	 * @param style    The style to use.
 	 * @return The dimension.
 	 */
-	protected abstract Dimension2DFloat getInnerDimension(Graphics2D graphics, DrawStyle style);
+	protected abstract Dimension2DFloat getInnerDimension(Graphics2D graphics);
 
 	/**
 	 * Adds the primitive as SVG element to the string builder.
@@ -244,14 +247,19 @@ public abstract class DrawPrimitive
 	 * @param position    Base position.
 	 * @param parentStyle Style of parent.
 	 */
-	public void toSVG(SVGWriter sw,
-					  Point2D.Float position, DrawStyle parentStyle)
+	public void toSVG(SVGWriter sw, Graphics2D g2,
+					  Point2D.Float position)
 	{
-		tempPosition.x = position.x + relativePosition.x + insets.left;
-		tempPosition.y = position.y + relativePosition.y + insets.top;
-		toSVGIntern(sw,
-				style == null ? parentStyle : style,
-				tempPosition);
+		tempPosition.x = relativePosition.x + insets.left;
+		tempPosition.y = relativePosition.y + insets.top;
+
+		if (position != null)
+		{
+			tempPosition.x += position.x;
+			tempPosition.y += position.y;
+		}
+
+		toSVGIntern(sw, g2, tempPosition);
 
 	}
 
@@ -262,7 +270,7 @@ public abstract class DrawPrimitive
 	 * @param style The resulting style to use.
 	 * @param pos   The calculated position (including the relative position).
 	 */
-	protected abstract void toSVGIntern(SVGWriter sw, DrawStyle style, Point2D.Float pos);
+	protected abstract void toSVGIntern(SVGWriter sw, Graphics2D g2, Point2D.Float pos);
 
 	/**
 	 * Sets new insets.
@@ -340,5 +348,21 @@ public abstract class DrawPrimitive
 		this.editable = editable;
 	}
 
+	/**
+	 * Release resource.
+	 */
+	public void dispose()
+	{
+		visual = null;
+	}
+
+	public boolean isModified()
+	{
+		return false;
+	}
+
+	public void setModified(boolean modified)
+	{
+	}
 
 }

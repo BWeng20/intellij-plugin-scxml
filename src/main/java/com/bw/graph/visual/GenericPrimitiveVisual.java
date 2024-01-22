@@ -1,14 +1,13 @@
 package com.bw.graph.visual;
 
 import com.bw.graph.DrawContext;
-import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.util.Dimension2DFloat;
 import com.bw.graph.util.ImageUtil;
+import com.bw.svg.SVGElement;
 import com.bw.svg.SVGWriter;
 
-import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
@@ -23,7 +22,7 @@ import java.util.List;
 /**
  * A visual that is build of generic primitives.
  */
-public class GenericVisual extends Visual
+public class GenericPrimitiveVisual extends Visual
 {
 	/**
 	 * The drawing primitives.
@@ -43,7 +42,7 @@ public class GenericVisual extends Visual
 	 * @param id      The identification. Can be null.
 	 * @param context The Drawing context to use.
 	 */
-	public GenericVisual(Object id, DrawContext context)
+	public GenericPrimitiveVisual(Object id, DrawContext context)
 	{
 		super(id, context);
 	}
@@ -51,33 +50,34 @@ public class GenericVisual extends Visual
 	/**
 	 * Draw the visual.
 	 *
-	 * @param g2    The Graphics context
-	 * @param style The style to use.
+	 * @param g2 The Graphics context
 	 */
 	@Override
-	public void drawIntern(Graphics2D g2, final DrawStyle style)
+	protected void drawRelative(Graphics2D g2)
 	{
-		if (x2 < 0)
+		if (absoluteBounds.width < 0)
 			updateBounds(g2);
 
 		final GraphConfiguration graphConfiguration = context.configuration;
 		final GraphicsConfiguration graphicsConfiguration = g2.getDeviceConfiguration();
 
-		if (graphConfiguration.buffered && graphicsConfiguration.getDevice().getType() != GraphicsDevice.TYPE_PRINTER)
+		if (graphConfiguration.buffered && graphicsConfiguration.getDevice()
+																.getType() != GraphicsDevice.TYPE_PRINTER)
 		{
-			// Double buffering needs to consider the current scale, otherwise the result will get blurry.
-			// The buffer-image needs to use native, unscaled coordinates.
-			float offset = 1;
+			// The buffer-image needs to use native, unscaled coordinates,
+			// otherwise the result will get blurry.
+			float offset = getStyle().getStrokeWidth() + 1;
 			float scaleX = (float) g2.getTransform()
 									 .getScaleX();
 			float scaleY = (float) g2.getTransform()
 									 .getScaleY();
 			if (buffer == null || repaintTriggered)
 			{
-				Rectangle2D.Float bounds = getBounds2D(g2);
+				float width = absoluteBounds.width;
+				float height = absoluteBounds.height;
 
-				int scaledBoundsWidth = (int) Math.ceil((bounds.width + 2 * offset) * scaleX);
-				int scaledBoundsHeight = (int) Math.ceil((bounds.height + 2 * offset) * scaleY);
+				int scaledBoundsWidth = (int) Math.ceil((width + 2 * offset) * scaleX);
+				int scaledBoundsHeight = (int) Math.ceil((height + 2 * offset) * scaleY);
 				if (buffer == null || buffer.getWidth() != scaledBoundsWidth || buffer.getHeight() != scaledBoundsHeight)
 				{
 					++buffersRecreated;
@@ -90,20 +90,12 @@ public class GenericVisual extends Visual
 					if (graphConfiguration.antialiasing)
 						g2Buffered.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-					if (false)
-					{
-						g2Buffered.setPaint(Color.RED);
-						g2Buffered.fillRect(0, 0, buffer.getWidth(), buffer.getHeight());
-						g2Buffered.setPaint(Color.BLUE);
-						g2Buffered.drawRect((int) offset, (int) offset, (int) bounds.width - 1, (int) bounds.height - 1);
-					}
-
 					g2Buffered.scale(scaleX, scaleY);
+					g2Buffered.translate(offset, offset);
 
 					// g2Buffered.translate(offset, offset);
 					forAllPrimitives(g2Buffered, DrawPrimitive::draw,
-							new Rectangle2D.Float(offset, offset, bounds.width, bounds.height),
-							style);
+							new Dimension2DFloat(width, height));
 				}
 				finally
 				{
@@ -116,9 +108,7 @@ public class GenericVisual extends Visual
 				// Scale to 1:1
 				g2.scale(1 / scaleX, 1 / scaleY);
 				// Draw to "scaled" position but with native pixels sizes.
-				g2.drawImage(buffer, null,
-						(int) ((position.x - offset) * scaleX),
-						(int) ((position.y - offset) * scaleY));
+				g2.drawImage(buffer, null, (int) (-offset * scaleX), (int) (-offset * scaleY));
 			}
 			finally
 			{
@@ -127,13 +117,7 @@ public class GenericVisual extends Visual
 		}
 		else
 		{
-			try
-			{
-				forAllPrimitives(g2, DrawPrimitive::draw, null, style);
-			}
-			finally
-			{
-			}
+			forAllPrimitives(g2, DrawPrimitive::draw, null);
 		}
 	}
 
@@ -141,19 +125,19 @@ public class GenericVisual extends Visual
 	public DrawPrimitive getEditablePrimitiveAt(float x, float y)
 	{
 		Point2D.Float pt = new Point2D.Float();
-		getPosition(pt);
-		Rectangle2D.Float bounds = getBounds2D(null);
-		DrawStyle style = getStyle();
+		getAbsolutePosition(pt);
+		Dimension2DFloat dimension = new Dimension2DFloat(getAbsoluteBounds2D(null));
 		DrawPrimitive p = null;
 		Point2D.Float alignedPos = new Point2D.Float();
+
 		for (DrawPrimitive pw : primitives)
 		{
 			if (pw.isEditable())
 			{
-				Rectangle2D.Float rt = pw.getBounds2D(pt, null, style);
-				alignPosition(null, pw, bounds, style, alignedPos);
-				rt.x = alignedPos.x;
-				rt.y = alignedPos.y;
+				Rectangle2D.Float rt = pw.getBounds2D(pt, null);
+				getAlignmentOffset(null, pw, dimension, alignedPos);
+				rt.x += alignedPos.x;
+				rt.y += alignedPos.y;
 
 				if (rt.contains(x, y))
 				{
@@ -167,7 +151,7 @@ public class GenericVisual extends Visual
 	}
 
 	/**
-	 * Updates {@link #x2} and {@link #y2}.
+	 * Updates {@link #absoluteBounds}.
 	 *
 	 * @param graphics The graphics context to use for calculations.
 	 */
@@ -176,19 +160,12 @@ public class GenericVisual extends Visual
 		Dimension2DFloat dim = getPreferredDimension();
 		if (dim == null)
 		{
-			x2 = position.x;
-			y2 = position.y;
-
-			if (subModel != null)
-			{
-				GraphConfiguration cfg = context.configuration;
-				x2 += cfg.innerModelBoxMinDimension.width + cfg.innerModelBoxInsets.left + cfg.innerModelBoxInsets.right;
-				y2 += cfg.innerModelBoxMinDimension.height + cfg.innerModelBoxInsets.top + cfg.innerModelBoxInsets.bottom;
-			}
+			absoluteBounds.width = 0;
+			absoluteBounds.height = 0;
 
 			for (DrawPrimitive primitive : primitives)
 			{
-				Rectangle2D.Float primitiveBounds = primitive.getBounds2D(position, graphics, context.normal);
+				Rectangle2D.Float primitiveBounds = primitive.getBounds2D(absoluteBounds.x, absoluteBounds.y, graphics);
 				switch (primitive.getAlignment())
 				{
 					case Left:
@@ -201,15 +178,16 @@ public class GenericVisual extends Visual
 						continue;
 				}
 				final float x2 = primitiveBounds.x + primitiveBounds.width;
-				if (this.x2 < x2) this.x2 = x2;
 				final float y2 = primitiveBounds.y + primitiveBounds.height;
-				if (this.y2 < y2) this.y2 = y2;
+
+				if ((this.absoluteBounds.x + this.absoluteBounds.width) < x2) this.absoluteBounds.width = x2 - this.absoluteBounds.x;
+				if ((this.absoluteBounds.y + this.absoluteBounds.height) < y2) this.absoluteBounds.height = y2 - this.absoluteBounds.y;
 			}
 		}
 		else
 		{
-			x2 = position.x + dim.width;
-			y2 = position.y + dim.height;
+			this.absoluteBounds.width = dim.width;
+			this.absoluteBounds.height = dim.height;
 		}
 	}
 
@@ -238,16 +216,31 @@ public class GenericVisual extends Visual
 		repaint();
 	}
 
+	@Override
+	public void repaint()
+	{
+		super.repaint();
+		for (DrawPrimitive primitive : primitives)
+		{
+			primitive.repaint();
+		}
+	}
+
+
 	/**
 	 * Writes the visual as SVG to the writer.
 	 *
 	 * @param sw The Writer to write to.
 	 * @param g2 The graphics context - only for calculation. Must not be modified in any way.
 	 */
+	@Override
 	public void toSVG(SVGWriter sw, Graphics2D g2)
 	{
+		sw.startElement(SVGElement.g);
+		Point2D.Float pt = getAbsolutePosition();
 		forAllPrimitives(g2,
-				(primitive, g, position, style) -> primitive.toSVG(sw, position, style));
+				(primitive, g) -> primitive.toSVG(sw, g, pt));
+		sw.endElement();
 	}
 
 	/**
@@ -255,17 +248,13 @@ public class GenericVisual extends Visual
 	 */
 	protected interface PrimitiveConsumer
 	{
-
 		/**
 		 * Called for each primitive.
 		 *
 		 * @param primitive The primitive.
 		 * @param g2        The graphics context to use.
-		 * @param position  The calculated effective position.
-		 * @param style     The effective style to use.
 		 */
-		void consume(DrawPrimitive primitive,
-					 Graphics2D g2, Point2D.Float position, DrawStyle style);
+		void consume(DrawPrimitive primitive, Graphics2D g2);
 
 	}
 
@@ -279,43 +268,43 @@ public class GenericVisual extends Visual
 	 */
 	protected void forAllPrimitives(Graphics2D g2, PrimitiveConsumer consumer)
 	{
-		if (x2 < 0)
+		if (absoluteBounds.width < 0)
 			updateBounds(g2);
 
-		forAllPrimitives(g2, consumer, null, null);
+		forAllPrimitives(g2, consumer, null);
 	}
 
 	/**
 	 * Calls a function on all primitives.
 	 * Position is adapted according to alignment.
 	 *
-	 * @param g2       The graphics context.
-	 * @param consumer The consumer to call.
-	 * @param bounds   The bounds to adapt relative positions to.
-	 * @param style    The style to use.
+	 * @param g2        The graphics context.
+	 * @param consumer  The consumer to call.
+	 * @param dimension The dimension to adapt position to.
 	 */
-	protected void forAllPrimitives(Graphics2D g2, PrimitiveConsumer consumer, Rectangle2D.Float bounds, DrawStyle style)
+	protected void forAllPrimitives(Graphics2D g2, PrimitiveConsumer consumer, Dimension2DFloat dimension)
 	{
-		if (bounds == null && position != null)
-			bounds = new Rectangle2D.Float(position.x, position.y, x2 - position.x, y2 - position.y);
+		if (dimension == null)
+			dimension = new Dimension2DFloat(absoluteBounds);
 
-		if (bounds != null)
+		if (dimension != null)
 		{
 			final Point2D.Float pt = new Point2D.Float();
-			final Point2D.Float pos = new Point2D.Float(bounds.x, bounds.y);
-			final DrawStyle actualStyle = style == null ? (highlighted ? context.highlighted : context.normal) : style;
 			for (DrawPrimitive primitive : primitives)
 			{
+				// Optimized to spare the call to getAlignmentOffset if not needed.
 				switch (primitive.getAlignment())
 				{
 					case Left:
-						consumer.consume(primitive, g2, pos, actualStyle);
+						consumer.consume(primitive, g2);
 						break;
 					case Center:
 					case Right:
 					{
-						alignPosition(g2, primitive, bounds, actualStyle, pt);
-						consumer.consume(primitive, g2, pt, actualStyle);
+						getAlignmentOffset(g2, primitive, dimension, pt);
+						g2.translate(pt.x, pt.y);
+						consumer.consume(primitive, g2);
+						g2.translate(-pt.x, -pt.y);
 					}
 					break;
 					case Hidden:
@@ -326,10 +315,56 @@ public class GenericVisual extends Visual
 	}
 
 	@Override
+	public boolean isModified()
+	{
+		if (dirty)
+			return true;
+		else
+		{
+			for (DrawPrimitive primitive : primitives)
+			{
+				if (primitive.isModified())
+				{
+					dirty = true;
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+
+	@Override
 	public void dispose()
 	{
 		super.dispose();
 		buffer = null;
+		for (DrawPrimitive primitive : primitives)
+		{
+			primitive.dispose();
+		}
 		primitives.clear();
 	}
+
+	public <T extends DrawPrimitive> T getPrimitiveOf(Class<T> primitiveClass)
+	{
+		for (DrawPrimitive primitive : primitives)
+		{
+			if (primitiveClass.isAssignableFrom(primitive.getClass()))
+				return (T) primitive;
+		}
+		return null;
+	}
+
+	@Override
+	public void setModified(boolean modified)
+	{
+		super.setModified(modified);
+		if (!modified)
+		{
+			for (DrawPrimitive primitive : primitives)
+				primitive.setModified(false);
+		}
+	}
+
 }

@@ -48,6 +48,12 @@ public final class Dimension2DFloat extends Dimension2D
 		}
 	}
 
+	public Dimension2DFloat(Dimension2DFloat other)
+	{
+		width = other.width;
+		height = other.height;
+	}
+
 
 	@Override
 	public double getWidth()
@@ -72,5 +78,10 @@ public final class Dimension2DFloat extends Dimension2D
 	public String toString()
 	{
 		return "Dimension[" + width + "," + height + "]";
+	}
+
+	public Rectangle2D.Float getBounds()
+	{
+		return new Rectangle2D.Float(0, 0, width, height);
 	}
 }

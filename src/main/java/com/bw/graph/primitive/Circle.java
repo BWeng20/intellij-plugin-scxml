@@ -2,8 +2,11 @@ package com.bw.graph.primitive;
 
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
+import com.bw.svg.SVGAttribute;
+import com.bw.svg.SVGElement;
 import com.bw.svg.SVGWriter;
 
+import java.awt.Graphics2D;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 
@@ -33,17 +36,17 @@ public class Circle extends ShapeBase
 	}
 
 	@Override
-	protected void toSVGIntern(SVGWriter sw, DrawStyle style, Point2D.Float pos)
+	protected void toSVGIntern(SVGWriter sw, Graphics2D g2, Point2D.Float pos)
 	{
-		sw.startElement("circle");
-		sw.writeAttribute("cx", pos.x + (diameter / 2));
-		sw.writeAttribute("cy", pos.y + (diameter / 2));
-		sw.writeAttribute("r", (diameter / 2));
+		sw.startElement(SVGElement.circle);
+		sw.writeAttribute(SVGAttribute.Cx, pos.x + (diameter / 2));
+		sw.writeAttribute(SVGAttribute.Cy, pos.y + (diameter / 2));
+		sw.writeAttribute(SVGAttribute.R, (diameter / 2));
 		sw.startStyle();
-		if (fill)
-			sw.writeAttribute("fill", style.fillPaint);
-		sw.writeAttribute("stroke", style.linePaint);
-		sw.writeStrokeWith(style.getStrokeWidth());
+		if (isFill())
+			sw.writeAttribute(SVGAttribute.Fill, style.fillPaint);
+		sw.writeAttribute(SVGAttribute.Stroke, style.linePaint);
+		sw.writeStrokeWidth(style.getStrokeWidth());
 		sw.endElement();
 	}
 }

@@ -3,6 +3,8 @@ package com.bw.graph.primitive;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.util.Dimension2DFloat;
+import com.bw.svg.SVGAttribute;
+import com.bw.svg.SVGElement;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
@@ -37,7 +39,7 @@ public class Line extends DrawPrimitive
 
 
 	@Override
-	protected void drawIntern(Graphics2D g2, DrawStyle style)
+	protected void drawIntern(Graphics2D g2)
 	{
 		g2.setPaint(style.linePaint);
 		g2.setStroke(style.lineStroke);
@@ -45,21 +47,21 @@ public class Line extends DrawPrimitive
 	}
 
 	@Override
-	protected Dimension2DFloat getInnerDimension(Graphics2D graphics, DrawStyle style)
+	protected Dimension2DFloat getInnerDimension(Graphics2D graphics)
 	{
 		return new Dimension2DFloat(shape.x2, shape.y2);
 	}
 
 	@Override
-	protected void toSVGIntern(SVGWriter sw, DrawStyle style, Point2D.Float pos)
+	protected void toSVGIntern(SVGWriter sw, Graphics2D g2, Point2D.Float pos)
 	{
-		sw.startElement("line");
-		sw.writeAttribute("x1", pos.x);
-		sw.writeAttribute("y1", pos.y);
-		sw.writeAttribute("x2", shape.x2 + pos.x);
-		sw.writeAttribute("y2", shape.y2 + pos.y);
-		sw.writeAttribute("stroke", style.linePaint);
-		sw.writeStrokeWith(style.getStrokeWidth());
+		sw.startElement(SVGElement.line);
+		sw.writeAttribute(SVGAttribute.X1, pos.x);
+		sw.writeAttribute(SVGAttribute.Y1, pos.y);
+		sw.writeAttribute(SVGAttribute.X2, shape.x2 + pos.x);
+		sw.writeAttribute(SVGAttribute.Y2, shape.y2 + pos.y);
+		sw.writeAttribute(SVGAttribute.Stroke, style.linePaint);
+		sw.writeStrokeWidth(style.getStrokeWidth());
 		sw.endElement();
 	}
 

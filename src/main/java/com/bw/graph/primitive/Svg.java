@@ -70,19 +70,19 @@ public class Svg extends DrawPrimitive
 
 
 	@Override
-	protected void drawIntern(Graphics2D g2, DrawStyle style)
+	protected void drawIntern(Graphics2D g2)
 	{
 		painter.paint(g2, null, style.fillPaint, false, gray);
 	}
 
 	@Override
-	protected Dimension2DFloat getInnerDimension(Graphics2D graphics, DrawStyle style)
+	protected Dimension2DFloat getInnerDimension(Graphics2D graphics)
 	{
 		return new Dimension2DFloat(painter.getArea());
 	}
 
 	@Override
-	protected void toSVGIntern(SVGWriter sw, DrawStyle style, Point2D.Float pos)
+	protected void toSVGIntern(SVGWriter sw, Graphics2D g2, Point2D.Float pos)
 	{
 		if (svgSource != null)
 		{

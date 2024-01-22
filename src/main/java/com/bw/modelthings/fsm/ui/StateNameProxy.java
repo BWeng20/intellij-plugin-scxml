@@ -5,11 +5,12 @@ import com.bw.graph.DrawContext;
 import com.bw.graph.editor.EditorProxy;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.primitive.Line;
+import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.primitive.Rectangle;
 import com.bw.graph.primitive.Text;
 import com.bw.graph.util.Dimension2DFloat;
 import com.bw.graph.util.InsetsFloat;
-import com.bw.graph.visual.GenericVisual;
+import com.bw.graph.visual.GenericPrimitiveVisual;
 import com.bw.graph.visual.Visual;
 import com.bw.modelthings.fsm.model.State;
 
@@ -85,7 +86,8 @@ public class StateNameProxy implements EditorProxy
 	@Override
 	public void endEdit(DrawPrimitive text, Graphics2D g2)
 	{
-		String newName = textComponent.getText().trim();
+		String newName = textComponent.getText()
+									  .trim();
 		if (!Objects.equals(newName, state.name))
 		{
 			if (text instanceof Text)
@@ -93,10 +95,10 @@ public class StateNameProxy implements EditorProxy
 				((Text) text).setText(newName);
 			}
 			state.name = textComponent.getText();
-			Visual v = text.getVisual();
+			GenericPrimitiveVisual v = (GenericPrimitiveVisual) text.getVisual();
 			v.setId(newName);
 			v.setModified(true);
-			Point2D.Float pt = v.getPosition();
+			Point2D.Float pt = v.getAbsolutePosition();
 			createStatePrimitives(v, pt.x, pt.y, g2, null);
 			v.setPreferredDimension(null);
 		}
@@ -108,7 +110,8 @@ public class StateNameProxy implements EditorProxy
 		if (originalName != null && !Objects.equals(originalName, state.name))
 		{
 			state.name = originalName;
-			text.getVisual().setModified(true);
+			text.getVisual()
+				.setModified(true);
 		}
 	}
 
@@ -124,10 +127,11 @@ public class StateNameProxy implements EditorProxy
 	public void createStatePrimitives(Visual visual, float x, float y, Graphics2D g2,
 									  Rectangle2D.Float bounds)
 	{
-		GenericVisual v = (GenericVisual) visual;
-		v.removeAllDrawingPrimitives();
-
+		GenericPrimitiveVisual v = (GenericPrimitiveVisual) visual;
 		float fh = stateInnerContext.normal.fontMetrics.getHeight();
+
+		final boolean hasSubModel = ModelPrimitive.hasSubModel(v);
+		v.removeAllDrawingPrimitives();
 
 		if (bounds == null)
 		{
@@ -136,7 +140,7 @@ public class StateNameProxy implements EditorProxy
 			float height = 5 * fh;
 			float width = (float) Math.max(stringBounds.getWidth() + 10, stateInnerContext.configuration.stateMinimalWidth);
 
-			if (visual.getSubModel() != null)
+			if (hasSubModel)
 			{
 				// For a state with internal states (a sub fsm in this context)
 				// we need space for the small image of the inner fsm.
@@ -175,5 +179,6 @@ public class StateNameProxy implements EditorProxy
 		label.setUserData(this);
 		v.addDrawingPrimitive(label);
 	}
+
 
 }

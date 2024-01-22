@@ -3,13 +3,11 @@ package com.bw.graph.visual;
 import com.bw.graph.DrawContext;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
-import com.bw.graph.VisualModel;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.util.Dimension2DFloat;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
-import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
@@ -25,42 +23,20 @@ public abstract class Visual
 	protected Object id;
 
 	/**
-	 * A sub-model or null.
-	 */
-	protected VisualModel subModel;
-
-	/**
-	 * The parent the visual is bound to or null.
-	 */
-	protected Visual parent;
-
-	/**
 	 * True of the visual is high-lighted.
 	 */
 	protected boolean highlighted;
-
-	/**
-	 * The base position of the visual, relative to parent.
-	 */
-	protected Point2D.Float position = new Point2D.Float(0, 0);
 
 	/**
 	 * The preferred dimension of the visual.
 	 */
 	protected Dimension2DFloat dimension;
 
-
 	/**
-	 * The maximal x position inside the visual, relative to parent.<br>
-	 * The value is lazy calculated and updated if set to a negative value.
+	 * The absilute bounds of the visual.<br>
+	 * The width and height are lazy calculated and updated if set to a negative value.
 	 */
-	protected float x2 = -1;
-
-	/**
-	 * The maximal y position inside the visual, relative to parent.<br>
-	 * The value is lazy calculated and updated if set to a negative value.
-	 */
-	protected float y2 = -1;
+	protected Rectangle2D.Float absoluteBounds = new Rectangle2D.Float(0, 0, -1, -1);
 
 	/**
 	 * The drawing context to use for painting and size calculations.
@@ -97,54 +73,14 @@ public abstract class Visual
 	 */
 	public void draw(Graphics2D g2)
 	{
-		draw(g2, getStyle());
-	}
-
-	/**
-	 * Draw the visual and (if available) the sub-model inside.<br>
-	 *
-	 * @param g2    The Graphics context
-	 * @param style The style.
-	 */
-	public void draw(Graphics2D g2, DrawStyle style)
-	{
-		drawIntern(g2, style);
-
-		if (subModel != null)
+		g2.translate(absoluteBounds.x, absoluteBounds.y);
+		try
 		{
-			Rectangle2D.Float subBounds = subModel.getBounds2D(g2);
-			Rectangle2D.Float subModelBox = getSubModelBounds(g2);
-
-			float innerInset2 = 10;
-
-			// Calc scale, use minimum to keep aspect ratio
-			float scale = Math.min((subModelBox.width - innerInset2) / subBounds.width, (subModelBox.height - innerInset2) / subBounds.height);
-			if (scale > 1f)
-				scale = 1f;
-			subBounds.x *= scale;
-			subBounds.y *= scale;
-			subBounds.width *= scale;
-			subBounds.height *= scale;
-
-
-			g2.setPaint(style.background);
-			g2.fill(subModelBox);
-			g2.setStroke(style.lineStroke);
-			g2.setPaint(style.linePaint);
-			g2.draw(subModelBox);
-
-			AffineTransform orgAft = g2.getTransform();
-			try
-			{
-				g2.translate(subModelBox.x + (subModelBox.width - subBounds.width) / 2f,
-						subModelBox.y + (subModelBox.height - subBounds.height) / 2f);
-				g2.scale(scale, scale);
-				subModel.draw(g2);
-			}
-			finally
-			{
-				g2.setTransform(orgAft);
-			}
+			drawRelative(g2);
+		}
+		finally
+		{
+			g2.translate(-absoluteBounds.x, -absoluteBounds.y);
 		}
 	}
 
@@ -152,12 +88,11 @@ public abstract class Visual
 	/**
 	 * Draw the visual.<br>
 	 * If a sub-model is set, the area described by {@link GraphConfiguration#innerModelBoxInsets} and {@link GraphConfiguration#innerModelBoxMinDimension} shall be spared,
-	 * as this area will be over-drawn by {@link #draw(Graphics2D, DrawStyle)}.
+	 * as this area will be over-drawn by {@link #draw(Graphics2D)}.
 	 *
-	 * @param g2    The Graphics context
-	 * @param style The style.
+	 * @param g2 The Graphics context
 	 */
-	protected abstract void drawIntern(Graphics2D g2, DrawStyle style);
+	protected abstract void drawRelative(Graphics2D g2);
 
 	/**
 	 * Checks if a point is inside the area of the visual.
@@ -168,11 +103,11 @@ public abstract class Visual
 	 */
 	public boolean containsPoint(float x, float y)
 	{
-		return (x >= position.x && x <= x2) && (y >= position.y && y <= y2);
+		return absoluteBounds.contains(x, y);
 	}
 
 	/**
-	 * Updates {@link #x2} and {@link #y2}.
+	 * Updates {@link #absoluteBounds}.
 	 *
 	 * @param graphics The graphics context to use for calculations.
 	 */
@@ -189,13 +124,8 @@ public abstract class Visual
 		if (x != 0 || y != 0)
 		{
 			dirty = true;
-			position.x += x;
-			position.y += y;
-			if (x2 >= 0)
-			{
-				x2 += x;
-				y2 += y;
-			}
+			absoluteBounds.x += x;
+			absoluteBounds.y += y;
 		}
 	}
 
@@ -204,7 +134,7 @@ public abstract class Visual
 	 */
 	public void resetBounds()
 	{
-		x2 = -1;
+		absoluteBounds.width = -1;
 	}
 
 	/**
@@ -213,14 +143,13 @@ public abstract class Visual
 	 * @param g2 The Graphic context to use for calculations. Will not be modified.
 	 * @return The bounds in absolute coordinates, never null.
 	 */
-	public Rectangle2D.Float getBounds2D(Graphics2D g2)
+	public Rectangle2D.Float getAbsoluteBounds2D(Graphics2D g2)
 	{
-		if (x2 < 0)
+		if (absoluteBounds.width < 0)
 		{
 			updateBounds(g2);
 		}
-		Point2D.Float pos = getPosition();
-		return new Rectangle2D.Float(pos.x, pos.y, x2 - position.x, y2 - position.y);
+		return new Rectangle2D.Float(absoluteBounds.x, absoluteBounds.y, absoluteBounds.width, absoluteBounds.height);
 	}
 
 	/**
@@ -244,7 +173,7 @@ public abstract class Visual
 	}
 
 	/**
-	 * Get the local style if independent of parent.
+	 * Get the style.
 	 *
 	 * @return The style or null.
 	 */
@@ -262,10 +191,10 @@ public abstract class Visual
 	 */
 	public void setPosition(float x, float y)
 	{
-		if (position.x != x || position.y != y)
+		if (absoluteBounds.x != x || absoluteBounds.y != y)
 		{
-			position.x = x;
-			position.y = y;
+			absoluteBounds.x = x;
+			absoluteBounds.y = y;
 			resetBounds();
 		}
 	}
@@ -275,11 +204,9 @@ public abstract class Visual
 	 *
 	 * @return pt The Point to set.
 	 */
-	public Point2D.Float getPosition()
+	public Point2D.Float getAbsolutePosition()
 	{
-		Point2D.Float p = new Point2D.Float();
-		getPosition(p);
-		return p;
+		return new Point2D.Float(absoluteBounds.x, absoluteBounds.y);
 	}
 
 	/**
@@ -287,59 +214,10 @@ public abstract class Visual
 	 *
 	 * @param pt The Point to set.
 	 */
-	public void getPosition(Point2D.Float pt)
+	public void getAbsolutePosition(Point2D.Float pt)
 	{
-		if (parent == null)
-			pt.setLocation(0, 0);
-		else
-			parent.getPosition(pt);
-		if (position != null)
-		{
-			pt.x += position.x;
-			pt.y += position.y;
-		}
-	}
-
-	/**
-	 * Sets the sub model.
-	 *
-	 * @param model The model or null
-	 */
-	public void setSubModel(VisualModel model)
-	{
-		subModel = model;
-	}
-
-	/**
-	 * Gets the sub-model.
-	 *
-	 * @return The model or null
-	 */
-	public VisualModel getSubModel()
-	{
-		return subModel;
-	}
-
-	/**
-	 * Gets the absolute bounds of the sub-model area.
-	 *
-	 * @param g2 The graphics context to use or null.
-	 * @return The rectangle or null if not sub-model exists.
-	 */
-	public Rectangle2D.Float getSubModelBounds(Graphics2D g2)
-	{
-
-		if (subModel != null)
-		{
-			final GraphConfiguration cfg = context.configuration;
-			Rectangle2D.Float bounds = getBounds2D(g2);
-			return new Rectangle2D.Float(
-					bounds.x + cfg.innerModelBoxInsets.left,
-					bounds.y + cfg.innerModelBoxInsets.top,
-					bounds.width - cfg.innerModelBoxInsets.left - cfg.innerModelBoxInsets.right,
-					bounds.height - cfg.innerModelBoxInsets.top - cfg.innerModelBoxInsets.bottom);
-		}
-		return null;
+		pt.x = absoluteBounds.x;
+		pt.y = absoluteBounds.y;
 	}
 
 	/**
@@ -356,18 +234,20 @@ public abstract class Visual
 	 *
 	 * @param g2        The graphics context.
 	 * @param primitive The primitive to measure.
-	 * @param style     The style to use for calculation.
 	 * @return The bounds or null.
 	 */
-	public Rectangle2D.Float getBoundsOfPrimitive(Graphics2D g2, DrawPrimitive primitive, DrawStyle style)
+	public Rectangle2D.Float getBoundsOfPrimitive(Graphics2D g2, DrawPrimitive primitive)
 	{
+		if (absoluteBounds.width < 0)
+			updateBounds(g2);
 
-		if (position != null && primitive != null)
+		if (primitive != null)
 		{
-			Rectangle2D.Float bounds = new Rectangle2D.Float(position.x, position.y, x2 - position.x, y2 - position.y);
-			final DrawStyle actualStyle = style == null ? (highlighted ? context.highlighted : context.normal) : style;
-			final Point2D.Float pt = alignPosition(g2, primitive, bounds, actualStyle, new Point2D.Float());
-			return primitive.getBounds2D(pt, g2, actualStyle);
+			Dimension2DFloat dim = new Dimension2DFloat(absoluteBounds);
+			final Point2D.Float pt = getAlignmentOffset(g2, primitive, dim, new Point2D.Float());
+			pt.x += absoluteBounds.x;
+			pt.y += absoluteBounds.y;
+			return primitive.getBounds2D(pt, g2);
 		}
 		return null;
 	}
@@ -375,39 +255,36 @@ public abstract class Visual
 	/**
 	 * Helper to get a aligned position according to alignment mode.
 	 *
-	 * @param g2          The graphics context to use for dimension calculations.
-	 * @param primitive   The primitive
-	 * @param bounds      The bounds to align to.
-	 * @param actualStyle The style to use for dimension calculations.
-	 * @param pt          The point to store the result.
+	 * @param g2        The graphics context to use for dimension calculations.
+	 * @param primitive The primitive
+	 * @param pt        The point to store the result.
 	 * @return The aligned base point or null if {@link com.bw.graph.Alignment#Hidden}. Always same as pt if not null.
 	 * @see DrawPrimitive#getAlignment()
 	 */
-	protected Point2D.Float alignPosition(Graphics2D g2, DrawPrimitive primitive,
-										  Rectangle2D.Float bounds,
-										  DrawStyle actualStyle, Point2D.Float pt)
+	protected Point2D.Float getAlignmentOffset(Graphics2D g2, DrawPrimitive primitive,
+											   Dimension2DFloat dimension, Point2D.Float pt)
 	{
 		switch (primitive.getAlignment())
 		{
 			case Left:
-				pt.x = bounds.x;
+				pt.x = 0;
 				break;
 			case Center:
 			{
-				Dimension2DFloat dim = primitive.getDimension(g2, actualStyle);
-				pt.x = bounds.x + (bounds.width - dim.width) / 2f - 1;
+				Dimension2DFloat dim = primitive.getDimension(g2);
+				pt.x = (dimension.width - dim.width) / 2f - 1;
 			}
 			break;
 			case Right:
 			{
-				Dimension2DFloat dim = primitive.getDimension(g2, actualStyle);
-				pt.x = bounds.x + bounds.width - dim.width;
+				Dimension2DFloat dim = primitive.getDimension(g2);
+				pt.x = dimension.width - dim.width;
 			}
 			break;
 			case Hidden:
 				return null;
 		}
-		pt.y = bounds.y;
+		pt.y = 0;
 		return pt;
 	}
 
@@ -419,7 +296,7 @@ public abstract class Visual
 	 */
 	public Point2D.Float getCenterPosition(Graphics2D g2)
 	{
-		Rectangle2D.Float bounds = getBounds2D(g2);
+		Rectangle2D.Float bounds = getAbsoluteBounds2D(g2);
 		return new Point2D.Float((float) bounds.getCenterX(), (float) bounds.getCenterY());
 	}
 
@@ -429,10 +306,6 @@ public abstract class Visual
 	public void repaint()
 	{
 		repaintTriggered = true;
-		if (subModel != null)
-		{
-			subModel.repaint();
-		}
 	}
 
 	/**
@@ -468,12 +341,6 @@ public abstract class Visual
 	 */
 	public void dispose()
 	{
-		if (subModel != null)
-		{
-			subModel.dispose();
-			subModel = null;
-		}
-		parent = null;
 		id = null;
 		context = null;
 	}
@@ -527,16 +394,6 @@ public abstract class Visual
 	}
 
 	/**
-	 * Get the parent.
-	 *
-	 * @return The parent or null.
-	 */
-	public Visual getParent()
-	{
-		return parent;
-	}
-
-	/**
 	 * Get the GraphConfiguration from current context.<br>
 	 * Same as {@link #getDrawContext()}.configuration.
 	 *
@@ -566,8 +423,6 @@ public abstract class Visual
 	public void setModified(boolean modified)
 	{
 		dirty = modified;
-		if (subModel != null)
-			subModel.setModified(modified);
 	}
 
 	/**
@@ -577,7 +432,7 @@ public abstract class Visual
 	 */
 	public boolean isModified()
 	{
-		return dirty || (subModel != null && subModel.isModified());
+		return dirty;
 	}
 
 	@Override
@@ -586,4 +441,5 @@ public abstract class Visual
 		return String.valueOf(id);
 	}
 
+	public abstract <T extends DrawPrimitive> T getPrimitiveOf(Class<T> primitiveClass);
 }

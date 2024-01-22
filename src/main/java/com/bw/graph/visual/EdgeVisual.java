@@ -1,7 +1,6 @@
 package com.bw.graph.visual;
 
 import com.bw.graph.DrawContext;
-import com.bw.graph.DrawStyle;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.primitive.Path;
 import com.bw.svg.SVGWriter;
@@ -49,7 +48,7 @@ public class EdgeVisual extends Visual
 	{
 		super(id, context);
 
-		this.path = new Path(context.configuration, null);
+		this.path = new Path(context.configuration, context.normal);
 		this.sourceConnector = source;
 		this.targetConnector = target;
 
@@ -65,14 +64,21 @@ public class EdgeVisual extends Visual
 	 *
 	 * @param g2 The graphics context
 	 */
-	protected void drawIntern(Graphics2D g2, DrawStyle actualStyle)
+	@Override
+	public void draw(Graphics2D g2)
 	{
 		if (targetConnector != null)
 		{
-			path.draw(g2, null, actualStyle);
-			targetConnector.draw(g2, actualStyle);
+			path.draw(g2);
+			targetConnector.draw(g2);
 		}
-		sourceConnector.draw(g2, actualStyle);
+		sourceConnector.draw(g2);
+	}
+
+	@Override
+	protected void drawRelative(Graphics2D g2)
+	{
+
 	}
 
 	@Override
@@ -95,14 +101,14 @@ public class EdgeVisual extends Visual
 	@Override
 	protected void updateBounds(Graphics2D graphics)
 	{
-		x2 = position.x;
-		y2 = position.y;
+		absoluteBounds.width = 0;
+		absoluteBounds.height = 0;
 	}
 
 	@Override
 	public void toSVG(SVGWriter sw, Graphics2D g2)
 	{
-		// @TODO
+		path.toSVG(sw, g2, new Point2D.Float(0, 0));
 	}
 
 	@Override
@@ -136,4 +142,15 @@ public class EdgeVisual extends Visual
 		return path.getDistanceTo(new Point2D.Float(x, y)) < context.configuration.selectEdgeMaxDistance;
 	}
 
+
+	public <T extends DrawPrimitive> T getPrimitiveOf(Class<T> primitiveClass)
+	{
+		return null;
+	}
+
+
+	@Override
+	public void moveBy(float x, float y)
+	{
+	}
 }

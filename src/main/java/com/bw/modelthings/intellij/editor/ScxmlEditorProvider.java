@@ -32,6 +32,7 @@ public class ScxmlEditorProvider implements FileEditorProvider, DumbAware
 	public @NotNull FileEditor createEditor(@NotNull Project project, @NotNull VirtualFile file)
 	{
 		ScxmlEditor scxmlEditor = new ScxmlEditor(file, project);
+
 		return scxmlEditor;
 	}
 

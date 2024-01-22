@@ -729,15 +729,10 @@ public class XmlParser implements ScxmlTags
 		if (parent != null)
 		{
 			state.parent = parent;
-			debug("state %s parent %s", state.toString(), parent.name);
 			if (!parent.states.contains(state))
 			{
 				parent.states.add(state);
 			}
-		}
-		else
-		{
-			debug("state %s no parent", state.toString());
 		}
 
 		processUnhandledAttributes(node, state);

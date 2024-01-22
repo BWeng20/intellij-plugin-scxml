@@ -4,6 +4,9 @@ import com.bw.XmlWriter;
 
 import java.awt.Color;
 import java.awt.Paint;
+import java.awt.Shape;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.PathIterator;
 import java.awt.geom.Rectangle2D;
 import java.io.Writer;
 
@@ -44,6 +47,10 @@ public class SVGWriter extends XmlWriter
 				write('0');
 			write(hex);
 		}
+		else if (paint == null)
+		{
+			write("none");
+		}
 		else
 		{
 			// @TODO Handle for more complex paints via defs
@@ -54,17 +61,13 @@ public class SVGWriter extends XmlWriter
 	/**
 	 * Write "stroke-width:" with the line width of the given stroke.
 	 *
-	 * @param strokeWith The stroke.
+	 * @param strokeWidth The stroke.
 	 */
-	public void writeStrokeWith(float strokeWith)
+	public void writeStrokeWidth(float strokeWidth)
 	{
-		if (strokeWith > 0f)
+		if (strokeWidth > 0f)
 		{
-			writeAttributeProlog();
-			write("stroke-width");
-			writeAssign();
-			writeRestrictedFloat(strokeWith);
-			writeAttributeEpilog();
+			writeAttribute(SVGAttribute.StrokeWidth, strokeWidth);
 		}
 	}
 
@@ -150,6 +153,27 @@ public class SVGWriter extends XmlWriter
 	}
 
 	/**
+	 * Starts a new element.
+	 *
+	 * @param element A element.
+	 */
+	public void startElement(SVGElement element)
+	{
+		super.startElement(element.name());
+	}
+
+	/**
+	 * Appends the attribute with the value.
+	 *
+	 * @param attribute The attribute.
+	 * @param value     The value.
+	 */
+	public void writeAttribute(SVGAttribute attribute, String value)
+	{
+		super.writeAttribute(attribute.xmlName(), value);
+	}
+
+	/**
 	 * Starts content area.
 	 */
 	@Override
@@ -191,21 +215,29 @@ public class SVGWriter extends XmlWriter
 	}
 
 	/**
+	 * Appends the attribute with the float as value.
+	 *
+	 * @param attribute The attribute.
+	 * @param value     The value.
+	 */
+	public void writeAttribute(SVGAttribute attribute, float value)
+	{
+		writeAttribute(attribute.xmlName(), value);
+	}
+
+	/**
 	 * Appends the attribute with the paint as value.
 	 *
 	 * @param attribute The name of the attribute (without '=').
 	 * @param paint     The paint.
 	 */
-	public void writeAttribute(String attribute, Paint paint)
+	public void writeAttribute(SVGAttribute attribute, Paint paint)
 	{
-		if (paint != null)
-		{
-			writeAttributeProlog();
-			write(attribute);
-			writeAssign();
-			write(paint);
-			writeAttributeEpilog();
-		}
+		writeAttributeProlog();
+		write(attribute.xmlName());
+		writeAssign();
+		write(paint);
+		writeAttributeEpilog();
 	}
 
 	@Override
@@ -238,5 +270,83 @@ public class SVGWriter extends XmlWriter
 	protected void writeAssign()
 	{
 		write(inStyle ? ":" : "='");
+	}
+
+	/**
+	 * Writes a shapes as approximated path.
+	 *
+	 * @param shape       The shape.
+	 * @param flatness    Flatness factor. See {@link Shape#getPathIterator(AffineTransform, double)}.
+	 * @param fill        Fill paint or null for none.
+	 * @param stroke      Stroke paint or null for none.
+	 * @param strokeWidth Stroke width.
+	 * @param closed      If true the path is closed.
+	 */
+	public void writeShape(Shape shape, float flatness, Paint fill, Paint stroke, float strokeWidth, boolean closed)
+	{
+		startElement(SVGElement.path);
+		writeAttribute(SVGAttribute.Fill, fill);
+		writeAttribute(SVGAttribute.Stroke, stroke);
+		if (stroke != null)
+			writeAttribute(SVGAttribute.StrokeWidth, strokeWidth);
+
+		PathIterator pi = shape.getPathIterator(null, flatness);
+		double[] seg = new double[6];
+
+		write(" d='");
+
+		while (!pi.isDone())
+		{
+			final int type = pi.currentSegment(seg);
+			switch (type)
+			{
+				case PathIterator.SEG_MOVETO:
+					write('M');
+					writePathCoordinates(seg[0], seg[1]);
+					break;
+				case PathIterator.SEG_LINETO:
+					write(' ');
+					writePathCoordinates(seg[0], seg[1]);
+					break;
+				case PathIterator.SEG_CLOSE:
+					write('Z');
+					break;
+			}
+			pi.next();
+		}
+		write('\'');
+		endElement();
+	}
+
+	private void writePathCoordinates(double x, double y)
+	{
+		writeRestrictedFloat((float) x);
+		write(' ');
+		writeRestrictedFloat((float) y);
+	}
+
+	/**
+	 * Create a box string from the rectangle.
+	 *
+	 * @param box The rectangle.
+	 * @return The box string
+	 */
+	public String toBox(Rectangle2D.Float box)
+	{
+		return toBox(box, precisionFactor);
+	}
+
+	/**
+	 * Create a box string from the rectangle.
+	 *
+	 * @param box The rectangle.
+	 * @return The box string
+	 */
+	public static String toBox(Rectangle2D.Float box, float precisionFactor)
+	{
+		return floatToStringRestrictedPrecision(box.x, precisionFactor) + " " +
+				floatToStringRestrictedPrecision(box.y, precisionFactor) + " " +
+				floatToStringRestrictedPrecision(box.width, precisionFactor) + " " +
+				floatToStringRestrictedPrecision(box.height, precisionFactor);
 	}
 }

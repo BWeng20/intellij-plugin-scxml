@@ -19,6 +19,8 @@ public class Text extends DrawPrimitive
 	 */
 	protected String text;
 
+	private Dimension2DFloat lastStringDimension;
+
 	/**
 	 * Creates a new Primitive.
 	 *
@@ -35,7 +37,7 @@ public class Text extends DrawPrimitive
 	}
 
 	@Override
-	protected void drawIntern(Graphics2D g2, DrawStyle style)
+	protected void drawIntern(Graphics2D g2)
 	{
 		g2.setFont(style.font);
 		g2.setPaint(style.textPaint);
@@ -44,21 +46,20 @@ public class Text extends DrawPrimitive
 	}
 
 	@Override
-	protected Dimension2DFloat getInnerDimension(Graphics2D graphics, DrawStyle style)
+	protected Dimension2DFloat getInnerDimension(Graphics2D graphics)
 	{
 		if (graphics != null)
 		{
 			Rectangle2D r = style.fontMetrics.getStringBounds(text, graphics);
-			return new Dimension2DFloat((float) r.getWidth(), (float) r.getHeight());
+			lastStringDimension = new Dimension2DFloat((float) r.getWidth(), (float) r.getHeight());
 		}
-		else
-		{
-			return new Dimension2DFloat(text.length() * 12, 12);
-		}
+		else if (lastStringDimension == null)
+			lastStringDimension = new Dimension2DFloat(text.length() * 12, 12);
+		return new Dimension2DFloat(lastStringDimension);
 	}
 
 	@Override
-	protected void toSVGIntern(SVGWriter sw, DrawStyle style, Point2D.Float pos)
+	protected void toSVGIntern(SVGWriter sw, Graphics2D g2, Point2D.Float pos)
 	{
 		sw.startElement("text");
 		sw.writeAttribute("x", pos.x);
