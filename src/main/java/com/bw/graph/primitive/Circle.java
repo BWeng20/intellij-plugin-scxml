@@ -13,7 +13,7 @@ import java.awt.geom.Point2D;
 /**
  * A Circle.
  */
-public class Circle extends ShapeBase
+public class Circle extends ShapePrimitiveBase
 {
 	private float diameter;
 

@@ -42,7 +42,8 @@ public class ExportSVG extends AnAction implements DumbAware
 					ScXmlSdkBundle.message("action.ScXmlEditor.SvgExport.chooser.title"),
 					ScXmlSdkBundle.message("action.ScXmlEditor.SvgExport.chooser.description"), "svg");
 			VirtualFileWrapper fileWrapper =
-					FileChooserFactory.getInstance().createSaveFileDialog(d, e.getProject())
+					FileChooserFactory.getInstance()
+									  .createSaveFileDialog(d, e.getProject())
 									  .save(lastVF == null ? null : lastVF.getParent(), lastVF == null ? null : lastVF.getName());
 
 			if (fileWrapper != null)

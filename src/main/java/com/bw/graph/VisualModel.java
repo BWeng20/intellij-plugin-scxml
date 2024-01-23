@@ -183,7 +183,8 @@ public class VisualModel
 	 */
 	public boolean isModified()
 	{
-		return dirty || visuals.stream().anyMatch(Visual::isModified);
+		return dirty || visuals.stream()
+							   .anyMatch(Visual::isModified);
 	}
 
 	/**

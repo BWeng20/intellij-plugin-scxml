@@ -12,7 +12,19 @@ import com.bw.svg.SVGWriter;
 import javax.swing.JComponent;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.Point;
+import java.awt.RenderingHints;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -69,6 +81,19 @@ public class GraphPane extends JComponent
 	};
 
 	/**
+	 * Focus listener used to control editors.
+	 */
+	protected FocusListener editorFocusAdapter = new FocusAdapter()
+	{
+		@Override
+		public void focusLost(FocusEvent e)
+		{
+			cancelEdit();
+		}
+	};
+
+
+	/**
 	 * Key adapter, used to control editors.
 	 */
 	protected KeyAdapter editorKeyAdapter = new KeyAdapter()
@@ -118,19 +143,23 @@ public class GraphPane extends JComponent
 				x /= configuration.scale;
 				y /= configuration.scale;
 
-				ModelPrimitive modelPrimitive = clicked.getPrimitiveOf(ModelPrimitive.class);
-				if (modelPrimitive != null)
+				DrawPrimitive editablePrimitive = clicked.getEditablePrimitiveAt(x, y);
+				if (editablePrimitive == null)
 				{
-					Rectangle2D.Float subModelBox = clicked.getBoundsOfPrimitive(null, modelPrimitive);
-					if (subModelBox != null && subModelBox.contains(x, y))
+					ModelPrimitive modelPrimitive = clicked.getPrimitiveOf(ModelPrimitive.class);
+					if (modelPrimitive != null)
 					{
-						parents.add(clicked);
-						setModel(modelPrimitive.getSubModel());
-						fireHierarchyChanged();
-						return;
+						Rectangle2D.Float subModelBox = clicked.getBoundsOfPrimitive(null, modelPrimitive);
+						if (subModelBox != null && subModelBox.contains(x, y))
+						{
+							parents.add(clicked);
+							setModel(modelPrimitive.getSubModel());
+							fireHierarchyChanged();
+							return;
+						}
 					}
 				}
-				setSelectedPrimitive(clicked.getEditablePrimitiveAt(x, y));
+				setSelectedPrimitive(editablePrimitive);
 			}
 		}
 
@@ -483,10 +512,8 @@ public class GraphPane extends JComponent
 	 */
 	public void setSelectedPrimitive(DrawPrimitive p)
 	{
-
 		if (p != selectedPrimitive)
 		{
-
 			cancelEdit();
 			Graphics2D g2 = (Graphics2D) getGraphics();
 			try
@@ -667,19 +694,19 @@ public class GraphPane extends JComponent
 				if (selectedPrimitiveEditor != null)
 				{
 					// This should not happen...
-					System.err.println("Editor still set in new selection!");
-					remove(selectedPrimitiveEditor);
+					System.err.println("Previous Editor still active during new selection, should already by removed.");
+					removePrimitiveEditor();
 				}
 				selectedPrimitiveEditor = selectedPrimitiveEditorProxy.getEditor(selectedPrimitive);
 				Rectangle2D.Float rt = v.getBoundsOfPrimitive(g2, selectedPrimitive);
 
 				final float scale = configuration.scale;
+				rt.x += offsetX;
+				rt.y += offsetY;
 				rt.x *= scale;
 				rt.y *= scale;
 				rt.width *= scale;
 				rt.height *= scale;
-				rt.x += offsetX;
-				rt.y += offsetY;
 
 				Font font;
 				FontMetrics fontMetrics;
@@ -701,7 +728,6 @@ public class GraphPane extends JComponent
 
 				float minWidth = fontMetrics.charWidth('X') * 20 * configuration.scale;
 				d.width = (int) (0.5 + Math.max(minWidth, d.width));
-				selectedPrimitiveEditor.setPreferredSize(d);
 
 				rt.x += (rt.width - d.width) / 2f;
 				rt.y += (rt.height - d.height) / 2f;
@@ -710,6 +736,7 @@ public class GraphPane extends JComponent
 
 				selectedPrimitiveEditor.setBounds(rt.getBounds());
 				selectedPrimitiveEditor.addKeyListener(editorKeyAdapter);
+				selectedPrimitiveEditor.addFocusListener(editorFocusAdapter);
 				add(selectedPrimitiveEditor);
 				selectedPrimitiveEditor.requestFocus();
 			}
@@ -727,9 +754,7 @@ public class GraphPane extends JComponent
 	{
 		if (selectedPrimitiveEditor != null)
 		{
-			remove(selectedPrimitiveEditor);
-			selectedPrimitiveEditor.removeKeyListener(editorKeyAdapter);
-			selectedPrimitiveEditor = null;
+			removePrimitiveEditor();
 			if (selectedPrimitiveEditorProxy != null)
 			{
 				selectedPrimitiveEditorProxy.cancelEdit(selectedPrimitive);
@@ -749,7 +774,6 @@ public class GraphPane extends JComponent
 	{
 		if (selectedPrimitiveEditor != null)
 		{
-			selectedPrimitiveEditor.removeKeyListener(editorKeyAdapter);
 			if (selectedPrimitiveEditorProxy != null)
 			{
 				Graphics2D g2 = (Graphics2D) getGraphics();
@@ -757,10 +781,16 @@ public class GraphPane extends JComponent
 				g2.scale(configuration.scale, configuration.scale);
 				selectedPrimitiveEditorProxy.endEdit(selectedPrimitive, g2);
 			}
-			// Suppress any cursor updates.
 			selectedPrimitive = null;
-			remove(selectedPrimitiveEditor);
-			selectedPrimitiveEditor = null;
+			removePrimitiveEditor();
 		}
+	}
+
+	protected void removePrimitiveEditor()
+	{
+		selectedPrimitiveEditor.removeKeyListener(editorKeyAdapter);
+		selectedPrimitiveEditor.removeFocusListener(editorFocusAdapter);
+		remove(selectedPrimitiveEditor);
+		selectedPrimitiveEditor = null;
 	}
 }

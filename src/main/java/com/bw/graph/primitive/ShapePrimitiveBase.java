@@ -11,7 +11,7 @@ import java.awt.geom.Rectangle2D;
 /**
  * A draw primitive base class for all primitives that use shapes to draw.<br>
  */
-public abstract class ShapeBase extends DrawPrimitive
+public abstract class ShapePrimitiveBase extends DrawPrimitive
 {
 	/**
 	 * The shape to draw.
@@ -32,7 +32,7 @@ public abstract class ShapeBase extends DrawPrimitive
 	 * @param config The configuration to use.
 	 * @param style  The local style or null if parent style shall be used.
 	 */
-	protected ShapeBase(float x, float y, GraphConfiguration config, DrawStyle style)
+	protected ShapePrimitiveBase(float x, float y, GraphConfiguration config, DrawStyle style)
 	{
 		super(x, y, config, style);
 		this.fill = false;

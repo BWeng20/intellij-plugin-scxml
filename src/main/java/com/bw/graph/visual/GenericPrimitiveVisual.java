@@ -247,7 +247,8 @@ public class GenericPrimitiveVisual extends Visual
 	{
 		sw.startElement(SVGElement.g);
 		final Point2D.Float pt = getAbsolutePosition();
-		forAllPrimitives(g2, (primitive, g, offset) -> {
+		forAllPrimitives(g2, (primitive, g, offset) ->
+		{
 			Point2D.Float tempPos = new Point2D.Float(offset.x + pt.x, offset.y + pt.y);
 			primitive.toSVG(sw, g, tempPos);
 		});

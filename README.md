@@ -30,3 +30,25 @@ Plan:
   + Support for Offline-Generation if Java-Language is used.
 + Gradle Plugin
   + Documentation Generator task (SVG from enriched SCXML, Java Generation) to support CI/CD.
+
+
+### SVG
+
+An Example:
+
+```mermaid
+stateDiagram-v2
+    [*] --> A
+    B --> AA
+    B --> D
+    B --> E
+    E --> [*]
+    state A {
+      [*] --> AA
+      AA --> AB
+      AB --> AA
+      AB --> [*]
+    }
+    A --> B
+    D --> E
+```

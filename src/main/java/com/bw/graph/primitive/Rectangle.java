@@ -14,7 +14,7 @@ import java.awt.geom.RoundRectangle2D;
 /**
  * A Rectangle.
  */
-public class Rectangle extends ShapeBase
+public class Rectangle extends ShapePrimitiveBase
 {
 	/**
 	 * Creates a new Rectangle Primitive.
