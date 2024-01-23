@@ -786,11 +786,17 @@ public class GraphPane extends JComponent
 		}
 	}
 
+	/**
+	 * Removes the primitive in-place editor.
+	 */
 	protected void removePrimitiveEditor()
 	{
-		selectedPrimitiveEditor.removeKeyListener(editorKeyAdapter);
-		selectedPrimitiveEditor.removeFocusListener(editorFocusAdapter);
-		remove(selectedPrimitiveEditor);
-		selectedPrimitiveEditor = null;
+		if ( selectedPrimitiveEditor != null)
+		{
+			selectedPrimitiveEditor.removeKeyListener(editorKeyAdapter);
+			selectedPrimitiveEditor.removeFocusListener(editorFocusAdapter);
+			remove(selectedPrimitiveEditor);
+			selectedPrimitiveEditor = null;
+		}
 	}
 }
