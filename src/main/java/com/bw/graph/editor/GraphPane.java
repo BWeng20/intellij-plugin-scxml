@@ -6,31 +6,15 @@ import com.bw.graph.VisualModel;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.visual.Visual;
+import com.bw.graph.visual.VisualFlags;
 import com.bw.svg.SVGAttribute;
 import com.bw.svg.SVGWriter;
 
 import javax.swing.JComponent;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Paint;
-import java.awt.Point;
-import java.awt.RenderingHints;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
+import java.awt.*;
+import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -118,15 +102,35 @@ public class GraphPane extends JComponent
 	};
 
 	/**
+	 * The visual that is currently dragged or null.
+	 */
+	private Visual draggingVisual;
+
+	/**
+	 * The last coordinate of a drag-event.
+	 */
+	private final Point lastDragPoint = new Point(0, 0);
+
+	/**
+	 * Current visual the mouse is over.
+	 */
+	private Visual mouseOverVisual;
+
+	/**
 	 * Listens to clicks and drags on visuals.
 	 */
-	protected MouseAdapter mouseAdapter = new MouseAdapter()
+	protected MouseListener mouseHandler = new MouseListener()
 	{
-		/** The visual that is currently dragged or null. */
-		private Visual draggingVisual;
+		@Override
+		public void mouseEntered(MouseEvent e)
+		{
+		}
 
-		/** The last coordinate of a drag-event. */
-		private final Point lastDragPoint = new Point(0, 0);
+		@Override
+		public void mouseExited(MouseEvent e)
+		{
+
+		}
 
 		@Override
 		public void mouseClicked(MouseEvent e)
@@ -174,11 +178,20 @@ public class GraphPane extends JComponent
 		@Override
 		public void mouseReleased(MouseEvent e)
 		{
+			boolean fireDragged = draggingVisual != null;
 			draggingVisual = null;
 			lastDragPoint.x = lastDragPoint.y = 0;
-			SwingUtilities.convertPointToScreen(lastDragPoint, GraphPane.this);
+			if (fireDragged)
+				fireMouseDragging(null);
 		}
 
+	};
+
+	/**
+	 * Handles mouse wheel.
+	 */
+	protected MouseWheelListener mouseWheelHandler = new MouseWheelListener()
+	{
 		@Override
 		public void mouseWheelMoved(MouseWheelEvent we)
 		{
@@ -207,6 +220,48 @@ public class GraphPane extends JComponent
 				}
 			}
 		}
+	};
+
+	/**
+	 * Listens to clicks and drags on visuals.
+	 */
+	protected MouseMotionListener mouseMotionHandler = new MouseMotionListener()
+	{
+		@Override
+		public void mouseMoved(MouseEvent e)
+		{
+			Visual over = getVisualAt(e.getX(), e.getY());
+			if (mouseOverVisual != over)
+			{
+				Rectangle2D.Float update = null;
+				if (mouseOverVisual != null)
+				{
+					update = mouseOverVisual.getAbsoluteBounds2D(null);
+				}
+
+				mouseOverVisual = over;
+				fireMouseOver(mouseOverVisual);
+
+				if (mouseOverVisual != null)
+				{
+					Rectangle2D.Float rt = mouseOverVisual.getAbsoluteBounds2D(null);
+					if (update == null)
+						update = rt;
+					else
+						Rectangle2D.union(update, rt, update);
+				}
+				if (update != null)
+				{
+					update.x -= 2;
+					update.y -= 2;
+					update.width += 2 * 2;
+					update.height += 2 * 2;
+					update.height += 2 * 2;
+					repaint(update.getBounds());
+				}
+
+			}
+		}
 
 		@Override
 		public void mouseDragged(MouseEvent e)
@@ -222,6 +277,7 @@ public class GraphPane extends JComponent
 			if (draggingVisual != null)
 			{
 				draggingVisual.moveBy(xd / configuration.scale, yd / configuration.scale);
+				fireMouseDragging(draggingVisual);
 				revalidate();
 				repaint();
 			}
@@ -251,9 +307,9 @@ public class GraphPane extends JComponent
 	{
 		setLayout(null);
 		setModel(new VisualModel("none"));
-		addMouseListener(mouseAdapter);
-		addMouseMotionListener(mouseAdapter);
-		addMouseWheelListener(mouseAdapter);
+		addMouseListener(mouseHandler);
+		addMouseMotionListener(mouseMotionHandler);
+		addMouseWheelListener(mouseWheelHandler);
 		addKeyListener(keyAdapter);
 	}
 
@@ -352,7 +408,7 @@ public class GraphPane extends JComponent
 
 			if (showDrawSpeed)
 			{
-				g.setColor(Color.BLACK);
+				g.setColor(getForeground());
 				g.setFont(getFont());
 				char[] text = (Long.toString(lastPaintMS) + "ms").toCharArray();
 				g.drawChars(text, 0, text.length, 0, 20);
@@ -430,8 +486,6 @@ public class GraphPane extends JComponent
 
 			if (oldSelected != null)
 			{
-				if (oldSelected.isHighlighted())
-					oldSelected.setHighlighted(false);
 				fireVisualDeselected(oldSelected);
 			}
 
@@ -471,16 +525,16 @@ public class GraphPane extends JComponent
 
 		if (oldSelected != null && oldSelected != selectedVisual)
 		{
-			if (oldSelected.isHighlighted())
+			if (oldSelected.isFlagSet(VisualFlags.SELECTED))
 			{
-				oldSelected.setHighlighted(false);
+				oldSelected.clearFlags(VisualFlags.SELECTED);
 				triggerRepaint = true;
 			}
 		}
 
-		if (selectedVisual != null && !selectedVisual.isHighlighted())
+		if (selectedVisual != null && !selectedVisual.isFlagSet(VisualFlags.SELECTED))
 		{
-			visual.setHighlighted(true);
+			visual.setFlags(VisualFlags.SELECTED);
 			triggerRepaint = true;
 		}
 		List<Visual> visuals = model.getVisuals();
@@ -549,7 +603,6 @@ public class GraphPane extends JComponent
 		g2.setStroke(new BasicStroke(3));
 		g2.setColor(Color.BLUE);
 		g2.setXORMode(Color.RED);
-		Point.Float pt = v.getAbsolutePosition();
 
 		Rectangle2D.Float rt = v.getBoundsOfPrimitive(g2, primitive);
 		if (rt != null)
@@ -569,11 +622,14 @@ public class GraphPane extends JComponent
 	{
 		selectedVisual = null;
 		model = null;
-		removeMouseListener(mouseAdapter);
-		removeMouseMotionListener(mouseAdapter);
+		removeMouseListener(mouseHandler);
+		removeMouseMotionListener(mouseMotionHandler);
+		removeMouseWheelListener(mouseWheelHandler);
 		listeners.clear();
 		parents.clear();
-		mouseAdapter = null;
+		mouseHandler = null;
+		mouseMotionHandler = null;
+		mouseWheelHandler = null;
 	}
 
 	@Override
@@ -666,6 +722,26 @@ public class GraphPane extends JComponent
 	}
 
 	/**
+	 * Calls mouseDragging on all listeners.
+	 *
+	 * @param visual The visual that is dragged or null.
+	 */
+	protected void fireMouseDragging(Visual visual)
+	{
+		new ArrayList<>(listeners).forEach(i -> i.mouseDragging(visual));
+	}
+
+	/**
+	 * Calls mouseOver on all listeners.
+	 *
+	 * @param visual The visual the mouse is over or null.
+	 */
+	protected void fireMouseOver(Visual visual)
+	{
+		new ArrayList<>(listeners).forEach(i -> i.mouseOver(visual));
+	}
+
+	/**
 	 * Get current hierarchy
 	 *
 	 * @return The chain of parents the editor entered.
@@ -715,7 +791,6 @@ public class GraphPane extends JComponent
 				{
 					font = style.font;
 					fontMetrics = style.fontMetrics;
-
 				}
 				else
 				{
@@ -791,7 +866,7 @@ public class GraphPane extends JComponent
 	 */
 	protected void removePrimitiveEditor()
 	{
-		if ( selectedPrimitiveEditor != null)
+		if (selectedPrimitiveEditor != null)
 		{
 			selectedPrimitiveEditor.removeKeyListener(editorKeyAdapter);
 			selectedPrimitiveEditor.removeFocusListener(editorFocusAdapter);

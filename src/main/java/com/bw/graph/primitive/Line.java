@@ -3,6 +3,7 @@ package com.bw.graph.primitive;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.util.Dimension2DFloat;
+import com.bw.graph.visual.VisualFlags;
 import com.bw.svg.SVGAttribute;
 import com.bw.svg.SVGElement;
 import com.bw.svg.SVGWriter;
@@ -28,12 +29,13 @@ public class Line extends DrawPrimitive
 	 * @param y2     The relative y2-position
 	 * @param config The configuration to use.
 	 * @param style  The style or null if default style shall be used.
+	 * @param flags  The initial flags. @see {@link VisualFlags}
 	 */
 	public Line(float x1, float y1, float x2, float y2,
 				GraphConfiguration config,
-				DrawStyle style)
+				DrawStyle style, int flags)
 	{
-		super(x1, y1, config, style);
+		super(x1, y1, config, style, flags);
 		shape = new Line2D.Float(0, 0, x2 - x1, y2 - y1);
 	}
 

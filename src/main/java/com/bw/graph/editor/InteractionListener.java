@@ -27,4 +27,19 @@ public interface InteractionListener
 	 */
 	void hierarchyChanged();
 
+
+	/**
+	 * Mouse is dragging a visual.
+	 *
+	 * @param visual The dragged visual.
+	 */
+	void mouseDragging(Visual visual);
+
+	/**
+	 * Mouse is over some visual.
+	 *
+	 * @param visual The visual or null if mouse is not on top of a visual.
+	 */
+	void mouseOver(Visual visual);
+
 }

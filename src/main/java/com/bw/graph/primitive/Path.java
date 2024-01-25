@@ -76,11 +76,12 @@ public class Path extends DrawPrimitive
 	 *
 	 * @param config The configuration to use.
 	 * @param style  The style or null if default style shall be used.
+	 * @param flags  Bitwise combination of flag-bits.
 	 */
 	public Path(GraphConfiguration config,
-				DrawStyle style)
+				DrawStyle style, int flags)
 	{
-		super(0, 0, config, style);
+		super(0, 0, config, style, flags);
 
 		arrow.moveTo(-2f * config.connectorSize, -config.connectorSize);
 		arrow.lineTo(0, 0);

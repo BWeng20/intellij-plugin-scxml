@@ -8,7 +8,6 @@ import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 
 /**
  * Used to visualize connectors in different modes.
@@ -26,7 +25,7 @@ public class PathControlVisual extends Visual implements PathControlPoint
 	public PathControlVisual(DrawContext context)
 	{
 		super(null, context);
-		this.primitive = new Rectangle(-radius, -radius, 2 * radius, 2 * radius, 0, context.configuration, context.normal);
+		this.primitive = new Rectangle(-radius, -radius, 2 * radius, 2 * radius, 0, context.configuration, context.style, VisualFlags.ALWAYS);
 	}
 
 	/**
@@ -37,7 +36,7 @@ public class PathControlVisual extends Visual implements PathControlPoint
 	@Override
 	protected void drawRelative(Graphics2D g2)
 	{
-		if (isHighlighted())
+		if (isFlagSet(VisualFlags.SELECTED))
 		{
 			primitive.draw(g2);
 		}
@@ -53,9 +52,7 @@ public class PathControlVisual extends Visual implements PathControlPoint
 	@Override
 	protected void updateBounds(Graphics2D graphics)
 	{
-		Rectangle2D.Float primitiveBounds = primitive.getBounds2D(absoluteBounds.x, absoluteBounds.y, graphics);
-		absoluteBounds.width = primitiveBounds.x + primitiveBounds.width;
-		absoluteBounds.height = primitiveBounds.y + primitiveBounds.height;
+		absoluteBounds.setRect(primitive.getBounds2D(absolutePosition.x, absolutePosition.y, graphics));
 	}
 
 	@Override

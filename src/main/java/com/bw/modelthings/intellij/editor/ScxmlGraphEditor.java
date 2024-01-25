@@ -1,6 +1,7 @@
 package com.bw.modelthings.intellij.editor;
 
 import com.bw.graph.VisualModel;
+import com.bw.graph.editor.InteractionAdapter;
 import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.visual.GenericPrimitiveVisual;
 import com.bw.graph.visual.Visual;
@@ -10,7 +11,7 @@ import com.bw.modelthings.fsm.parser.ParserException;
 import com.bw.modelthings.fsm.parser.ScxmlTags;
 import com.bw.modelthings.fsm.parser.XmlParser;
 import com.bw.modelthings.fsm.ui.GraphExtension;
-import com.bw.svg.SVGWriter;
+import com.bw.modelthings.fsm.ui.GraphFactory;
 import com.intellij.ide.ui.customization.CustomActionsSchema;
 import com.intellij.openapi.actionSystem.ActionGroup;
 import com.intellij.openapi.actionSystem.ActionManager;
@@ -41,7 +42,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.Timer;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -89,6 +89,11 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	 * Sync to document is in progress, if this flag is true.
 	 */
 	boolean inDocumentSync = false;
+
+	/**
+	 * Enables file/graph synchronization.
+	 */
+	boolean enableSync = true;
 
 	/**
 	 * Timer to trigger graph to document synchronization.
@@ -144,6 +149,10 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 		}
 	}
 
+	private Visual getStartVisual(VisualModel model)
+	{
+		return model.getVisuals().stream().filter(v -> v.isFlagSet(GraphFactory.START_NODE_FLAG)).findFirst().orElse(null);
+	}
 
 	/**
 	 * This method is synchronized because it is possible that this method is called from different worker threads in parallel.
@@ -164,9 +173,13 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 				VisualModel model = (component.root == null) ? null : ModelPrimitive.getSubModel(component.root);
 				if (xmlFile != null && model != null)
 				{
-					HashMap<String, Rectangle2D.Float> bounds = new HashMap<>();
+					HashMap<String, GraphExtension.PosAndBounds> bounds = new HashMap<>();
+					HashMap<String, GraphExtension.PosAndBounds> startBounds = new HashMap<>();
 
 					List<Visual> visuals = new ArrayList<>(model.getVisuals());
+					Visual sv = getStartVisual(model);
+					if (sv != null)
+						startBounds.put(model.name, new GraphExtension.PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
 
 					while (!visuals.isEmpty())
 					{
@@ -176,18 +189,31 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 							String id = (String) v.getId();
 							if (id != null)
 							{
-								bounds.put(id, v.getAbsoluteBounds2D(null));
+								bounds.put(id, new GraphExtension.PosAndBounds(v.getAbsolutePosition(), v.getAbsoluteBounds2D(null)));
 							}
-						}
-						VisualModel m = ModelPrimitive.getSubModel(v);
-						if (m != null)
-						{
-							visuals.addAll(m.getVisuals());
+							VisualModel m = ModelPrimitive.getSubModel(v);
+							if (m != null)
+							{
+								if (m.name != null)
+								{
+									sv = getStartVisual(m);
+									if (sv != null)
+									{
+										startBounds.put(m.name, new GraphExtension.PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
+										System.err.println(m.name + " = " + startBounds.get(m.name));
+									}
+								}
+								else
+								{
+									System.err.println("Submodel of " + v.getId() + " without name");
+								}
+								visuals.addAll(m.getVisuals());
+							}
 						}
 					}
 					try
 					{
-						float precisionFactor = 1000;
+						final float precisionFactor = this.component.getGraphConfiguration().precisionFactor;
 						XmlDocument doc = ((XmlFile) xmlFile).getDocument();
 						XmlTag root = doc.getRootTag();
 						if (root != null)
@@ -200,16 +226,18 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 								XmlTag s = allStates.remove(allStates.size() - 1);
 								String id = s.getAttributeValue(ScxmlTags.ATTR_ID);
 
-								allStates.addAll(Arrays.asList(s.findSubTags(ScxmlTags.TAG_STATE, ScxmlTags.NS_SCXML)));
-								allStates.addAll(Arrays.asList(s.findSubTags(ScxmlTags.TAG_PARALLEL, ScxmlTags.NS_SCXML)));
+								List<XmlTag> states = Arrays.asList(s.findSubTags(ScxmlTags.TAG_STATE, ScxmlTags.NS_SCXML));
+								List<XmlTag> parallels = Arrays.asList(s.findSubTags(ScxmlTags.TAG_PARALLEL, ScxmlTags.NS_SCXML));
+
+								allStates.addAll(states);
+								allStates.addAll(parallels);
 
 								if (id != null)
 								{
-									Rectangle2D.Float r = bounds.get(id);
+									GraphExtension.PosAndBounds r = bounds.get(id);
 									if (r != null)
 									{
-										String bs = SVGWriter.toBox(r, precisionFactor);
-
+										String bs = r.toXML(precisionFactor);
 										XmlAttribute attr = s.getAttribute(GraphExtension.ATTR_BOUNDS, GraphExtension.NS_GRAPH_EXTENSION);
 										if (attr == null)
 										{
@@ -219,8 +247,35 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 										{
 											if (!bs.equals(attr.getValue()))
 											{
-												System.err.println(attr.getValue() + " -> " + bs);
 												attr.setValue(bs);
+											}
+										}
+									}
+								}
+
+								GraphExtension.PosAndBounds startNodeBounds = startBounds.get(id);
+
+								if (startNodeBounds != null || !(states.isEmpty() && parallels.isEmpty()))
+								{
+
+									// A submachine. We need to set the start-state bounds
+									if (startNodeBounds == null)
+									{
+										startNodeBounds = startBounds.get(s.getAttributeValue(ScxmlTags.ATTR_NAME, ScxmlTags.NS_SCXML));
+									}
+									if (startNodeBounds != null)
+									{
+										String bs = startNodeBounds.toXML(precisionFactor);
+										XmlAttribute attrStart = s.getAttribute(GraphExtension.ATTR_START_BOUNDS, GraphExtension.NS_GRAPH_EXTENSION);
+										if (attrStart == null)
+										{
+											s.setAttribute(GraphExtension.ATTR_START_BOUNDS, GraphExtension.NS_GRAPH_EXTENSION, bs);
+										}
+										else
+										{
+											if (!bs.equals(attrStart.getValue()))
+											{
+												attrStart.setValue(bs);
 											}
 										}
 									}
@@ -300,9 +355,16 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 				VisualModel model = ModelPrimitive.getSubModel(component.root);
 				if (model != null && model.isModified())
 				{
-					log.warn("Model modified");
-					model.setModified(false);
-					triggerXmlUpdate();
+					if (enableSync)
+					{
+						log.warn("Model modified, sync with file");
+						model.setModified(false);
+						triggerXmlUpdate();
+					}
+					else
+					{
+						log.warn("Model modified, but sync disabled");
+					}
 				}
 			}
 		});
@@ -325,6 +387,29 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 
 			}
 		});
+
+		component.pane.addInteractionListener(new InteractionAdapter()
+		{
+			@Override
+			public void deselected(Visual visual)
+			{
+				enableSync = true;
+			}
+
+			@Override
+			public void mouseDragging(Visual visual)
+			{
+				// Disable sync to xml file during dragging.
+				enableSync = (visual == null);
+			}
+
+			@Override
+			public void mouseOver(Visual visual)
+			{
+				log.warn("MouseOver " + visual);
+			}
+		});
+
 
 	}
 
@@ -414,6 +499,8 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	@Override
 	public void dispose()
 	{
+		if (component != null)
+			component.dispose();
 		if (xmlDocument != null)
 		{
 			xmlDocument.removeDocumentListener(documentListener);

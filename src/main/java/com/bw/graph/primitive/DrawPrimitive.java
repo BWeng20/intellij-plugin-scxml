@@ -6,6 +6,7 @@ import com.bw.graph.GraphConfiguration;
 import com.bw.graph.util.Dimension2DFloat;
 import com.bw.graph.util.InsetsFloat;
 import com.bw.graph.visual.Visual;
+import com.bw.graph.visual.VisualFlags;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
@@ -28,6 +29,8 @@ public abstract class DrawPrimitive
 	private final Point2D.Float relativePosition;
 	private final Point2D.Float tempPosition = new Point2D.Float();
 	private boolean editable;
+
+	private int flags = VisualFlags.ALWAYS;
 
 	/**
 	 * Assigned Visual. Will be set temporary during event handling.
@@ -70,17 +73,19 @@ public abstract class DrawPrimitive
 	/**
 	 * Creates a new Primitive.
 	 *
-	 * @param x      The relative x-position
-	 * @param y      The relative y-position
+	 * @param x      The relative x-position. Can also be negative.
+	 * @param y      The relative y-position. Can also be negative.
 	 * @param config The configuration to use.
 	 * @param style  The local style.
+	 * @param flags  The initial flags. @see {@link VisualFlags}
 	 */
-	protected DrawPrimitive(float x, float y, GraphConfiguration config, DrawStyle style)
+	protected DrawPrimitive(float x, float y, GraphConfiguration config, DrawStyle style, int flags)
 	{
 		Objects.requireNonNull(style);
 		this.style = style;
 		this.relativePosition = new Point2D.Float(x, y);
 		this.config = config;
+		this.flags = flags;
 	}
 
 	/**
@@ -396,6 +401,47 @@ public abstract class DrawPrimitive
 	 */
 	public void setModified(boolean modified)
 	{
+	}
+
+	/**
+	 * Sets Bit Flags.
+	 *
+	 * @param flags Flag bits to add.
+	 */
+	public void setFlags(int flags)
+	{
+		this.flags |= flags;
+	}
+
+	/**
+	 * Checks if some (combination of) flag(s) are set.
+	 *
+	 * @param flags Bitwise combination of flags.
+	 * @return true if all bits in the argument are set.
+	 */
+	public boolean isFlagSet(int flags)
+	{
+		return (this.flags & flags) == flags;
+	}
+
+	/**
+	 * Clears some (combination of) flag(s).
+	 *
+	 * @param flags Flag bits to clear.
+	 */
+	public void clearFlags(int flags)
+	{
+		this.flags &= ~flags;
+	}
+
+	/**
+	 * Gets the current flags.
+	 *
+	 * @return Bitwise combination of flags.
+	 */
+	public int getFlags()
+	{
+		return flags;
 	}
 
 }

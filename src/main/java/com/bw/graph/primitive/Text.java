@@ -3,6 +3,7 @@ package com.bw.graph.primitive;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.util.Dimension2DFloat;
+import com.bw.graph.visual.VisualFlags;
 import com.bw.svg.SVGAttribute;
 import com.bw.svg.SVGElement;
 import com.bw.svg.SVGWriter;
@@ -32,10 +33,11 @@ public class Text extends DrawPrimitive
 	 * @param text   The text to draw.
 	 * @param config The configuration to use.
 	 * @param style  The style or null if default style shall be used.
+	 * @param flags  The initial flags. @see {@link VisualFlags}
 	 */
-	public Text(float x, float y, String text, GraphConfiguration config, DrawStyle style)
+	public Text(float x, float y, String text, GraphConfiguration config, DrawStyle style, int flags)
 	{
-		super(x, y, config, style);
+		super(x, y, config, style, flags);
 		this.text = text;
 	}
 

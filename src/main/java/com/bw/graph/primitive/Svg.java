@@ -3,6 +3,7 @@ package com.bw.graph.primitive;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.util.Dimension2DFloat;
+import com.bw.graph.visual.VisualFlags;
 import com.bw.jtools.shape.AbstractShape;
 import com.bw.jtools.shape.ShapePainter;
 import com.bw.jtools.svg.SVGConverter;
@@ -30,13 +31,14 @@ public class Svg extends DrawPrimitive
 	 * @param shape  SVG Shape
 	 * @param config The configuration to use.
 	 * @param style  The style or null if default style shall be used.
+	 * @param flags  The initial flags. @see {@link VisualFlags}
 	 */
 	public Svg(float x, float y,
 			   AbstractShape shape,
 			   GraphConfiguration config,
-			   DrawStyle style)
+			   DrawStyle style, int flags)
 	{
-		super(x, y, config, style);
+		super(x, y, config, style, flags);
 		this.painter = new ShapePainter(shape);
 		this.gray = false;
 	}
@@ -54,7 +56,7 @@ public class Svg extends DrawPrimitive
 	public Svg(float x, float y, String svg, GraphConfiguration config,
 			   DrawStyle style) throws SVGException
 	{
-		this(x, y, SVGConverter.convert(svg), config, style);
+		this(x, y, SVGConverter.convert(svg), config, style, VisualFlags.ALWAYS);
 		this.svgSource = svg;
 	}
 

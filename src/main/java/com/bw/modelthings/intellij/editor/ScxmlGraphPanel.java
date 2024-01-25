@@ -2,9 +2,10 @@ package com.bw.modelthings.intellij.editor;
 
 import com.bw.graph.DrawContext;
 import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphConfiguration;
 import com.bw.graph.VisualModel;
 import com.bw.graph.editor.GraphPane;
-import com.bw.graph.editor.InteractionListener;
+import com.bw.graph.editor.InteractionAdapter;
 import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.visual.Visual;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
@@ -82,40 +83,29 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	protected DrawStyle stateInnerStyle = new DrawStyle();
 
 	/**
-	 * Style for highlighted edges.
-	 */
-	protected DrawStyle edgeHighlightStyle = new DrawStyle();
-
-	/**
 	 * Style for start nodes.
 	 */
 	protected DrawStyle startStyle = new DrawStyle();
 
 	/**
-	 * Style for state outline high-lighted.
-	 */
-	protected DrawStyle stateOutlineStyleHighlight = new DrawStyle();
-
-	/**
 	 * Context for state outline.
 	 */
-	protected DrawContext stateOutlineContext = new DrawContext(pane.getGraphConfiguration(), stateOutlineStyle, stateOutlineStyleHighlight);
+	protected DrawContext stateOutlineContext = new DrawContext(pane.getGraphConfiguration(), stateOutlineStyle);
 
 	/**
 	 * The context for inner drawing for states.
 	 */
-	protected DrawContext stateInnerContext = new DrawContext(pane.getGraphConfiguration(),
-			stateInnerStyle, stateInnerStyle);
+	protected DrawContext stateInnerContext = new DrawContext(pane.getGraphConfiguration(), stateInnerStyle);
 
 	/**
 	 * Context for edges.
 	 */
-	protected DrawContext edgeContext = new DrawContext(pane.getGraphConfiguration(), stateInnerStyle, edgeHighlightStyle);
+	protected DrawContext edgeContext = new DrawContext(pane.getGraphConfiguration(), stateInnerStyle);
 
 	/**
 	 * Context for start node.
 	 */
-	protected DrawContext startContext = new DrawContext(pane.getGraphConfiguration(), startStyle, startStyle);
+	protected DrawContext startContext = new DrawContext(pane.getGraphConfiguration(), startStyle);
 
 	/**
 	 * The project of the file.
@@ -164,6 +154,16 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	public String getSVG()
 	{
 		return pane.toSVG();
+	}
+
+	/**
+	 * Get the graph configuration.
+	 *
+	 * @return The graph configuration.
+	 */
+	public GraphConfiguration getGraphConfiguration()
+	{
+		return pane.getGraphConfiguration();
 	}
 
 
@@ -274,23 +274,14 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 			setConfiguration(persistenceService.getState());
 		}
 
-		pane.addInteractionListener(new InteractionListener()
+		pane.addInteractionListener(new InteractionAdapter()
 		{
-			@Override
-			public void selected(Visual visual)
-			{
-			}
-
-			@Override
-			public void deselected(Visual visual)
-			{
-			}
-
 			@Override
 			public void hierarchyChanged()
 			{
 				updatedStateBreadcrumbs();
 			}
+
 		});
 
 		GraphLafManagerListener.addGraphLafListener(lafListener);
@@ -344,19 +335,6 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		stateInnerStyle.background = background;
 		stateInnerStyle.font = font;
 		stateInnerStyle.fontMetrics = fontMetrics;
-
-		edgeHighlightStyle.linePaint = Color.RED;
-		edgeHighlightStyle.fillPaint = stateOutlineStyle.fillPaint;
-		edgeHighlightStyle.lineStroke = new BasicStroke(2);
-		edgeHighlightStyle.textPaint = stateOutlineStyle.textPaint;
-		edgeHighlightStyle.font = font;
-		edgeHighlightStyle.fontMetrics = fontMetrics;
-
-		stateOutlineStyleHighlight.linePaint = Color.RED;
-		stateOutlineStyleHighlight.lineStroke = new BasicStroke(2);
-		stateOutlineStyleHighlight.textPaint = getForeground();
-		stateOutlineStyleHighlight.font = font;
-		stateOutlineStyleHighlight.fontMetrics = fontMetrics;
 
 		pane.getModel()
 			.repaint();

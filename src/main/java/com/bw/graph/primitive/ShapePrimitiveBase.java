@@ -3,6 +3,7 @@ package com.bw.graph.primitive;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.util.Dimension2DFloat;
+import com.bw.graph.visual.VisualFlags;
 
 import java.awt.Graphics2D;
 import java.awt.Shape;
@@ -31,10 +32,11 @@ public abstract class ShapePrimitiveBase extends DrawPrimitive
 	 * @param y      The relative y-position
 	 * @param config The configuration to use.
 	 * @param style  The local style or null if parent style shall be used.
+	 * @param flags  The initial flags. @see {@link VisualFlags}
 	 */
-	protected ShapePrimitiveBase(float x, float y, GraphConfiguration config, DrawStyle style)
+	protected ShapePrimitiveBase(float x, float y, GraphConfiguration config, DrawStyle style, int flags)
 	{
-		super(x, y, config, style);
+		super(x, y, config, style, flags);
 		this.fill = false;
 	}
 
@@ -95,6 +97,16 @@ public abstract class ShapePrimitiveBase extends DrawPrimitive
 	public boolean isFill()
 	{
 		return fill;
+	}
+
+	/**
+	 * Gets the shape.
+	 *
+	 * @return The shape.
+	 */
+	public Shape getShape()
+	{
+		return shape;
 	}
 
 }

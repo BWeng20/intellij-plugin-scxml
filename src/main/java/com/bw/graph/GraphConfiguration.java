@@ -10,6 +10,7 @@ import java.awt.Paint;
  */
 public class GraphConfiguration
 {
+
 	/**
 	 * Creates a new graph configuration.
 	 */

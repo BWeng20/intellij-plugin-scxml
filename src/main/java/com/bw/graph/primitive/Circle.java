@@ -2,6 +2,7 @@ package com.bw.graph.primitive;
 
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
+import com.bw.graph.util.Dimension2DFloat;
 import com.bw.svg.SVGAttribute;
 import com.bw.svg.SVGElement;
 import com.bw.svg.SVGWriter;
@@ -25,14 +26,21 @@ public class Circle extends ShapePrimitiveBase
 	 * @param radius Radius in pixel.
 	 * @param config The configuration to use.
 	 * @param style  The style or null if default style shall be used.
+	 * @param flags  Bitwise combination of flags.
 	 */
 	public Circle(float cx, float cy, float radius,
 				  GraphConfiguration config,
-				  DrawStyle style)
+				  DrawStyle style, int flags)
 	{
-		super(cx - radius, cy - radius, config, style);
+		super(cx - radius, cy - radius, config, style, flags);
 		this.diameter = 2f * radius;
 		this.shape = new Ellipse2D.Float(0, 0, diameter, diameter);
+	}
+
+	@Override
+	protected Dimension2DFloat getInnerDimension(Graphics2D graphics)
+	{
+		return new Dimension2DFloat(diameter, diameter);
 	}
 
 	@Override

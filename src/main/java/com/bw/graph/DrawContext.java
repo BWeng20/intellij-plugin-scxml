@@ -5,16 +5,10 @@ package com.bw.graph;
  */
 public class DrawContext
 {
-
 	/**
-	 * Style for normal state.
+	 * Style for drawings.
 	 */
-	public DrawStyle normal;
-
-	/**
-	 * Style for highlighted state.
-	 */
-	public DrawStyle highlighted;
+	public DrawStyle style;
 
 	/**
 	 * The configuration.
@@ -24,14 +18,12 @@ public class DrawContext
 	/**
 	 * Creates a new Context with styles,
 	 *
-	 * @param configuration  Graph configuration to use.
-	 * @param normalStyle    Style for normal state.
-	 * @param highlightStyle Style for highlighted state.
+	 * @param configuration Graph configuration to use.
+	 * @param style         Style.
 	 */
-	public DrawContext(GraphConfiguration configuration, DrawStyle normalStyle, DrawStyle highlightStyle)
+	public DrawContext(GraphConfiguration configuration, DrawStyle style)
 	{
-		this.normal = normalStyle;
-		this.highlighted = highlightStyle;
+		this.style = style;
 		this.configuration = configuration;
 	}
 }

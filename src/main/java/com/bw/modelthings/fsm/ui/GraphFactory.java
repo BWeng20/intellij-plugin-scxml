@@ -10,6 +10,7 @@ import com.bw.graph.visual.ConnectorVisual;
 import com.bw.graph.visual.EdgeVisual;
 import com.bw.graph.visual.GenericPrimitiveVisual;
 import com.bw.graph.visual.Visual;
+import com.bw.graph.visual.VisualFlags;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
 import com.bw.modelthings.fsm.model.PseudoRoot;
 import com.bw.modelthings.fsm.model.State;
@@ -31,6 +32,11 @@ import java.util.logging.Logger;
  */
 public class GraphFactory
 {
+	/**
+	 * Visual flag for a start-node.
+	 */
+	public final static int START_NODE_FLAG = 128;
+
 	/**
 	 * Logger of this class.
 	 */
@@ -84,12 +90,24 @@ public class GraphFactory
 	 */
 	public Visual createStartVisual(State start, float x, float y, float radius, DrawContext style)
 	{
-		GenericPrimitiveVisual startNode = new GenericPrimitiveVisual(null, style);
-		Circle circle = new Circle(radius, radius, radius, style.configuration, style.normal);
+		GenericPrimitiveVisual startNode = new GenericPrimitiveVisual("*", style);
+		Circle circle = new Circle(radius, radius, radius, style.configuration, style.style, VisualFlags.ALWAYS);
 		circle.setFill(true);
-		startNode.setPosition(x, y);
 		startNode.addDrawingPrimitive(circle);
+		Circle circleActive = new Circle(radius, radius, radius + 5, style.configuration, style.style, VisualFlags.SELECTED);
+		startNode.addDrawingPrimitive(circleActive);
 		startNode.setModified(false);
+		startNode.setFlags(START_NODE_FLAG);
+
+		GraphExtension.PosAndBounds startBounds = graphExtension.startBounds.get(start.docId);
+		if (startBounds == null)
+		{
+			startNode.setAbsolutePosition(x, y, null);
+		}
+		else
+		{
+			startNode.setAbsolutePosition(startBounds.position, startBounds.bounds);
+		}
 		return startNode;
 	}
 
@@ -142,13 +160,13 @@ public class GraphFactory
 		{
 			Rectangle2D.Float startBounds = source.getAbsoluteBounds2D(g2);
 
-			ConnectorVisual sourceConnector = new ConnectorVisual(source, style);
+			ConnectorVisual sourceConnector = new ConnectorVisual(source, style, VisualFlags.ALWAYS);
 			Rectangle2D.Float sourceConnectorBounds = sourceConnector.getAbsoluteBounds2D(g2);
 			sourceConnector.setRelativePosition(startBounds.width - (sourceConnectorBounds.width / 2f), (startBounds.height - sourceConnectorBounds.height) / 2f);
 			sourceConnector.setModified(false);
 
 			Rectangle2D.Float targetBounds = target.getAbsoluteBounds2D(g2);
-			ConnectorVisual targetConnector = new ConnectorVisual(target, style);
+			ConnectorVisual targetConnector = new ConnectorVisual(target, style, VisualFlags.ALWAYS);
 			Rectangle2D.Float targetConnectorBounds = targetConnector.getAbsoluteBounds2D(g2);
 			if (toInnerModel)
 				targetConnector.setRelativePosition(style.configuration.innerModelBoxInsets.left - targetConnectorBounds.width + (targetConnectorBounds.width / 2f), (targetBounds.height - targetConnectorBounds.height) / 2f);
@@ -202,7 +220,7 @@ public class GraphFactory
 			states.add(fsm.pseudoRoot);
 
 			final float gapY = 5;
-			float fh = stateOutlineStyles.normal.fontMetrics.getHeight();
+			float fh = stateOutlineStyles.style.fontMetrics.getHeight();
 
 			InsetsFloat insets = stateInnerStyles.configuration.innerModelBoxInsets;
 			insets.top = fh * 2.5f;
@@ -249,7 +267,7 @@ public class GraphFactory
 							modelName = pseudoRoot.fsmName;
 						}
 						VisualModel subModel = new VisualModel(modelName);
-						ModelPrimitive modelPrimitive = new ModelPrimitive(0, 0, stateInnerStyles.configuration, stateInnerStyles.normal);
+						ModelPrimitive modelPrimitive = new ModelPrimitive(0, 0, stateInnerStyles.configuration, stateInnerStyles.style, VisualFlags.ALWAYS);
 						modelPrimitive.setAlignment(Alignment.Center);
 						modelPrimitive.setInsets(stateInnerStyles.configuration.innerModelBoxInsets);
 						modelPrimitive.setSubModel(subModel);

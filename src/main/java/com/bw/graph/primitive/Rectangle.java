@@ -2,6 +2,7 @@ package com.bw.graph.primitive;
 
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
+import com.bw.graph.visual.VisualFlags;
 import com.bw.svg.SVGAttribute;
 import com.bw.svg.SVGElement;
 import com.bw.svg.SVGWriter;
@@ -26,12 +27,14 @@ public class Rectangle extends ShapePrimitiveBase
 	 * @param arcSize Size of arc to use to round off the corners.
 	 * @param config  The configuration to use.
 	 * @param style   The style or null if default style shall be used.
+	 * @param flags   The initial flags. @see {@link VisualFlags}
 	 */
 	public Rectangle(float x, float y, float width, float height, float arcSize,
 					 GraphConfiguration config,
-					 DrawStyle style)
+					 DrawStyle style,
+					 int flags)
 	{
-		super(x, y, config, style);
+		super(x, y, config, style, flags);
 
 		if (arcSize == 0)
 			shape = new Rectangle2D.Float(0, 0, width, height);

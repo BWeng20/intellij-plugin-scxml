@@ -78,11 +78,14 @@ public class VisualModel
 	 */
 	public void moveVisualToTop(Visual visual)
 	{
-		if (visuals.remove(visual))
+		if (visuals.get(visuals.size() - 1) != visual)
 		{
-			visuals.add(visual);
+			if (visuals.remove(visual))
+			{
+				visuals.add(visual);
+				fireModelChange();
+			}
 		}
-		fireModelChange();
 	}
 
 	/**
@@ -173,7 +176,7 @@ public class VisualModel
 	 */
 	public void repaint()
 	{
-		getVisuals().forEach(Visual::repaint);
+		getVisuals().forEach(Visual::invalidateBuffers);
 	}
 
 	/**

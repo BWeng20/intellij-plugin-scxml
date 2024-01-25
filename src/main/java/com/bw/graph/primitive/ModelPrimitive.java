@@ -6,6 +6,7 @@ import com.bw.graph.GraphConfiguration;
 import com.bw.graph.VisualModel;
 import com.bw.graph.util.Dimension2DFloat;
 import com.bw.graph.visual.Visual;
+import com.bw.graph.visual.VisualFlags;
 import com.bw.svg.SVGAttribute;
 import com.bw.svg.SVGElement;
 import com.bw.svg.SVGWriter;
@@ -33,10 +34,11 @@ public class ModelPrimitive extends DrawPrimitive
 	 * @param y      The relative y-position
 	 * @param config The configuration to use.
 	 * @param style  The local style or null if parent style shall be used.
+	 * @param flags  The initial flags. @see {@link VisualFlags}
 	 */
-	public ModelPrimitive(float x, float y, GraphConfiguration config, DrawStyle style)
+	public ModelPrimitive(float x, float y, GraphConfiguration config, DrawStyle style, int flags)
 	{
-		super(x, y, config, style);
+		super(x, y, config, style, flags);
 	}
 
 	/**

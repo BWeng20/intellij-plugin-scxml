@@ -29,13 +29,14 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	 *
 	 * @param parent  The connected visual (not the edge itself!).
 	 * @param context The draw context. Must not be null.
+	 * @param flags   The initial flags. @see {@link VisualFlags}
 	 */
-	public ConnectorVisual(Visual parent, DrawContext context)
+	public ConnectorVisual(Visual parent, DrawContext context, int flags)
 	{
 		super(null, context);
 		this.parent = parent;
 		this.radius = context.configuration.connectorSize;
-		this.primitive = new Circle(radius, radius, radius, context.configuration, context.normal);
+		this.primitive = new Circle(radius, radius, radius, context.configuration, context.style, flags);
 	}
 
 	/**
@@ -57,7 +58,8 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	@Override
 	public void draw(Graphics2D g2)
 	{
-		if ((parent != null && parent.isHighlighted()) || (edgeVisual != null && edgeVisual.isHighlighted()))
+		if ((parent != null && parent.isFlagSet(VisualFlags.SELECTED)) ||
+				(edgeVisual != null && edgeVisual.isFlagSet(VisualFlags.SELECTED)))
 		{
 			Point2D.Float pt = parent.getAbsolutePosition();
 
@@ -109,6 +111,8 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	protected void updateBounds(Graphics2D graphics)
 	{
 		Dimension2DFloat dim = primitive.getDimension(graphics);
+		absoluteBounds.x = absolutePosition.x;
+		absoluteBounds.y = absolutePosition.y;
 		absoluteBounds.width = dim.width;
 		absoluteBounds.height = dim.height;
 	}

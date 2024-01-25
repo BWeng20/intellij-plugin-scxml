@@ -8,6 +8,8 @@ import com.bw.graph.util.ImageUtil;
 import com.bw.svg.SVGElement;
 import com.bw.svg.SVGWriter;
 
+import java.awt.AlphaComposite;
+import java.awt.Composite;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
@@ -49,9 +51,12 @@ public class GenericPrimitiveVisual extends Visual
 
 	private PrimitiveConsumer drawWithAlignment = (primitive, g2, offset) ->
 	{
-		g2.translate(offset.x, offset.y);
-		primitive.draw(g2);
-		g2.translate(-offset.x, -offset.y);
+		if ((getFlags() & primitive.getFlags()) != 0)
+		{
+			g2.translate(offset.x, offset.y);
+			primitive.draw(g2);
+			g2.translate(-offset.x, -offset.y);
+		}
 	};
 
 	/**
@@ -73,34 +78,52 @@ public class GenericPrimitiveVisual extends Visual
 		{
 			// The buffer-image needs to use native, unscaled coordinates,
 			// otherwise the result will get blurry.
-			float offset = getStyle().getStrokeWidth() + 1;
+
+			float inset = getStyle().getStrokeWidth() + 1;
+
+			// If the actual bounds starts not on base position, we need to translate
+			// to get inside the buffer.
+			float offsetX = inset + absolutePosition.x - absoluteBounds.x;
+			float offsetY = inset + absolutePosition.y - absoluteBounds.y;
+
+
 			float scaleX = (float) g2.getTransform()
 									 .getScaleX();
 			float scaleY = (float) g2.getTransform()
 									 .getScaleY();
-			if (buffer == null || repaintTriggered)
+			if (buffer == null || offscreenBuffersInvalid)
 			{
 				float width = absoluteBounds.width;
 				float height = absoluteBounds.height;
 
-				int scaledBoundsWidth = (int) Math.ceil((width + 2 * offset) * scaleX);
-				int scaledBoundsHeight = (int) Math.ceil((height + 2 * offset) * scaleY);
+				boolean needsToBeCleared = true;
+
+				int scaledBoundsWidth = (int) Math.ceil((width + 2 * inset) * scaleX);
+				int scaledBoundsHeight = (int) Math.ceil((height + 2 * inset) * scaleY);
 				if (buffer == null || buffer.getWidth() != scaledBoundsWidth || buffer.getHeight() != scaledBoundsHeight)
 				{
 					++buffersRecreated;
 					buffer = ImageUtil.createCompatibleImage(graphicsConfiguration, scaledBoundsWidth, scaledBoundsHeight);
+					needsToBeCleared = false;
 				}
-				repaintTriggered = false;
 				Graphics2D g2Buffered = buffer.createGraphics();
 				try
 				{
+					if (needsToBeCleared)
+					{
+						Composite c = g2Buffered.getComposite();
+						g2Buffered.setComposite(AlphaComposite.Clear);
+						g2Buffered.fillRect(0, 0, scaledBoundsWidth, scaledBoundsHeight);
+						g2Buffered.setComposite(c);
+					}
+
 					if (graphConfiguration.antialiasing)
 						g2Buffered.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
 					g2Buffered.scale(scaleX, scaleY);
-					g2Buffered.translate(offset, offset);
 
-					// g2Buffered.translate(offset, offset);
+					g2Buffered.translate(offsetX, offsetY);
+
 					forAllPrimitives(g2Buffered, drawWithAlignment,
 							new Dimension2DFloat(width, height));
 				}
@@ -115,7 +138,7 @@ public class GenericPrimitiveVisual extends Visual
 				// Scale to 1:1
 				g2.scale(1 / scaleX, 1 / scaleY);
 				// Draw to "scaled" position but with native pixels sizes.
-				g2.drawImage(buffer, null, (int) (-offset * scaleX), (int) (-offset * scaleY));
+				g2.drawImage(buffer, null, (int) (-offsetX * scaleX), (int) (-offsetY * scaleY));
 			}
 			finally
 			{
@@ -167,34 +190,52 @@ public class GenericPrimitiveVisual extends Visual
 		Dimension2DFloat dim = getPreferredDimension();
 		if (dim == null)
 		{
-			absoluteBounds.width = 0;
-			absoluteBounds.height = 0;
+			Rectangle2D.Float localBounds = new Rectangle2D.Float(Float.MAX_VALUE, Float.MAX_VALUE, 0, 0);
 
-			for (DrawPrimitive primitive : primitives)
+			if (primitives.isEmpty())
 			{
-				Rectangle2D.Float primitiveBounds = primitive.getBounds2D(absoluteBounds.x, absoluteBounds.y, graphics);
-				switch (primitive.getAlignment())
-				{
-					case Left:
-						break;
-					case Center:
-					case Right:
-						primitiveBounds.width += primitive.getRelativePosition().x;
-						break;
-					case Hidden:
-						continue;
-				}
-				final float x2 = primitiveBounds.x + primitiveBounds.width;
-				final float y2 = primitiveBounds.y + primitiveBounds.height;
-
-				if ((this.absoluteBounds.x + this.absoluteBounds.width) < x2)
-					this.absoluteBounds.width = x2 - this.absoluteBounds.x;
-				if ((this.absoluteBounds.y + this.absoluteBounds.height) < y2)
-					this.absoluteBounds.height = y2 - this.absoluteBounds.y;
+				localBounds.x = 0;
+				localBounds.y = 0;
 			}
+			else
+			{
+				for (DrawPrimitive primitive : primitives)
+				{
+					Rectangle2D.Float primitiveBounds = primitive.getBounds2D(this.absolutePosition.x, this.absolutePosition.y, graphics);
+					switch (primitive.getAlignment())
+					{
+						case Left:
+							break;
+						case Center:
+						case Right:
+							primitiveBounds.width += primitive.getRelativePosition().x;
+							break;
+						case Hidden:
+							continue;
+					}
+					final float x2 = primitiveBounds.x + primitiveBounds.width;
+					final float y2 = primitiveBounds.y + primitiveBounds.height;
+
+					if (localBounds.x > primitiveBounds.x)
+						localBounds.x = primitiveBounds.x;
+					if (localBounds.y > primitiveBounds.y)
+						localBounds.y = primitiveBounds.y;
+
+					if ((localBounds.x + localBounds.width) < x2)
+						localBounds.width = x2 - localBounds.x;
+					if ((localBounds.y + localBounds.height) < y2)
+						localBounds.height = y2 - localBounds.y;
+				}
+			}
+			this.absoluteBounds.x = localBounds.x;
+			this.absoluteBounds.y = localBounds.y;
+			this.absoluteBounds.width = localBounds.width;
+			this.absoluteBounds.height = localBounds.height;
 		}
 		else
 		{
+			this.absoluteBounds.x = absolutePosition.x;
+			this.absoluteBounds.y = absolutePosition.y;
 			this.absoluteBounds.width = dim.width;
 			this.absoluteBounds.height = dim.height;
 		}
@@ -212,7 +253,7 @@ public class GenericPrimitiveVisual extends Visual
 		primitives.remove(primitive);
 		primitives.add(primitive);
 		resetBounds();
-		repaint();
+		invalidateBuffers();
 	}
 
 	/**
@@ -222,13 +263,13 @@ public class GenericPrimitiveVisual extends Visual
 	{
 		primitives.clear();
 		resetBounds();
-		repaint();
+		invalidateBuffers();
 	}
 
 	@Override
-	public void repaint()
+	public void invalidateBuffers()
 	{
-		super.repaint();
+		super.invalidateBuffers();
 		for (DrawPrimitive primitive : primitives)
 		{
 			primitive.repaint();
@@ -249,8 +290,11 @@ public class GenericPrimitiveVisual extends Visual
 		final Point2D.Float pt = getAbsolutePosition();
 		forAllPrimitives(g2, (primitive, g, offset) ->
 		{
-			Point2D.Float tempPos = new Point2D.Float(offset.x + pt.x, offset.y + pt.y);
-			primitive.toSVG(sw, g, tempPos);
+			if (primitive.isFlagSet(VisualFlags.ALWAYS))
+			{
+				Point2D.Float tempPos = new Point2D.Float(offset.x + pt.x, offset.y + pt.y);
+				primitive.toSVG(sw, g, tempPos);
+			}
 		});
 		sw.endElement();
 	}

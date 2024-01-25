@@ -31,9 +31,9 @@ public abstract class Visual
 	protected String displayName;
 
 	/**
-	 * True of the visual is high-lighted.
+	 * Combination of flag bits.
 	 */
-	protected boolean highlighted;
+	protected int flags;
 
 	/**
 	 * The preferred dimension of the visual.
@@ -41,8 +41,15 @@ public abstract class Visual
 	protected Dimension2DFloat dimension;
 
 	/**
-	 * The absilute bounds of the visual.<br>
-	 * The width and height are lazy calculated and updated if set to a negative value.
+	 * Absolute base position of the visual.
+	 */
+	protected Point2D.Float absolutePosition = new Point2D.Float(0, 0);
+
+	/**
+	 * The absolute bounds of the visual.<br>
+	 * These bounds are lazy calculated and updated. The bounds may extend the {@link #absolutePosition} in all directions.
+	 * The resulting bounds result from the absolute {@link #absolutePosition} and
+	 * the combined dimension of the content. But implementations may choose other options. See {@link #updateBounds(Graphics2D)}.
 	 */
 	protected Rectangle2D.Float absoluteBounds = new Rectangle2D.Float(0, 0, -1, -1);
 
@@ -52,9 +59,9 @@ public abstract class Visual
 	protected DrawContext context;
 
 	/**
-	 * Terue if a repaint was triggered.
+	 * True if offscreen buffers needs to be updated.
 	 */
-	protected boolean repaintTriggered = false;
+	protected boolean offscreenBuffersInvalid = false;
 
 	/**
 	 * "Dirty" marker, true if model was externally modified.
@@ -72,6 +79,7 @@ public abstract class Visual
 		Objects.requireNonNull(context);
 		this.id = id;
 		this.context = context;
+		this.flags = VisualFlags.ALWAYS;
 	}
 
 
@@ -93,20 +101,21 @@ public abstract class Visual
 	 */
 	public void draw(Graphics2D g2)
 	{
-		g2.translate(absoluteBounds.x, absoluteBounds.y);
+		g2.translate(absolutePosition.x, absolutePosition.y);
 		try
 		{
 			drawRelative(g2);
+			offscreenBuffersInvalid = false;
 		}
 		finally
 		{
-			g2.translate(-absoluteBounds.x, -absoluteBounds.y);
+			g2.translate(-absolutePosition.x, -absolutePosition.y);
 		}
 	}
 
 
 	/**
-	 * Draw the visual.<br>
+	 * Draw the visual with graphics context moved to absolute base position.<br>
 	 * If a sub-model is set, the area described by {@link GraphConfiguration#innerModelBoxInsets} and {@link GraphConfiguration#innerModelBoxMinDimension} shall be spared,
 	 * as this area will be over-drawn by {@link #draw(Graphics2D)}.
 	 *
@@ -144,6 +153,8 @@ public abstract class Visual
 		if (x != 0 || y != 0)
 		{
 			dirty = true;
+			absolutePosition.x += x;
+			absolutePosition.y += y;
 			absoluteBounds.x += x;
 			absoluteBounds.y += y;
 		}
@@ -165,7 +176,7 @@ public abstract class Visual
 	 */
 	public Rectangle2D.Float getAbsoluteBounds2D(Graphics2D g2)
 	{
-		if (absoluteBounds.width < 0)
+		if (absoluteBounds.width < 0 && g2 != null)
 		{
 			updateBounds(g2);
 		}
@@ -173,23 +184,52 @@ public abstract class Visual
 	}
 
 	/**
-	 * Sets property highlighted.
+	 * Sets Bit Flags.
 	 *
-	 * @param highlighted The new value.
+	 * @param flags Flag bits to add.
 	 */
-	public void setHighlighted(boolean highlighted)
+	public void setFlags(int flags)
 	{
-		this.highlighted = highlighted;
+		if ((flags | this.flags) != this.flags)
+		{
+			this.flags |= flags;
+			invalidateBuffers();
+		}
 	}
 
 	/**
-	 * Gets property highlighted.
+	 * Checks if some (combination of) flag(s) are set.
 	 *
-	 * @return true if highlighted.
+	 * @param flags Bitwise combination of flags.
+	 * @return true if all bits in the argument are set.
 	 */
-	public boolean isHighlighted()
+	public boolean isFlagSet(int flags)
 	{
-		return highlighted;
+		return (this.flags & flags) == flags;
+	}
+
+	/**
+	 * Clears some (combination of) flag(s).
+	 *
+	 * @param flags Flag bits to clear.
+	 */
+	public void clearFlags(int flags)
+	{
+		if ((this.flags & flags) != 0)
+		{
+			this.flags &= ~flags;
+			invalidateBuffers();
+		}
+	}
+
+	/**
+	 * Gets the current flags.
+	 *
+	 * @return Bitwise combination of flag-bits.
+	 */
+	public int getFlags()
+	{
+		return flags;
 	}
 
 	/**
@@ -199,34 +239,57 @@ public abstract class Visual
 	 */
 	public DrawStyle getStyle()
 	{
-		return context == null ? null : (isHighlighted() ? context.highlighted : context.normal);
+		return context == null ? null : context.style;
 	}
 
 	/**
 	 * Sets the base position.<br>
 	 * Doesn't set dirty as this method is used to set up the visual.
 	 *
-	 * @param x The new X ordinate.
-	 * @param y The new Y ordinate.
+	 * @param pt     The point.
+	 * @param bounds The absolute bounds to set or null.
 	 */
-	public void setPosition(float x, float y)
+	public void setAbsolutePosition(Point2D.Float pt, Rectangle2D.Float bounds)
 	{
-		if (absoluteBounds.x != x || absoluteBounds.y != y)
+		setAbsolutePosition(pt.x, pt.y, bounds);
+	}
+
+	/**
+	 * Sets the base position.<br>
+	 * Doesn't set dirty as this method is used to set up the visual.
+	 *
+	 * @param x      The new X ordinate.
+	 * @param y      The new Y ordinate.
+	 * @param bounds The new absolute bounds or null.
+	 */
+	public void setAbsolutePosition(float x, float y, Rectangle2D.Float bounds)
+	{
+		if (absolutePosition.x != x || absolutePosition.y != y ||
+				(bounds != null && !absoluteBounds.equals(bounds)))
 		{
-			absoluteBounds.x = x;
-			absoluteBounds.y = y;
-			resetBounds();
+			dirty = true;
+			if (bounds == null)
+			{
+				absoluteBounds.x += x - absolutePosition.x;
+				absoluteBounds.y += y - absolutePosition.y;
+			}
+			else
+			{
+				absoluteBounds.setRect(bounds);
+			}
+			absolutePosition.x = x;
+			absolutePosition.y = y;
 		}
 	}
 
 	/**
 	 * Gets the absolute base position.
 	 *
-	 * @return pt The Point to set.
+	 * @return pt The base Point in absolute coordinates.
 	 */
 	public Point2D.Float getAbsolutePosition()
 	{
-		return new Point2D.Float(absoluteBounds.x, absoluteBounds.y);
+		return new Point2D.Float(absolutePosition.x, absolutePosition.y);
 	}
 
 	/**
@@ -236,8 +299,8 @@ public abstract class Visual
 	 */
 	public void getAbsolutePosition(Point2D.Float pt)
 	{
-		pt.x = absoluteBounds.x;
-		pt.y = absoluteBounds.y;
+		pt.x = absolutePosition.x;
+		pt.y = absolutePosition.y;
 	}
 
 	/**
@@ -265,8 +328,8 @@ public abstract class Visual
 		{
 			Dimension2DFloat dim = new Dimension2DFloat(absoluteBounds);
 			final Point2D.Float pt = getAlignmentOffset(g2, primitive, dim, new Point2D.Float());
-			pt.x += absoluteBounds.x;
-			pt.y += absoluteBounds.y;
+			pt.x += absolutePosition.x;
+			pt.y += absolutePosition.y;
 			return primitive.getBounds2D(pt, g2);
 		}
 		return null;
@@ -322,11 +385,13 @@ public abstract class Visual
 	}
 
 	/**
-	 * Marks the visual for repaint.
+	 * Marks the visual for internal repaint.
+	 * The visual itself can't trigger a repaint to the drawing surface, this needs to be done
+	 * by caller. "invalidateBuffers" will force invalidation of any offscreen-buffers for the next draw cycle.
 	 */
-	public void repaint()
+	public void invalidateBuffers()
 	{
-		repaintTriggered = true;
+		offscreenBuffersInvalid = true;
 	}
 
 	/**
@@ -380,7 +445,7 @@ public abstract class Visual
 			{
 				this.dimension = null;
 				resetBounds();
-				repaint();
+				invalidateBuffers();
 			}
 		}
 		else
@@ -400,7 +465,7 @@ public abstract class Visual
 			dirty = true;
 			this.dimension = new Dimension2DFloat(width, height);
 			resetBounds();
-			repaint();
+			invalidateBuffers();
 		}
 	}
 

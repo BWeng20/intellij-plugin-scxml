@@ -48,7 +48,7 @@ public class EdgeVisual extends Visual
 	{
 		super(id, context);
 
-		this.path = new Path(context.configuration, context.normal);
+		this.path = new Path(context.configuration, context.style, VisualFlags.ALWAYS);
 		this.sourceConnector = source;
 		this.targetConnector = target;
 
@@ -101,6 +101,8 @@ public class EdgeVisual extends Visual
 	@Override
 	protected void updateBounds(Graphics2D graphics)
 	{
+		absoluteBounds.x = absolutePosition.x;
+		absoluteBounds.y = absolutePosition.y;
 		absoluteBounds.width = 0;
 		absoluteBounds.height = 0;
 	}

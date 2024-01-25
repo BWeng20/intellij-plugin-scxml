@@ -12,6 +12,7 @@ import com.bw.graph.util.Dimension2DFloat;
 import com.bw.graph.util.InsetsFloat;
 import com.bw.graph.visual.GenericPrimitiveVisual;
 import com.bw.graph.visual.Visual;
+import com.bw.graph.visual.VisualFlags;
 import com.bw.modelthings.fsm.model.State;
 
 import javax.swing.JComponent;
@@ -125,17 +126,17 @@ public class StateNameProxy implements EditorProxy
 	 * @param bounds Outer bounds. If null bounds will be calculated.
 	 */
 	public void createStatePrimitives(Visual visual, float x, float y, Graphics2D g2,
-									  Rectangle2D.Float bounds)
+									  GraphExtension.PosAndBounds bounds)
 	{
 		GenericPrimitiveVisual v = (GenericPrimitiveVisual) visual;
-		float fh = stateInnerContext.normal.fontMetrics.getHeight();
+		float fh = stateInnerContext.style.fontMetrics.getHeight();
 
 		final boolean hasSubModel = ModelPrimitive.hasSubModel(v);
 		v.removeAllDrawingPrimitives();
 
 		if (bounds == null)
 		{
-			Rectangle2D stringBounds = stateInnerContext.normal.fontMetrics.getStringBounds(state.name, g2);
+			Rectangle2D stringBounds = stateInnerContext.style.fontMetrics.getStringBounds(state.name, g2);
 
 			float height = 5 * fh;
 			float width = (float) Math.max(stringBounds.getWidth() + 10, stateInnerContext.configuration.stateMinimalWidth);
@@ -153,26 +154,22 @@ public class StateNameProxy implements EditorProxy
 				if (width < w) width = w;
 				if (height < h) height = h;
 			}
-			bounds = new Rectangle2D.Float(x, y, width, height);
+			bounds = new GraphExtension.PosAndBounds(new Point2D.Float(x, y), new Rectangle2D.Float(x, y, width, height));
 		}
-		else
-		{
-			v.setPreferredDimension(bounds.width, bounds.height);
-		}
-		v.setPosition(bounds.x, bounds.y);
+		v.setAbsolutePosition(bounds.position, bounds.bounds);
 
 		Rectangle frame = new Rectangle(
-				0, 0, bounds.width, bounds.height, stateOuterContext.configuration.stateCornerArcSize, stateOuterContext.configuration,
-				stateOuterContext.normal);
+				0, 0, bounds.bounds.width, bounds.bounds.height, stateOuterContext.configuration.stateCornerArcSize, stateOuterContext.configuration,
+				stateOuterContext.style, VisualFlags.ALWAYS);
 
 		frame.setFill(true);
 		v.addDrawingPrimitive(frame);
 
-		Line separator = new Line(0, fh * 1.5f, bounds.width, fh * 1.5f
-				, stateInnerContext.configuration, stateInnerContext.normal);
+		Line separator = new Line(0, fh * 1.5f, bounds.bounds.width, fh * 1.5f
+				, stateInnerContext.configuration, stateInnerContext.style, VisualFlags.ALWAYS);
 		v.addDrawingPrimitive(separator);
 
-		Text label = new Text(0, 0, state.name, stateInnerContext.configuration, stateInnerContext.normal);
+		Text label = new Text(0, 0, state.name, stateInnerContext.configuration, stateInnerContext.style, VisualFlags.ALWAYS);
 		label.setEditable(true);
 		label.setAlignment(Alignment.Center);
 		label.setInsets(fh * 0.25f, 0, 0, 0);
