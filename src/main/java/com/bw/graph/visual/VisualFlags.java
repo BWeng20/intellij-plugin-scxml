@@ -8,10 +8,10 @@ public interface VisualFlags
 	/**
 	 * Draw always.
 	 */
-	final static int ALWAYS = 1;
+	int ALWAYS = 1;
 
 	/**
 	 * Draw if selected.
 	 */
-	final static int SELECTED = 2;
+	int SELECTED = 2;
 }
