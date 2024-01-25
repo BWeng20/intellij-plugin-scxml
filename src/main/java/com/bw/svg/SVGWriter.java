@@ -7,6 +7,7 @@ import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.PathIterator;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.Writer;
 
@@ -318,5 +319,19 @@ public class SVGWriter extends XmlWriter
 				floatToString(box.y, precisionFactor) + " " +
 				floatToString(box.width, precisionFactor) + " " +
 				floatToString(box.height, precisionFactor);
+	}
+
+	/**
+	 * Create a point string from the point.
+	 *
+	 * @param pt              The point.
+	 * @param precisionFactor The precision factor.
+	 * @return The point string
+	 * @see #floatToString(float, float)
+	 */
+	public static String toPoint(Point2D.Float pt, float precisionFactor)
+	{
+		return floatToString(pt.x, precisionFactor) + " " +
+				floatToString(pt.y, precisionFactor);
 	}
 }
