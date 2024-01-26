@@ -9,6 +9,8 @@ import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Used to visualize connectors in different modes.
@@ -16,13 +18,13 @@ import java.awt.geom.Point2D;
 public class ConnectorVisual extends Visual implements PathControlPoint
 {
 
-	private DrawPrimitive primitive;
-	private float radius;
-	private EdgeVisual edgeVisual;
+	private DrawPrimitive _primitive;
+	private float _radius;
+	private EdgeVisual _edgeVisual;
 
-	private Point2D.Float relativePosition = new Point2D.Float(0, 0);
+	private Point2D.Float _relativePosition = new Point2D.Float(0, 0);
 
-	private Visual parent;
+	private Visual _parent;
 
 	/**
 	 * Creates a new Primitive.
@@ -34,9 +36,9 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	public ConnectorVisual(Visual parent, DrawContext context, int flags)
 	{
 		super(null, context);
-		this.parent = parent;
-		this.radius = context.configuration.connectorSize;
-		this.primitive = new Circle(radius, radius, radius, context.configuration, context.style, flags);
+		this._parent = parent;
+		this._radius = context._configuration.connectorSize;
+		this._primitive = new Circle(_radius, _radius, _radius, context._configuration, context._style, flags);
 	}
 
 	/**
@@ -46,9 +48,18 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	 */
 	public void setEdgeVisual(EdgeVisual edgeVisual)
 	{
-		this.edgeVisual = edgeVisual;
+		this._edgeVisual = edgeVisual;
 	}
 
+	/**
+	 * Get parent state.
+	 *
+	 * @return The parent state or null.
+	 */
+	public Visual getParent()
+	{
+		return _parent;
+	}
 
 	/**
 	 * Connectors don't use relative positions or insets.
@@ -58,21 +69,21 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	@Override
 	public void draw(Graphics2D g2)
 	{
-		if ((parent != null && parent.isFlagSet(VisualFlags.SELECTED)) ||
-				(edgeVisual != null && edgeVisual.isFlagSet(VisualFlags.SELECTED)))
+		if ((_parent != null && _parent.isFlagSet(VisualFlags.SELECTED)) ||
+				(_edgeVisual != null && _edgeVisual.isFlagSet(VisualFlags.SELECTED)))
 		{
-			Point2D.Float pt = parent.getAbsolutePosition();
+			Point2D.Float pt = _parent.getAbsolutePosition();
 
-			pt.x += relativePosition.x;
-			pt.y += relativePosition.y;
+			pt.x += _relativePosition.x;
+			pt.y += _relativePosition.y;
 
-			absoluteBounds.x = pt.x;
-			absoluteBounds.y = pt.y;
+			_absoluteBounds.x = pt.x;
+			_absoluteBounds.y = pt.y;
 
 			g2.translate(pt.x, pt.y);
 			try
 			{
-				primitive.draw(g2);
+				_primitive.draw(g2);
 			}
 			finally
 			{
@@ -96,11 +107,11 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	{
 		Point2D.Float pt = new Point2D.Float();
 		getAbsolutePosition(pt);
-		if (primitive.getBounds2D(pt, null)
-					 .contains(x, y))
+		if (_primitive.getBounds2D(pt, null)
+					  .contains(x, y))
 		{
-			primitive.setVisual(this);
-			return primitive;
+			_primitive.setVisual(this);
+			return _primitive;
 		}
 		else
 			return null;
@@ -110,11 +121,11 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	@Override
 	protected void updateBounds(Graphics2D graphics)
 	{
-		Dimension2DFloat dim = primitive.getDimension(graphics);
-		absoluteBounds.x = absolutePosition.x;
-		absoluteBounds.y = absolutePosition.y;
-		absoluteBounds.width = dim.width;
-		absoluteBounds.height = dim.height;
+		Dimension2DFloat dim = _primitive.getDimension(graphics);
+		_absoluteBounds.x = _absolutePosition.x;
+		_absoluteBounds.y = _absolutePosition.y;
+		_absoluteBounds.width = dim.width;
+		_absoluteBounds.height = dim.height;
 	}
 
 	@Override
@@ -127,24 +138,21 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	public void dispose()
 	{
 		super.dispose();
-		primitive = null;
+		_primitive = null;
 	}
 
 	@Override
 	public void getControlPosition(Point2D.Float pt)
 	{
-		parent.getAbsolutePosition(pt);
-		pt.x += relativePosition.x + radius;
-		pt.y += relativePosition.y + radius;
+		_parent.getAbsolutePosition(pt);
+		pt.x += _relativePosition.x + _radius;
+		pt.y += _relativePosition.y + _radius;
 	}
 
 	@Override
-	public <T extends DrawPrimitive> T getPrimitiveOf(Class<T> primitiveClass)
+	public List<DrawPrimitive> getPrimitives()
 	{
-		if (primitiveClass.isAssignableFrom(primitive.getClass()))
-			return (T) primitive;
-		else
-			return null;
+		return Collections.singletonList(_primitive);
 	}
 
 	/**
@@ -155,8 +163,8 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	 */
 	public void setRelativePosition(float x, float y)
 	{
-		relativePosition.x = x;
-		relativePosition.y = y;
+		_relativePosition.x = x;
+		_relativePosition.y = y;
 		resetBounds();
 	}
 }

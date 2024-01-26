@@ -43,32 +43,32 @@ public class Path extends DrawPrimitive
 	/**
 	 * Edge mode.
 	 */
-	protected Mode mode = Mode.Quad;
+	protected Mode _mode = Mode.Quad;
 
 	/**
 	 * Control points.
 	 */
-	protected List<PathControlPoint> controlPoints = new ArrayList<>();
+	protected List<PathControlPoint> _controlPoints = new ArrayList<>();
 
 	/**
 	 * The edge path, created during draw.
 	 */
-	protected Path2D path2D;
+	protected Path2D _path2D;
 
 	/**
 	 * The buffered translated arrow shape for the path end.
 	 */
-	protected Shape arrowEndTranslated;
+	protected Shape _arrowEndTranslated;
 
 	/**
 	 * Buffered control point coordinates.
 	 */
-	protected Point2D.Float[] coordinates = new Point2D.Float[0];
+	protected Point2D.Float[] _coordinates = new Point2D.Float[0];
 
 	/**
 	 * Reused arrow path template.
 	 */
-	protected Path2D arrow = new Path2D.Float();
+	protected Path2D _arrow = new Path2D.Float();
 
 	/**
 	 * Creates a new Path Primitive.<br>
@@ -83,10 +83,10 @@ public class Path extends DrawPrimitive
 	{
 		super(0, 0, config, style, flags);
 
-		arrow.moveTo(-2f * config.connectorSize, -config.connectorSize);
-		arrow.lineTo(0, 0);
-		arrow.lineTo(-2f * config.connectorSize, config.connectorSize);
-		arrow.closePath();
+		_arrow.moveTo(-2f * config.connectorSize, -config.connectorSize);
+		_arrow.lineTo(0, 0);
+		_arrow.lineTo(-2f * config.connectorSize, config.connectorSize);
+		_arrow.closePath();
 	}
 
 	/**
@@ -100,69 +100,69 @@ public class Path extends DrawPrimitive
 	public void draw(Graphics2D g2)
 	{
 		Point2D.Float pt = new Point2D.Float();
-		boolean recreatePath = path2D == null;
+		boolean recreatePath = _path2D == null;
 
-		final int LI = coordinates.length - 1;
+		final int LI = _coordinates.length - 1;
 
 		for (int i = 0; i <= LI; ++i)
 		{
 			if (recreatePath)
 			{
-				controlPoints.get(i)
-							 .getControlPosition(coordinates[i]);
+				_controlPoints.get(i)
+							  .getControlPosition(_coordinates[i]);
 			}
 			else
 			{
-				controlPoints.get(i)
-							 .getControlPosition(pt);
-				if (pt.x != coordinates[i].x || pt.y != coordinates[i].y)
+				_controlPoints.get(i)
+							  .getControlPosition(pt);
+				if (pt.x != _coordinates[i].x || pt.y != _coordinates[i].y)
 				{
 					recreatePath = true;
-					coordinates[i].x = pt.x;
-					coordinates[i].y = pt.y;
+					_coordinates[i].x = pt.x;
+					_coordinates[i].y = pt.y;
 				}
 			}
 		}
 		if (recreatePath)
 		{
-			path2D = new Path2D.Float();
-			arrowEndTranslated = null;
+			_path2D = new Path2D.Float();
+			_arrowEndTranslated = null;
 
 			if (LI >= 0)
 			{
-				path2D.moveTo(coordinates[0].x, coordinates[0].y);
+				_path2D.moveTo(_coordinates[0].x, _coordinates[0].y);
 				if (LI > 0)
 				{
 					for (int i = 1; i <= LI; ++i)
 					{
-						switch (mode)
+						switch (_mode)
 						{
 							case Quad ->
 							{
-								float cx = coordinates[i - 1].x + (coordinates[i].x - coordinates[i - 1].x) / 2f;
-								float cy = coordinates[i].y;
-								path2D.quadTo(cx, cy, coordinates[i].x, coordinates[i].y);
+								float cx = _coordinates[i - 1].x + (_coordinates[i].x - _coordinates[i - 1].x) / 2f;
+								float cy = _coordinates[i].y;
+								_path2D.quadTo(cx, cy, _coordinates[i].x, _coordinates[i].y);
 							}
-							case Straight -> path2D.lineTo(coordinates[i].x, coordinates[i].y);
+							case Straight -> _path2D.lineTo(_coordinates[i].x, _coordinates[i].y);
 						}
 					}
-					ShapeHelper sh = new ShapeHelper(path2D);
-					var pos = sh.pointAtLength(sh.getOutlineLength() - config.connectorSize);
+					ShapeHelper sh = new ShapeHelper(_path2D);
+					var pos = sh.pointAtLength(sh.getOutlineLength() - _config.connectorSize);
 					double theta = pos == null ? 0 : pos.angle_;
 
 					AffineTransform aft = new AffineTransform();
-					aft.translate(coordinates[LI].x, coordinates[LI].y);
+					aft.translate(_coordinates[LI].x, _coordinates[LI].y);
 					aft.rotate(theta);
-					arrowEndTranslated = aft.createTransformedShape(arrow);
+					_arrowEndTranslated = aft.createTransformedShape(_arrow);
 				}
 			}
 		}
 
-		g2.setStroke(style.lineStroke);
-		g2.setPaint(style.linePaint);
-		g2.draw(path2D);
-		if (arrowEndTranslated != null)
-			g2.fill(arrowEndTranslated);
+		g2.setStroke(_style.lineStroke);
+		g2.setPaint(_style.linePaint);
+		g2.draw(_path2D);
+		if (_arrowEndTranslated != null)
+			g2.fill(_arrowEndTranslated);
 	}
 
 	@Override
@@ -180,55 +180,55 @@ public class Path extends DrawPrimitive
 	@Override
 	protected void toSVGIntern(SVGWriter sw, Graphics2D g2, Point2D.Float pos)
 	{
-		final int LI = coordinates.length - 1;
+		final int LI = _coordinates.length - 1;
 		for (int i = 0; i <= LI; ++i)
 		{
-			controlPoints.get(i)
-						 .getControlPosition(coordinates[i]);
+			_controlPoints.get(i)
+						  .getControlPosition(_coordinates[i]);
 		}
 		StringBuilder pathB = new StringBuilder();
 		pathB.append('M');
-		appendPoint(pathB, coordinates[0]);
+		appendPoint(pathB, _coordinates[0]);
 
 		Point2D.Float pt = new Point2D.Float();
 		for (int i = 1; i <= LI; ++i)
 		{
-			switch (mode)
+			switch (_mode)
 			{
 				case Quad ->
 				{
-					pt.x = coordinates[i - 1].x + (coordinates[i].x - coordinates[i - 1].x) / 2f;
-					pt.y = coordinates[i].y;
+					pt.x = _coordinates[i - 1].x + (_coordinates[i].x - _coordinates[i - 1].x) / 2f;
+					pt.y = _coordinates[i].y;
 					pathB.append('Q');
 					appendPoint(pathB, pt);
 					pathB.append(' ');
-					appendPoint(pathB, coordinates[i]);
+					appendPoint(pathB, _coordinates[i]);
 				}
 				case Straight ->
 				{
 					pathB.append('L');
-					appendPoint(pathB, coordinates[i]);
+					appendPoint(pathB, _coordinates[i]);
 				}
 			}
 		}
 		sw.startElement(SVGElement.g);
 		sw.startElement(SVGElement.path);
 		sw.writeAttribute(SVGAttribute.Fill, (Paint) null);
-		sw.writeAttribute(SVGAttribute.Stroke, style.linePaint);
-		sw.writeStrokeWidth(style.getStrokeWidth());
+		sw.writeAttribute(SVGAttribute.Stroke, _style.linePaint);
+		sw.writeStrokeWidth(_style.getStrokeWidth());
 		sw.writeAttribute(SVGAttribute.D, pathB.toString());
 		sw.endElement();
-		sw.writeShape(arrowEndTranslated, 1, style.linePaint, null, 0);
+		sw.writeShape(_arrowEndTranslated, 1, _style.linePaint, null, 0);
 		sw.endElement();
 	}
 
-	static final float precisionFactor = 10 * 10 * 10;
+	static final float _precisionFactor = 10 * 10 * 10;
 
 	private void appendPoint(StringBuilder pathB, Point2D.Float pt)
 	{
-		pathB.append(SVGWriter.floatToString(pt.x, precisionFactor))
+		pathB.append(SVGWriter.floatToString(pt.x, _precisionFactor))
 			 .append(' ')
-			 .append(SVGWriter.floatToString(pt.y, precisionFactor));
+			 .append(SVGWriter.floatToString(pt.y, _precisionFactor));
 	}
 
 	/**
@@ -238,12 +238,12 @@ public class Path extends DrawPrimitive
 	 */
 	public void addPoint(PathControlPoint pt)
 	{
-		controlPoints.add(pt);
-		path2D = null;
+		_controlPoints.add(pt);
+		_path2D = null;
 
-		coordinates = new Point2D.Float[controlPoints.size()];
-		for (int i = 0; i < coordinates.length; ++i)
-			coordinates[i] = new Point2D.Float(0, 0);
+		_coordinates = new Point2D.Float[_controlPoints.size()];
+		for (int i = 0; i < _coordinates.length; ++i)
+			_coordinates[i] = new Point2D.Float(0, 0);
 	}
 
 	/**
@@ -254,9 +254,9 @@ public class Path extends DrawPrimitive
 	 */
 	public float getDistanceTo(Point2D.Float pt)
 	{
-		if (pt != null && coordinates.length > 1)
+		if (pt != null && _coordinates.length > 1)
 		{
-			return (float) pt.distance(Geometry.getClosestPointOnShape(pt, path2D, 1));
+			return (float) pt.distance(Geometry.getClosestPointOnShape(pt, _path2D, 1));
 		}
 		return Float.MAX_VALUE;
 	}

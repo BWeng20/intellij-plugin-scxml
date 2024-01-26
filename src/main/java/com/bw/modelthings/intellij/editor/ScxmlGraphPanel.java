@@ -9,8 +9,10 @@ import com.bw.graph.editor.InteractionAdapter;
 import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.visual.Visual;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
+import com.bw.modelthings.fsm.model.State;
 import com.bw.modelthings.fsm.ui.GraphExtension;
 import com.bw.modelthings.fsm.ui.GraphFactory;
+import com.bw.modelthings.fsm.ui.StateNameProxy;
 import com.bw.modelthings.intellij.settings.Configuration;
 import com.bw.modelthings.intellij.settings.PersistenceService;
 import com.intellij.openapi.Disposable;
@@ -73,6 +75,11 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	protected GraphPane pane = new GraphPane();
 
 	/**
+	 * The FSM.
+	 */
+	protected FiniteStateMachine fsm;
+
+	/**
 	 * Style for state outline.
 	 */
 	protected DrawStyle stateOutlineStyle = new DrawStyle();
@@ -116,6 +123,11 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	public void dispose()
 	{
 		GraphLafManagerListener.removeGraphLafListener(lafListener);
+		if (fsm != null)
+		{
+			fsm.dispose();
+			fsm = null;
+		}
 		pane.dispose();
 	}
 
@@ -157,6 +169,58 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	}
 
 	/**
+	 * Get the state of the currently selected visual.
+	 *
+	 * @return The state or null.
+	 */
+	public State getSelectedState()
+	{
+		Visual v = pane.getSelectedVisual();
+		if (v != null)
+		{
+			StateNameProxy stateProxy = v.getProxyOf(StateNameProxy.class);
+			if (stateProxy != null)
+			{
+				return stateProxy.state;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Remove a state.
+	 *
+	 * @param state           The state.
+	 * @param keepChildStates If true child-states and internal transitions are moved to parent-state.
+	 */
+	public void removeState(State state, boolean keepChildStates)
+	{
+		if (fsm != null)
+		{
+			List<State> removedStates = fsm.remove(state, keepChildStates);
+		}
+	}
+
+	/**
+	 * Extracts the name of the state behind the visual.
+	 *
+	 * @param stateVisual The state visual.
+	 * @return The name or null - if the visual is no state or if the name is not set.
+	 */
+	public String getNameOfState(Visual stateVisual)
+	{
+		if (stateVisual != null)
+		{
+			StateNameProxy stateProxy = stateVisual.getProxyOf(StateNameProxy.class);
+			if (stateProxy != null)
+			{
+				return stateProxy.state.name;
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Get the graph configuration.
 	 *
 	 * @return The graph configuration.
@@ -165,7 +229,6 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	{
 		return pane.getGraphConfiguration();
 	}
-
 
 	/**
 	 * Breadcrumbs implementation to show the State hierarchy.
@@ -260,7 +323,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		{
 			StateCrumb sc = (StateCrumb) crumb;
 			if (sc != null)
-				pane.setModel(ModelPrimitive.getSubModel(sc.state));
+				pane.setModel(ModelPrimitive.getChildModel(sc.state));
 		});
 
 		// add(bc, BorderLayout.NORTH);
@@ -400,6 +463,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 			root.dispose();
 			root = null;
 		}
+		this.fsm = fsm;
 		VisualModel rootModel =
 				factory.createVisualModel(fsm, (Graphics2D) pane.getGraphics(),
 						startContext, stateOutlineContext, stateInnerContext, edgeContext);
@@ -409,7 +473,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		{
 			root = rootModel.getVisuals()
 							.get(0);
-			pane.setModel(ModelPrimitive.getSubModel(root));
+			pane.setModel(ModelPrimitive.getChildModel(root));
 		}
 		else
 		{

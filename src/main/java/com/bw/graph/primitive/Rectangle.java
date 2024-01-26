@@ -37,9 +37,9 @@ public class Rectangle extends ShapePrimitiveBase
 		super(x, y, config, style, flags);
 
 		if (arcSize == 0)
-			shape = new Rectangle2D.Float(0, 0, width, height);
+			_shape = new Rectangle2D.Float(0, 0, width, height);
 		else
-			shape = new RoundRectangle2D.Float(0, 0, width, height, arcSize, arcSize);
+			_shape = new RoundRectangle2D.Float(0, 0, width, height, arcSize, arcSize);
 	}
 
 	@Override
@@ -48,18 +48,18 @@ public class Rectangle extends ShapePrimitiveBase
 		sw.startElement(SVGElement.rect);
 		sw.writeAttribute(SVGAttribute.X, pos.x);
 		sw.writeAttribute(SVGAttribute.Y, pos.y);
-		sw.writeAttribute(SVGAttribute.Width, (float) shape.getBounds2D()
-														   .getWidth());
-		sw.writeAttribute(SVGAttribute.Height, (float) shape.getBounds2D()
-															.getHeight());
-		if (shape instanceof RoundRectangle2D.Float)
-			sw.writeAttribute(SVGAttribute.Rx, ((RoundRectangle2D.Float) shape).arcwidth / 2f);
+		sw.writeAttribute(SVGAttribute.Width, (float) _shape.getBounds2D()
+															.getWidth());
+		sw.writeAttribute(SVGAttribute.Height, (float) _shape.getBounds2D()
+															 .getHeight());
+		if (_shape instanceof RoundRectangle2D.Float)
+			sw.writeAttribute(SVGAttribute.Rx, ((RoundRectangle2D.Float) _shape).arcwidth / 2f);
 
 		sw.startStyle();
 		if (isFill())
-			sw.writeAttribute(SVGAttribute.Fill, style.fillPaint);
-		sw.writeAttribute(SVGAttribute.Stroke, style.linePaint);
-		sw.writeStrokeWidth(style.getStrokeWidth());
+			sw.writeAttribute(SVGAttribute.Fill, _style.fillPaint);
+		sw.writeAttribute(SVGAttribute.Stroke, _style.linePaint);
+		sw.writeStrokeWidth(_style.getStrokeWidth());
 		sw.endElement();
 	}
 

@@ -1,5 +1,7 @@
 package com.bw.modelthings.fsm.parser;
 
+import java.util.regex.Pattern;
+
 /**
  * Static interface to provide static text, in this case the XML tags.
  */
@@ -616,5 +618,24 @@ public interface ScxmlTags
 	 * Main SCXML Namespace.
 	 */
 	String NS_SCXML = "http://www.w3.org/2005/07/scxml";
+
+	/**
+	 * Regular Expression to split State Specifications.
+	 */
+	Pattern NameListSplitRegExp = Pattern.compile("(?U)\\s");
+
+	/**
+	 * Splits a white-space-separated list.
+	 *
+	 * @param nameList The name list.
+	 * @return The array, possibly empty but never null.
+	 */
+	static String[] splitNameList(String nameList)
+	{
+		if (nameList != null)
+			return NameListSplitRegExp.split(nameList, 0);
+		else
+			return new String[0];
+	}
 
 }

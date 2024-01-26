@@ -18,6 +18,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,14 +30,14 @@ public class GenericPrimitiveVisual extends Visual
 	/**
 	 * The drawing primitives.
 	 */
-	protected List<DrawPrimitive> primitives = new LinkedList<>();
+	protected List<DrawPrimitive> _primitives = new LinkedList<>();
 
-	private BufferedImage buffer;
+	private BufferedImage _buffer;
 
 	/**
 	 * Statistical counter for double buffer creation.
 	 */
-	private long buffersRecreated = 0;
+	private long _buffersRecreated = 0;
 
 	/**
 	 * Create a new empty visual.
@@ -49,7 +50,7 @@ public class GenericPrimitiveVisual extends Visual
 		super(id, context);
 	}
 
-	private PrimitiveConsumer drawWithAlignment = (primitive, g2, offset) ->
+	private PrimitiveConsumer _drawWithAlignment = (primitive, g2, offset) ->
 	{
 		if ((getFlags() & primitive.getFlags()) != 0)
 		{
@@ -67,10 +68,10 @@ public class GenericPrimitiveVisual extends Visual
 	@Override
 	protected void drawRelative(Graphics2D g2)
 	{
-		if (absoluteBounds.width < 0)
+		if (_absoluteBounds.width < 0)
 			updateBounds(g2);
 
-		final GraphConfiguration graphConfiguration = context.configuration;
+		final GraphConfiguration graphConfiguration = _context._configuration;
 		final GraphicsConfiguration graphicsConfiguration = g2.getDeviceConfiguration();
 
 		if (graphConfiguration.buffered && graphicsConfiguration.getDevice()
@@ -83,30 +84,30 @@ public class GenericPrimitiveVisual extends Visual
 
 			// If the actual bounds starts not on base position, we need to translate
 			// to get inside the buffer.
-			float offsetX = inset + absolutePosition.x - absoluteBounds.x;
-			float offsetY = inset + absolutePosition.y - absoluteBounds.y;
+			float offsetX = inset + _absolutePosition.x - _absoluteBounds.x;
+			float offsetY = inset + _absolutePosition.y - _absoluteBounds.y;
 
 
 			float scaleX = (float) g2.getTransform()
 									 .getScaleX();
 			float scaleY = (float) g2.getTransform()
 									 .getScaleY();
-			if (buffer == null || offscreenBuffersInvalid)
+			if (_buffer == null || _offscreenBuffersInvalid)
 			{
-				float width = absoluteBounds.width;
-				float height = absoluteBounds.height;
+				float width = _absoluteBounds.width;
+				float height = _absoluteBounds.height;
 
 				boolean needsToBeCleared = true;
 
 				int scaledBoundsWidth = (int) Math.ceil((width + 2 * inset) * scaleX);
 				int scaledBoundsHeight = (int) Math.ceil((height + 2 * inset) * scaleY);
-				if (buffer == null || buffer.getWidth() != scaledBoundsWidth || buffer.getHeight() != scaledBoundsHeight)
+				if (_buffer == null || _buffer.getWidth() != scaledBoundsWidth || _buffer.getHeight() != scaledBoundsHeight)
 				{
-					++buffersRecreated;
-					buffer = ImageUtil.createCompatibleImage(graphicsConfiguration, scaledBoundsWidth, scaledBoundsHeight);
+					++_buffersRecreated;
+					_buffer = ImageUtil.createCompatibleImage(graphicsConfiguration, scaledBoundsWidth, scaledBoundsHeight);
 					needsToBeCleared = false;
 				}
-				Graphics2D g2Buffered = buffer.createGraphics();
+				Graphics2D g2Buffered = _buffer.createGraphics();
 				try
 				{
 					if (needsToBeCleared)
@@ -124,7 +125,7 @@ public class GenericPrimitiveVisual extends Visual
 
 					g2Buffered.translate(offsetX, offsetY);
 
-					forAllPrimitives(g2Buffered, drawWithAlignment,
+					forAllPrimitives(g2Buffered, _drawWithAlignment,
 							new Dimension2DFloat(width, height));
 				}
 				finally
@@ -138,7 +139,7 @@ public class GenericPrimitiveVisual extends Visual
 				// Scale to 1:1
 				g2.scale(1 / scaleX, 1 / scaleY);
 				// Draw to "scaled" position but with native pixels sizes.
-				g2.drawImage(buffer, null, (int) (-offsetX * scaleX), (int) (-offsetY * scaleY));
+				g2.drawImage(_buffer, null, (int) (-offsetX * scaleX), (int) (-offsetY * scaleY));
 			}
 			finally
 			{
@@ -147,7 +148,7 @@ public class GenericPrimitiveVisual extends Visual
 		}
 		else
 		{
-			forAllPrimitives(g2, drawWithAlignment, null);
+			forAllPrimitives(g2, _drawWithAlignment, null);
 		}
 	}
 
@@ -160,7 +161,7 @@ public class GenericPrimitiveVisual extends Visual
 		DrawPrimitive p = null;
 		Point2D.Float alignedPos = new Point2D.Float();
 
-		for (DrawPrimitive pw : primitives)
+		for (DrawPrimitive pw : _primitives)
 		{
 			if (pw.isEditable())
 			{
@@ -181,7 +182,7 @@ public class GenericPrimitiveVisual extends Visual
 	}
 
 	/**
-	 * Updates {@link #absoluteBounds}.
+	 * Updates {@link #_absoluteBounds}.
 	 *
 	 * @param graphics The graphics context to use for calculations.
 	 */
@@ -192,16 +193,16 @@ public class GenericPrimitiveVisual extends Visual
 		{
 			Rectangle2D.Float localBounds = new Rectangle2D.Float(Float.MAX_VALUE, Float.MAX_VALUE, 0, 0);
 
-			if (primitives.isEmpty())
+			if (_primitives.isEmpty())
 			{
 				localBounds.x = 0;
 				localBounds.y = 0;
 			}
 			else
 			{
-				for (DrawPrimitive primitive : primitives)
+				for (DrawPrimitive primitive : _primitives)
 				{
-					Rectangle2D.Float primitiveBounds = primitive.getBounds2D(this.absolutePosition.x, this.absolutePosition.y, graphics);
+					Rectangle2D.Float primitiveBounds = primitive.getBounds2D(this._absolutePosition.x, this._absolutePosition.y, graphics);
 					switch (primitive.getAlignment())
 					{
 						case Left:
@@ -227,17 +228,17 @@ public class GenericPrimitiveVisual extends Visual
 						localBounds.height = y2 - localBounds.y;
 				}
 			}
-			this.absoluteBounds.x = localBounds.x;
-			this.absoluteBounds.y = localBounds.y;
-			this.absoluteBounds.width = localBounds.width;
-			this.absoluteBounds.height = localBounds.height;
+			this._absoluteBounds.x = localBounds.x;
+			this._absoluteBounds.y = localBounds.y;
+			this._absoluteBounds.width = localBounds.width;
+			this._absoluteBounds.height = localBounds.height;
 		}
 		else
 		{
-			this.absoluteBounds.x = absolutePosition.x;
-			this.absoluteBounds.y = absolutePosition.y;
-			this.absoluteBounds.width = dim.width;
-			this.absoluteBounds.height = dim.height;
+			this._absoluteBounds.x = _absolutePosition.x;
+			this._absoluteBounds.y = _absolutePosition.y;
+			this._absoluteBounds.width = dim.width;
+			this._absoluteBounds.height = dim.height;
 		}
 	}
 
@@ -250,8 +251,8 @@ public class GenericPrimitiveVisual extends Visual
 	 */
 	public void addDrawingPrimitive(DrawPrimitive primitive)
 	{
-		primitives.remove(primitive);
-		primitives.add(primitive);
+		_primitives.remove(primitive);
+		_primitives.add(primitive);
 		resetBounds();
 		invalidateBuffers();
 	}
@@ -261,7 +262,7 @@ public class GenericPrimitiveVisual extends Visual
 	 */
 	public void removeAllDrawingPrimitives()
 	{
-		primitives.clear();
+		_primitives.clear();
 		resetBounds();
 		invalidateBuffers();
 	}
@@ -270,7 +271,7 @@ public class GenericPrimitiveVisual extends Visual
 	public void invalidateBuffers()
 	{
 		super.invalidateBuffers();
-		for (DrawPrimitive primitive : primitives)
+		for (DrawPrimitive primitive : _primitives)
 		{
 			primitive.repaint();
 		}
@@ -324,7 +325,7 @@ public class GenericPrimitiveVisual extends Visual
 	 */
 	protected void forAllPrimitives(Graphics2D g2, PrimitiveConsumer consumer)
 	{
-		if (absoluteBounds.width < 0)
+		if (_absoluteBounds.width < 0)
 			updateBounds(g2);
 
 		forAllPrimitives(g2, consumer, null);
@@ -341,11 +342,11 @@ public class GenericPrimitiveVisual extends Visual
 	protected void forAllPrimitives(Graphics2D g2, PrimitiveConsumer consumer, Dimension2DFloat dimension)
 	{
 		if (dimension == null)
-			dimension = new Dimension2DFloat(absoluteBounds);
+			dimension = new Dimension2DFloat(_absoluteBounds);
 
 		final Point2D.Float pt = new Point2D.Float();
 		final Point2D.Float zero = new Point2D.Float();
-		for (DrawPrimitive primitive : primitives)
+		for (DrawPrimitive primitive : _primitives)
 		{
 			// Optimized to spare the call to getAlignmentOffset if not needed.
 			switch (primitive.getAlignment())
@@ -369,15 +370,15 @@ public class GenericPrimitiveVisual extends Visual
 	@Override
 	public boolean isModified()
 	{
-		if (dirty)
+		if (_dirty)
 			return true;
 		else
 		{
-			for (DrawPrimitive primitive : primitives)
+			for (DrawPrimitive primitive : _primitives)
 			{
 				if (primitive.isModified())
 				{
-					dirty = true;
+					_dirty = true;
 					return true;
 				}
 			}
@@ -390,22 +391,18 @@ public class GenericPrimitiveVisual extends Visual
 	public void dispose()
 	{
 		super.dispose();
-		buffer = null;
-		for (DrawPrimitive primitive : primitives)
+		_buffer = null;
+		for (DrawPrimitive primitive : _primitives)
 		{
 			primitive.dispose();
 		}
-		primitives.clear();
+		_primitives.clear();
 	}
 
-	public <T extends DrawPrimitive> T getPrimitiveOf(Class<T> primitiveClass)
+	@Override
+	public List<DrawPrimitive> getPrimitives()
 	{
-		for (DrawPrimitive primitive : primitives)
-		{
-			if (primitiveClass.isAssignableFrom(primitive.getClass()))
-				return (T) primitive;
-		}
-		return null;
+		return Collections.unmodifiableList(_primitives);
 	}
 
 	@Override
@@ -414,7 +411,7 @@ public class GenericPrimitiveVisual extends Visual
 		super.setModified(modified);
 		if (!modified)
 		{
-			for (DrawPrimitive primitive : primitives)
+			for (DrawPrimitive primitive : _primitives)
 				primitive.setModified(false);
 		}
 	}

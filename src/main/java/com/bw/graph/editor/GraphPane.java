@@ -30,32 +30,32 @@ public class GraphPane extends JComponent
 	/**
 	 * Graph configuration
 	 */
-	private GraphConfiguration configuration = new GraphConfiguration();
+	private GraphConfiguration _configuration = new GraphConfiguration();
 
 	/**
 	 * Listeners.
 	 */
-	private final LinkedList<InteractionListener> listeners = new LinkedList<>();
+	private final LinkedList<InteractionListener> _listeners = new LinkedList<>();
 
 	/**
 	 * Queue of parent states we had entered.
 	 */
-	protected LinkedList<Visual> parents = new LinkedList<>();
+	protected LinkedList<Visual> _parents = new LinkedList<>();
 
 	/**
 	 * Milliseconds needed of last paint cycle.
 	 */
-	private long lastPaintMS;
+	private long _lastPaintMS;
 
 	/**
-	 * If true {@link #lastPaintMS} is shown on screen for debugging.
+	 * If true {@link #_lastPaintMS} is shown on screen for debugging.
 	 */
-	private boolean showDrawSpeed = true;
+	private boolean _showDrawSpeed = true;
 
 	/**
 	 * Listen to key events.
 	 */
-	protected KeyAdapter keyAdapter = new KeyAdapter()
+	protected KeyAdapter _keyAdapter = new KeyAdapter()
 	{
 		@Override
 		public void keyPressed(KeyEvent e)
@@ -67,7 +67,7 @@ public class GraphPane extends JComponent
 	/**
 	 * Focus listener used to control editors.
 	 */
-	protected FocusListener editorFocusAdapter = new FocusAdapter()
+	protected FocusListener _editorFocusAdapter = new FocusAdapter()
 	{
 		@Override
 		public void focusLost(FocusEvent e)
@@ -80,7 +80,7 @@ public class GraphPane extends JComponent
 	/**
 	 * Key adapter, used to control editors.
 	 */
-	protected KeyAdapter editorKeyAdapter = new KeyAdapter()
+	protected KeyAdapter _editorKeyAdapter = new KeyAdapter()
 	{
 		@Override
 		public void keyTyped(KeyEvent e)
@@ -104,22 +104,22 @@ public class GraphPane extends JComponent
 	/**
 	 * The visual that is currently dragged or null.
 	 */
-	private Visual draggingVisual;
+	private Visual _draggingVisual;
 
 	/**
 	 * The last coordinate of a drag-event.
 	 */
-	private final Point lastDragPoint = new Point(0, 0);
+	private final Point _lastDragPoint = new Point(0, 0);
 
 	/**
 	 * Current visual the mouse is over.
 	 */
-	private Visual mouseOverVisual;
+	private Visual _mouseOverVisual;
 
 	/**
 	 * Listens to clicks and drags on visuals.
 	 */
-	protected MouseListener mouseHandler = new MouseListener()
+	protected MouseListener _mouseHandler = new MouseListener()
 	{
 		@Override
 		public void mouseEntered(MouseEvent e)
@@ -141,11 +141,11 @@ public class GraphPane extends JComponent
 			Visual clicked = getVisualAt(x, y);
 			if (clicked != null && e.getClickCount() > 1)
 			{
-				x -= offsetX;
-				y -= offsetY;
+				x -= _offsetX;
+				y -= _offsetY;
 
-				x /= configuration.scale;
-				y /= configuration.scale;
+				x /= _configuration.scale;
+				y /= _configuration.scale;
 
 				DrawPrimitive editablePrimitive = clicked.getEditablePrimitiveAt(x, y);
 				if (editablePrimitive == null)
@@ -156,8 +156,8 @@ public class GraphPane extends JComponent
 						Rectangle2D.Float subModelBox = clicked.getBoundsOfPrimitive(null, modelPrimitive);
 						if (subModelBox != null && subModelBox.contains(x, y))
 						{
-							parents.add(clicked);
-							setModel(modelPrimitive.getSubModel());
+							_parents.add(clicked);
+							setModel(modelPrimitive.getChildModel());
 							fireHierarchyChanged();
 							return;
 						}
@@ -170,17 +170,17 @@ public class GraphPane extends JComponent
 		@Override
 		public void mousePressed(MouseEvent e)
 		{
-			draggingVisual = getVisualAt(lastDragPoint.x = e.getX(), lastDragPoint.y = e.getY());
-			setSelectedVisual(draggingVisual);
-			SwingUtilities.convertPointToScreen(lastDragPoint, GraphPane.this);
+			_draggingVisual = getVisualAt(_lastDragPoint.x = e.getX(), _lastDragPoint.y = e.getY());
+			setSelectedVisual(_draggingVisual);
+			SwingUtilities.convertPointToScreen(_lastDragPoint, GraphPane.this);
 		}
 
 		@Override
 		public void mouseReleased(MouseEvent e)
 		{
-			boolean fireDragged = draggingVisual != null;
-			draggingVisual = null;
-			lastDragPoint.x = lastDragPoint.y = 0;
+			boolean fireDragged = _draggingVisual != null;
+			_draggingVisual = null;
+			_lastDragPoint.x = _lastDragPoint.y = 0;
 			if (fireDragged)
 				fireMouseDragging(null);
 		}
@@ -190,12 +190,12 @@ public class GraphPane extends JComponent
 	/**
 	 * Handles mouse wheel.
 	 */
-	protected MouseWheelListener mouseWheelHandler = new MouseWheelListener()
+	protected MouseWheelListener _mouseWheelHandler = new MouseWheelListener()
 	{
 		@Override
 		public void mouseWheelMoved(MouseWheelEvent we)
 		{
-			if (configuration.zoomByMetaMouseWheelEnabled)
+			if (_configuration.zoomByMetaMouseWheelEnabled)
 			{
 				int wheel = we.getWheelRotation();
 				if (wheel != 0)
@@ -203,14 +203,14 @@ public class GraphPane extends JComponent
 					int mod = we.getModifiersEx();
 					if ((mod & (InputEvent.CTRL_DOWN_MASK | InputEvent.META_DOWN_MASK)) != 0)
 					{
-						float scale = configuration.scale - 0.1f * wheel;
+						float scale = _configuration.scale - 0.1f * wheel;
 						if (scale >= 0.1)
 						{
-							configuration.scale = scale;
+							_configuration.scale = scale;
 							SwingUtilities.invokeLater(() ->
 							{
-								if (configuration.buffered)
-									model.repaint();
+								if (_configuration.buffered)
+									_model.repaint();
 								cancelEdit();
 								revalidate();
 								repaint();
@@ -225,26 +225,26 @@ public class GraphPane extends JComponent
 	/**
 	 * Listens to clicks and drags on visuals.
 	 */
-	protected MouseMotionListener mouseMotionHandler = new MouseMotionListener()
+	protected MouseMotionListener _mouseMotionHandler = new MouseMotionListener()
 	{
 		@Override
 		public void mouseMoved(MouseEvent e)
 		{
 			Visual over = getVisualAt(e.getX(), e.getY());
-			if (mouseOverVisual != over)
+			if (_mouseOverVisual != over)
 			{
 				Rectangle2D.Float update = null;
-				if (mouseOverVisual != null)
+				if (_mouseOverVisual != null)
 				{
-					update = mouseOverVisual.getAbsoluteBounds2D(null);
+					update = _mouseOverVisual.getAbsoluteBounds2D(null);
 				}
 
-				mouseOverVisual = over;
-				fireMouseOver(mouseOverVisual);
+				_mouseOverVisual = over;
+				fireMouseOver(_mouseOverVisual);
 
-				if (mouseOverVisual != null)
+				if (_mouseOverVisual != null)
 				{
-					Rectangle2D.Float rt = mouseOverVisual.getAbsoluteBounds2D(null);
+					Rectangle2D.Float rt = _mouseOverVisual.getAbsoluteBounds2D(null);
 					if (update == null)
 						update = rt;
 					else
@@ -271,13 +271,13 @@ public class GraphPane extends JComponent
 			Point mp = e.getPoint();
 			SwingUtilities.convertPointToScreen(mp, GraphPane.this);
 
-			final int xd = mp.x - lastDragPoint.x;
-			final int yd = mp.y - lastDragPoint.y;
+			final int xd = mp.x - _lastDragPoint.x;
+			final int yd = mp.y - _lastDragPoint.y;
 
-			if (draggingVisual != null)
+			if (_draggingVisual != null)
 			{
-				draggingVisual.moveBy(xd / configuration.scale, yd / configuration.scale);
-				fireMouseDragging(draggingVisual);
+				_draggingVisual.moveBy(xd / _configuration.scale, yd / _configuration.scale);
+				fireMouseDragging(_draggingVisual);
 				revalidate();
 				repaint();
 			}
@@ -296,7 +296,7 @@ public class GraphPane extends JComponent
 					viewPort.setViewPosition(p);
 				}
 			}
-			lastDragPoint.setLocation(mp);
+			_lastDragPoint.setLocation(mp);
 		}
 	};
 
@@ -307,10 +307,10 @@ public class GraphPane extends JComponent
 	{
 		setLayout(null);
 		setModel(new VisualModel("none"));
-		addMouseListener(mouseHandler);
-		addMouseMotionListener(mouseMotionHandler);
-		addMouseWheelListener(mouseWheelHandler);
-		addKeyListener(keyAdapter);
+		addMouseListener(_mouseHandler);
+		addMouseMotionListener(_mouseMotionHandler);
+		addMouseWheelListener(_mouseWheelHandler);
+		addKeyListener(_keyAdapter);
 	}
 
 	/**
@@ -322,13 +322,13 @@ public class GraphPane extends JComponent
 	 */
 	protected Visual getVisualAt(float x, float y)
 	{
-		x -= offsetX;
-		y -= offsetY;
+		x -= _offsetX;
+		y -= _offsetY;
 
-		x /= configuration.scale;
-		y /= configuration.scale;
+		x /= _configuration.scale;
+		y /= _configuration.scale;
 
-		var visuals = model.getVisuals();
+		var visuals = _model.getVisuals();
 		for (var it = visuals.listIterator(visuals.size()); it.hasPrevious(); )
 		{
 			final Visual v = it.previous();
@@ -343,37 +343,37 @@ public class GraphPane extends JComponent
 	/**
 	 * The top level model
 	 */
-	protected VisualModel model;
+	protected VisualModel _model;
 
 	/**
 	 * Drawing X-offset.
 	 */
-	protected float offsetX = 0;
+	protected float _offsetX = 0;
 
 	/**
 	 * Drawing Y-offset.
 	 */
-	protected float offsetY = 0;
+	protected float _offsetY = 0;
 
 	/**
 	 * Last selected visual or null.
 	 */
-	protected Visual selectedVisual;
+	protected Visual _selectedVisual;
 
 	/**
 	 * The current selected primitive.
 	 */
-	protected DrawPrimitive selectedPrimitive;
+	protected DrawPrimitive _selectedPrimitive;
 
 	/**
 	 * The current active editor.
 	 */
-	protected JComponent selectedPrimitiveEditor;
+	protected JComponent _selectedPrimitiveEditor;
 
 	/**
 	 * The proxy of the current active editor.
 	 */
-	protected EditorProxy selectedPrimitiveEditorProxy;
+	protected EditorProxy _selectedPrimitiveEditorProxy;
 
 
 	@Override
@@ -381,22 +381,22 @@ public class GraphPane extends JComponent
 	{
 		final long start = System.currentTimeMillis();
 		Graphics2D g2 = (Graphics2D) g.create();
-		g2.translate(offsetX, offsetY);
+		g2.translate(_offsetX, _offsetY);
 
-		if (configuration.antialiasing)
+		if (_configuration.antialiasing)
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		try
 		{
 			if (isOpaque())
 			{
-				g2.setPaint(configuration.graphBackground == null ? getBackground() : configuration.graphBackground);
+				g2.setPaint(_configuration.graphBackground == null ? getBackground() : _configuration.graphBackground);
 				g2.fillRect(0, 0, getWidth(), getHeight());
 			}
-			g2.scale(configuration.scale, configuration.scale);
+			g2.scale(_configuration.scale, _configuration.scale);
 
-			model.draw(g2);
-			if (selectedPrimitive != null && selectedPrimitiveEditor == null)
-				drawPrimitiveCursor(g2, selectedPrimitive);
+			_model.draw(g2);
+			if (_selectedPrimitive != null && _selectedPrimitiveEditor == null)
+				drawPrimitiveCursor(g2, _selectedPrimitive);
 
 		}
 		finally
@@ -404,13 +404,13 @@ public class GraphPane extends JComponent
 			g2.dispose();
 
 			final long end = System.currentTimeMillis();
-			lastPaintMS = end - start;
+			_lastPaintMS = end - start;
 
-			if (showDrawSpeed)
+			if (_showDrawSpeed)
 			{
 				g.setColor(getForeground());
 				g.setFont(getFont());
-				char[] text = (Long.toString(lastPaintMS) + "ms").toCharArray();
+				char[] text = (Long.toString(_lastPaintMS) + "ms").toCharArray();
 				g.drawChars(text, 0, text.length, 0, 20);
 			}
 		}
@@ -426,26 +426,26 @@ public class GraphPane extends JComponent
 		Graphics2D g2 = (Graphics2D) getGraphics();
 		StringWriter ssw = new StringWriter();
 		SVGWriter sw = new SVGWriter(ssw);
-		sw.precisionFactor = configuration.precisionFactor;
+		sw.precisionFactor = _configuration.precisionFactor;
 
 		Rectangle2D.Float bounds = getBounds2D();
 		sw.startSVG(bounds);
 
-		Paint bg = configuration.graphBackground == null ? getBackground() : configuration.graphBackground;
+		Paint bg = _configuration.graphBackground == null ? getBackground() : _configuration.graphBackground;
 		if (bg != null)
 		{
 			sw.startStyle();
 			sw.writeAttribute(SVGAttribute.BackgroundColor, bg);
 			sw.endStyle();
 		}
-		if (model.name != null)
+		if (_model.name != null)
 		{
 			sw.startElement("title");
 			sw.startContent();
-			sw.writeEscaped(model.name);
+			sw.writeEscaped(_model.name);
 			sw.endElement();
 		}
-		for (Visual v : model.getVisuals())
+		for (Visual v : _model.getVisuals())
 			v.toSVG(sw, g2);
 		sw.endSVG();
 		return ssw.getBuffer()
@@ -459,29 +459,29 @@ public class GraphPane extends JComponent
 	 */
 	public void setModel(VisualModel model)
 	{
-		if (model != this.model)
+		if (model != this._model)
 		{
 			cancelEdit();
 
 			boolean fireHierarchy = false;
-			while (!parents.isEmpty())
+			while (!_parents.isEmpty())
 			{
-				if (ModelPrimitive.getSubModel(parents.peekLast()) == model)
+				if (ModelPrimitive.getChildModel(_parents.peekLast()) == model)
 					break;
-				parents.removeLast();
+				_parents.removeLast();
 				fireHierarchy = true;
 			}
 
-			Visual oldSelected = selectedVisual;
-			selectedVisual = null;
-			selectedPrimitive = null;
-			if (this.model != null)
+			Visual oldSelected = _selectedVisual;
+			_selectedVisual = null;
+			_selectedPrimitive = null;
+			if (this._model != null)
 			{
-				this.model.removeListener(this::repaint);
+				this._model.removeListener(this::repaint);
 			}
 			if (model == null)
 				model = new VisualModel("none");
-			this.model = model;
+			this._model = model;
 			model.addListener(this::repaint);
 
 			if (oldSelected != null)
@@ -505,7 +505,7 @@ public class GraphPane extends JComponent
 	 */
 	public VisualModel getModel()
 	{
-		return model;
+		return _model;
 	}
 
 	/**
@@ -520,10 +520,10 @@ public class GraphPane extends JComponent
 
 		boolean triggerRepaint = false;
 
-		Visual oldSelected = selectedVisual;
-		selectedVisual = visual;
+		Visual oldSelected = _selectedVisual;
+		_selectedVisual = visual;
 
-		if (oldSelected != null && oldSelected != selectedVisual)
+		if (oldSelected != null && oldSelected != _selectedVisual)
 		{
 			if (oldSelected.isFlagSet(VisualFlags.SELECTED))
 			{
@@ -532,22 +532,22 @@ public class GraphPane extends JComponent
 			}
 		}
 
-		if (selectedVisual != null && !selectedVisual.isFlagSet(VisualFlags.SELECTED))
+		if (_selectedVisual != null && !_selectedVisual.isFlagSet(VisualFlags.SELECTED))
 		{
 			visual.setFlags(VisualFlags.SELECTED);
 			triggerRepaint = true;
 		}
-		List<Visual> visuals = model.getVisuals();
-		if (selectedVisual != null && visuals.indexOf(selectedVisual) != (visuals.size() - 1))
+		List<Visual> visuals = _model.getVisuals();
+		if (_selectedVisual != null && visuals.indexOf(_selectedVisual) != (visuals.size() - 1))
 		{
-			model.moveVisualToTop(selectedVisual);
+			_model.moveVisualToTop(_selectedVisual);
 			// Repaint will be triggered my model listener
 			triggerRepaint = false;
 		}
 
-		if (oldSelected != null && oldSelected != selectedVisual)
+		if (oldSelected != null && oldSelected != _selectedVisual)
 		{
-			if (selectedVisual == null)
+			if (_selectedVisual == null)
 				fireVisualDeselected(oldSelected);
 			else
 				fireVisualSelected();
@@ -560,26 +560,37 @@ public class GraphPane extends JComponent
 	}
 
 	/**
+	 * Get the selected visual.
+	 *
+	 * @return the current selected visual.
+	 */
+	public Visual getSelectedVisual()
+	{
+		return _selectedVisual;
+	}
+
+
+	/**
 	 * Sets the current selected primitive.
 	 *
 	 * @param p The primitive
 	 */
 	public void setSelectedPrimitive(DrawPrimitive p)
 	{
-		if (p != selectedPrimitive)
+		if (p != _selectedPrimitive)
 		{
 			cancelEdit();
 			Graphics2D g2 = (Graphics2D) getGraphics();
 			try
 			{
-				g2.translate(offsetX, offsetY);
-				g2.scale(configuration.scale, configuration.scale);
+				g2.translate(_offsetX, _offsetY);
+				g2.scale(_configuration.scale, _configuration.scale);
 
-				if (selectedPrimitive != null && selectedPrimitiveEditor == null)
+				if (_selectedPrimitive != null && _selectedPrimitiveEditor == null)
 				{
-					drawPrimitiveCursor(g2, selectedPrimitive);
+					drawPrimitiveCursor(g2, _selectedPrimitive);
 				}
-				selectedPrimitive = p;
+				_selectedPrimitive = p;
 				startEdit(g2);
 			}
 			finally
@@ -620,16 +631,16 @@ public class GraphPane extends JComponent
 	 */
 	public void dispose()
 	{
-		selectedVisual = null;
-		model = null;
-		removeMouseListener(mouseHandler);
-		removeMouseMotionListener(mouseMotionHandler);
-		removeMouseWheelListener(mouseWheelHandler);
-		listeners.clear();
-		parents.clear();
-		mouseHandler = null;
-		mouseMotionHandler = null;
-		mouseWheelHandler = null;
+		_selectedVisual = null;
+		_model = null;
+		removeMouseListener(_mouseHandler);
+		removeMouseMotionListener(_mouseMotionHandler);
+		removeMouseWheelListener(_mouseWheelHandler);
+		_listeners.clear();
+		_parents.clear();
+		_mouseHandler = null;
+		_mouseMotionHandler = null;
+		_mouseWheelHandler = null;
 	}
 
 	@Override
@@ -655,11 +666,11 @@ public class GraphPane extends JComponent
 	 */
 	public Rectangle2D.Float getBounds2D()
 	{
-		Rectangle2D.Float bounds = model.getBounds2D((Graphics2D) getGraphics());
-		bounds.x *= configuration.scale;
-		bounds.y *= configuration.scale;
-		bounds.height = 5 + bounds.height * configuration.scale;
-		bounds.width = 5 + bounds.width * configuration.scale;
+		Rectangle2D.Float bounds = _model.getBounds2D((Graphics2D) getGraphics());
+		bounds.x *= _configuration.scale;
+		bounds.y *= _configuration.scale;
+		bounds.height = 5 + bounds.height * _configuration.scale;
+		bounds.width = 5 + bounds.width * _configuration.scale;
 
 		return bounds;
 	}
@@ -671,7 +682,7 @@ public class GraphPane extends JComponent
 	 */
 	public GraphConfiguration getGraphConfiguration()
 	{
-		return configuration;
+		return _configuration;
 	}
 
 	/**
@@ -681,8 +692,8 @@ public class GraphPane extends JComponent
 	 */
 	public void addInteractionListener(InteractionListener listener)
 	{
-		this.listeners.remove(listener);
-		this.listeners.add(listener);
+		this._listeners.remove(listener);
+		this._listeners.add(listener);
 	}
 
 	/**
@@ -692,7 +703,7 @@ public class GraphPane extends JComponent
 	 */
 	public void removeInteractionListener(InteractionListener listener)
 	{
-		this.listeners.remove(listener);
+		this._listeners.remove(listener);
 	}
 
 	/**
@@ -700,7 +711,7 @@ public class GraphPane extends JComponent
 	 */
 	protected void fireVisualSelected()
 	{
-		new ArrayList<>(listeners).forEach(listener -> listener.selected(selectedVisual));
+		new ArrayList<>(_listeners).forEach(listener -> listener.selected(_selectedVisual));
 	}
 
 	/**
@@ -710,7 +721,7 @@ public class GraphPane extends JComponent
 	 */
 	protected void fireVisualDeselected(Visual oldSelected)
 	{
-		new ArrayList<>(listeners).forEach(listener -> listener.deselected(oldSelected));
+		new ArrayList<>(_listeners).forEach(listener -> listener.deselected(oldSelected));
 	}
 
 	/**
@@ -718,7 +729,7 @@ public class GraphPane extends JComponent
 	 */
 	protected void fireHierarchyChanged()
 	{
-		new ArrayList<>(listeners).forEach(InteractionListener::hierarchyChanged);
+		new ArrayList<>(_listeners).forEach(InteractionListener::hierarchyChanged);
 	}
 
 	/**
@@ -728,7 +739,7 @@ public class GraphPane extends JComponent
 	 */
 	protected void fireMouseDragging(Visual visual)
 	{
-		new ArrayList<>(listeners).forEach(i -> i.mouseDragging(visual));
+		new ArrayList<>(_listeners).forEach(i -> i.mouseDragging(visual));
 	}
 
 	/**
@@ -738,7 +749,7 @@ public class GraphPane extends JComponent
 	 */
 	protected void fireMouseOver(Visual visual)
 	{
-		new ArrayList<>(listeners).forEach(i -> i.mouseOver(visual));
+		new ArrayList<>(_listeners).forEach(i -> i.mouseOver(visual));
 	}
 
 	/**
@@ -748,7 +759,7 @@ public class GraphPane extends JComponent
 	 */
 	public List<Visual> getHierarchy()
 	{
-		return Collections.unmodifiableList(parents);
+		return Collections.unmodifiableList(_parents);
 	}
 
 	/**
@@ -759,26 +770,26 @@ public class GraphPane extends JComponent
 	protected void startEdit(Graphics2D g2)
 	{
 		cancelEdit();
-		if (selectedPrimitive != null)
+		if (_selectedPrimitive != null)
 		{
-			Object userData = selectedPrimitive.getUserData();
+			Object userData = _selectedPrimitive.getUserData();
 
 			if (userData instanceof EditorProxy editorProxy)
 			{
-				selectedPrimitiveEditorProxy = editorProxy;
-				Visual v = selectedPrimitive.getVisual();
-				if (selectedPrimitiveEditor != null)
+				_selectedPrimitiveEditorProxy = editorProxy;
+				Visual v = _selectedPrimitive.getVisual();
+				if (_selectedPrimitiveEditor != null)
 				{
 					// This should not happen...
 					System.err.println("Previous Editor still active during new selection, should already by removed.");
 					removePrimitiveEditor();
 				}
-				selectedPrimitiveEditor = selectedPrimitiveEditorProxy.getEditor(selectedPrimitive);
-				Rectangle2D.Float rt = v.getBoundsOfPrimitive(g2, selectedPrimitive);
+				_selectedPrimitiveEditor = _selectedPrimitiveEditorProxy.getEditor(_selectedPrimitive);
+				Rectangle2D.Float rt = v.getBoundsOfPrimitive(g2, _selectedPrimitive);
 
-				final float scale = configuration.scale;
-				rt.x += offsetX;
-				rt.y += offsetY;
+				final float scale = _configuration.scale;
+				rt.x += _offsetX;
+				rt.y += _offsetY;
 				rt.x *= scale;
 				rt.y *= scale;
 				rt.width *= scale;
@@ -786,7 +797,7 @@ public class GraphPane extends JComponent
 
 				Font font;
 				FontMetrics fontMetrics;
-				DrawStyle style = selectedPrimitive.getStyle();
+				DrawStyle style = _selectedPrimitive.getStyle();
 				if (style.fontMetrics != null)
 				{
 					font = style.font;
@@ -797,11 +808,11 @@ public class GraphPane extends JComponent
 					font = getFont();
 					fontMetrics = getFontMetrics(font);
 				}
-				font = font.deriveFont((float) (int) (0.5 + font.getSize() * configuration.scale));
-				selectedPrimitiveEditor.setFont(font);
-				Dimension d = selectedPrimitiveEditor.getPreferredSize();
+				font = font.deriveFont((float) (int) (0.5 + font.getSize() * _configuration.scale));
+				_selectedPrimitiveEditor.setFont(font);
+				Dimension d = _selectedPrimitiveEditor.getPreferredSize();
 
-				float minWidth = fontMetrics.charWidth('X') * 20 * configuration.scale;
+				float minWidth = fontMetrics.charWidth('X') * 20 * _configuration.scale;
 				d.width = (int) (0.5 + Math.max(minWidth, d.width));
 
 				rt.x += (rt.width - d.width) / 2f;
@@ -809,14 +820,14 @@ public class GraphPane extends JComponent
 				rt.width = d.width;
 				rt.height = d.height;
 
-				selectedPrimitiveEditor.setBounds(rt.getBounds());
-				selectedPrimitiveEditor.addKeyListener(editorKeyAdapter);
-				selectedPrimitiveEditor.addFocusListener(editorFocusAdapter);
-				add(selectedPrimitiveEditor);
-				selectedPrimitiveEditor.requestFocus();
+				_selectedPrimitiveEditor.setBounds(rt.getBounds());
+				_selectedPrimitiveEditor.addKeyListener(_editorKeyAdapter);
+				_selectedPrimitiveEditor.addFocusListener(_editorFocusAdapter);
+				add(_selectedPrimitiveEditor);
+				_selectedPrimitiveEditor.requestFocus();
 			}
 			else
-				drawPrimitiveCursor(g2, selectedPrimitive);
+				drawPrimitiveCursor(g2, _selectedPrimitive);
 		}
 	}
 
@@ -827,16 +838,16 @@ public class GraphPane extends JComponent
 	 */
 	protected void cancelEdit()
 	{
-		if (selectedPrimitiveEditor != null)
+		if (_selectedPrimitiveEditor != null)
 		{
 			removePrimitiveEditor();
-			if (selectedPrimitiveEditorProxy != null)
+			if (_selectedPrimitiveEditorProxy != null)
 			{
-				selectedPrimitiveEditorProxy.cancelEdit(selectedPrimitive);
-				selectedPrimitiveEditorProxy = null;
+				_selectedPrimitiveEditorProxy.cancelEdit(_selectedPrimitive);
+				_selectedPrimitiveEditorProxy = null;
 			}
 			// Suppress any cursor updates.
-			selectedPrimitive = null;
+			_selectedPrimitive = null;
 		}
 	}
 
@@ -847,16 +858,16 @@ public class GraphPane extends JComponent
 	 */
 	protected void endEdit()
 	{
-		if (selectedPrimitiveEditor != null)
+		if (_selectedPrimitiveEditor != null)
 		{
-			if (selectedPrimitiveEditorProxy != null)
+			if (_selectedPrimitiveEditorProxy != null)
 			{
 				Graphics2D g2 = (Graphics2D) getGraphics();
-				g2.translate(offsetX, offsetY);
-				g2.scale(configuration.scale, configuration.scale);
-				selectedPrimitiveEditorProxy.endEdit(selectedPrimitive, g2);
+				g2.translate(_offsetX, _offsetY);
+				g2.scale(_configuration.scale, _configuration.scale);
+				_selectedPrimitiveEditorProxy.endEdit(_selectedPrimitive, g2);
 			}
-			selectedPrimitive = null;
+			_selectedPrimitive = null;
 			removePrimitiveEditor();
 		}
 	}
@@ -866,12 +877,12 @@ public class GraphPane extends JComponent
 	 */
 	protected void removePrimitiveEditor()
 	{
-		if (selectedPrimitiveEditor != null)
+		if (_selectedPrimitiveEditor != null)
 		{
-			selectedPrimitiveEditor.removeKeyListener(editorKeyAdapter);
-			selectedPrimitiveEditor.removeFocusListener(editorFocusAdapter);
-			remove(selectedPrimitiveEditor);
-			selectedPrimitiveEditor = null;
+			_selectedPrimitiveEditor.removeKeyListener(_editorKeyAdapter);
+			_selectedPrimitiveEditor.removeFocusListener(_editorFocusAdapter);
+			remove(_selectedPrimitiveEditor);
+			_selectedPrimitiveEditor = null;
 		}
 	}
 }

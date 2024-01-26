@@ -31,19 +31,19 @@ public class VisualModel
 	/**
 	 * Listeners
 	 */
-	private final LinkedList<VisualModelListener> listeners = new LinkedList<>();
+	private final LinkedList<VisualModelListener> _listeners = new LinkedList<>();
 
 
 	/**
 	 * List of visuals.
 	 */
-	private final LinkedList<Visual> visuals = new LinkedList<>();
+	private final LinkedList<Visual> _visuals = new LinkedList<>();
 
 
 	/**
 	 * Marks the model as modified.
 	 */
-	private boolean dirty = false;
+	private boolean _dirty = false;
 
 	/**
 	 * Gets the visuals. Modification of the returned list will lead to undefined behaviour.
@@ -52,7 +52,7 @@ public class VisualModel
 	 */
 	public List<Visual> getVisuals()
 	{
-		return visuals;
+		return _visuals;
 	}
 
 	/**
@@ -64,9 +64,9 @@ public class VisualModel
 	{
 		if (visual != null)
 		{
-			dirty = true;
+			_dirty = true;
 			visual.resetBounds();
-			visuals.add(visual);
+			_visuals.add(visual);
 			fireModelChange();
 		}
 	}
@@ -78,11 +78,11 @@ public class VisualModel
 	 */
 	public void moveVisualToTop(Visual visual)
 	{
-		if (visuals.get(visuals.size() - 1) != visual)
+		if (_visuals.get(_visuals.size() - 1) != visual)
 		{
-			if (visuals.remove(visual))
+			if (_visuals.remove(visual))
 			{
-				visuals.add(visual);
+				_visuals.add(visual);
 				fireModelChange();
 			}
 		}
@@ -93,9 +93,9 @@ public class VisualModel
 	 */
 	public void dispose()
 	{
-		visuals.forEach(Visual::dispose);
-		visuals.clear();
-		listeners.clear();
+		_visuals.forEach(Visual::dispose);
+		_visuals.clear();
+		_listeners.clear();
 	}
 
 	/**
@@ -105,8 +105,8 @@ public class VisualModel
 	 */
 	public void addListener(VisualModelListener listener)
 	{
-		listeners.remove(listener);
-		listeners.add(listener);
+		_listeners.remove(listener);
+		_listeners.add(listener);
 	}
 
 	/**
@@ -116,7 +116,7 @@ public class VisualModel
 	 */
 	public void removeListener(VisualModelListener listener)
 	{
-		listeners.remove(listener);
+		_listeners.remove(listener);
 	}
 
 	/**
@@ -124,7 +124,7 @@ public class VisualModel
 	 */
 	protected void fireModelChange()
 	{
-		List<VisualModelListener> ll = new ArrayList<>(listeners);
+		List<VisualModelListener> ll = new ArrayList<>(_listeners);
 		for (var l : ll)
 			l.modelChanged();
 	}
@@ -136,7 +136,7 @@ public class VisualModel
 	 */
 	public void draw(Graphics2D g2)
 	{
-		for (Visual v : visuals)
+		for (Visual v : _visuals)
 			v.draw(g2);
 	}
 
@@ -152,7 +152,7 @@ public class VisualModel
 		float x2 = 0;
 		float y2 = 0;
 		float t2;
-		for (Visual visual : visuals)
+		for (Visual visual : _visuals)
 		{
 			Rectangle2D.Float visualBounds = visual.getAbsoluteBounds2D(g2);
 			if (bounds.x > visualBounds.x)
@@ -186,8 +186,8 @@ public class VisualModel
 	 */
 	public boolean isModified()
 	{
-		return dirty || visuals.stream()
-							   .anyMatch(Visual::isModified);
+		return _dirty || _visuals.stream()
+								 .anyMatch(Visual::isModified);
 	}
 
 	/**
@@ -197,10 +197,10 @@ public class VisualModel
 	 */
 	public void setModified(boolean modified)
 	{
-		dirty = modified;
+		_dirty = modified;
 		if (!modified)
 		{
-			visuals.forEach(v -> v.setModified(false));
+			_visuals.forEach(v -> v.setModified(false));
 		}
 	}
 

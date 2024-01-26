@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  * SCXML extension handler for "GraphExtension" that supports layout information within the scxml.
@@ -95,6 +96,9 @@ public class GraphExtension implements ExtensionParser
 			return toXML(1000);
 		}
 
+		private static Pattern boundsSplitRegExp = Pattern.compile("(?U)\\s");
+
+
 		/**
 		 * Parse a XML position and bound string.
 		 *
@@ -105,7 +109,7 @@ public class GraphExtension implements ExtensionParser
 		{
 			if (bounds != null)
 			{
-				String[] coordinate = bounds.split("(?U)\\s");
+				String[] coordinate = boundsSplitRegExp.split(bounds, 0);
 				if (coordinate.length == 6)
 				{
 					try

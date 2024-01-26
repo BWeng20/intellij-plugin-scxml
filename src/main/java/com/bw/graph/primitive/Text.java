@@ -21,9 +21,9 @@ public class Text extends DrawPrimitive
 	/**
 	 * The text to show.
 	 */
-	protected String text;
+	protected String _text;
 
-	private Dimension2DFloat lastStringDimension;
+	private Dimension2DFloat _lastStringDimension;
 
 	/**
 	 * Creates a new Primitive.
@@ -38,16 +38,16 @@ public class Text extends DrawPrimitive
 	public Text(float x, float y, String text, GraphConfiguration config, DrawStyle style, int flags)
 	{
 		super(x, y, config, style, flags);
-		this.text = text;
+		this._text = text;
 	}
 
 	@Override
 	protected void drawIntern(Graphics2D g2)
 	{
-		g2.setFont(style.font);
-		g2.setPaint(style.textPaint);
-		g2.drawString(text, 0, g2.getFontMetrics()
-								 .getAscent());
+		g2.setFont(_style.font);
+		g2.setPaint(_style.textPaint);
+		g2.drawString(_text, 0, g2.getFontMetrics()
+								  .getAscent());
 	}
 
 	@Override
@@ -55,12 +55,12 @@ public class Text extends DrawPrimitive
 	{
 		if (graphics != null)
 		{
-			Rectangle2D r = style.fontMetrics.getStringBounds(text, graphics);
-			lastStringDimension = new Dimension2DFloat((float) r.getWidth(), (float) r.getHeight());
+			Rectangle2D r = _style.fontMetrics.getStringBounds(_text, graphics);
+			_lastStringDimension = new Dimension2DFloat((float) r.getWidth(), (float) r.getHeight());
 		}
-		else if (lastStringDimension == null)
-			lastStringDimension = new Dimension2DFloat(text.length() * 12, 12);
-		return new Dimension2DFloat(lastStringDimension);
+		else if (_lastStringDimension == null)
+			_lastStringDimension = new Dimension2DFloat(_text.length() * 12, 12);
+		return new Dimension2DFloat(_lastStringDimension);
 	}
 
 	@Override
@@ -68,14 +68,14 @@ public class Text extends DrawPrimitive
 	{
 		sw.startElement(SVGElement.text);
 		sw.writeAttribute(SVGAttribute.X, pos.x);
-		sw.writeAttribute(SVGAttribute.Y, pos.y + style.fontMetrics.getAscent());
+		sw.writeAttribute(SVGAttribute.Y, pos.y + _style.fontMetrics.getAscent());
 		sw.startStyle();
 		sw.writeAttribute(SVGAttribute.Stroke, (Color) null);
-		sw.writeAttribute(SVGAttribute.Fill, style.textPaint);
-		sw.writeAttribute(SVGAttribute.FontFamily, style.font.getFamily());
-		sw.writeAttribute(SVGAttribute.FontSize, style.font.getSize2D());
+		sw.writeAttribute(SVGAttribute.Fill, _style.textPaint);
+		sw.writeAttribute(SVGAttribute.FontFamily, _style.font.getFamily());
+		sw.writeAttribute(SVGAttribute.FontSize, _style.font.getSize2D());
 		sw.startContent();
-		sw.writeEscaped(text);
+		sw.writeEscaped(_text);
 		sw.endElement();
 	}
 
@@ -86,7 +86,7 @@ public class Text extends DrawPrimitive
 	 */
 	public void setText(String text)
 	{
-		this.text = text == null ? "" : text;
+		this._text = text == null ? "" : text;
 	}
 
 }

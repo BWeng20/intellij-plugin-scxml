@@ -30,13 +30,13 @@ public class ExportSVG extends AnAction implements DumbAware
 	{
 	}
 
-	VirtualFile lastVF;
+	private VirtualFile _lastVF;
 
 	@Override
 	public void actionPerformed(@NotNull AnActionEvent e)
 	{
 		Component c = e.getData(PlatformCoreDataKeys.CONTEXT_COMPONENT);
-		if (c instanceof ScxmlGraphPanel)
+		if (c instanceof ScxmlGraphPanel panel)
 		{
 			FileSaverDescriptor d = new FileSaverDescriptor(
 					ScXmlSdkBundle.message("action.ScXmlEditor.SvgExport.chooser.title"),
@@ -44,16 +44,16 @@ public class ExportSVG extends AnAction implements DumbAware
 			VirtualFileWrapper fileWrapper =
 					FileChooserFactory.getInstance()
 									  .createSaveFileDialog(d, e.getProject())
-									  .save(lastVF == null ? null : lastVF.getParent(), lastVF == null ? null : lastVF.getName());
+									  .save(_lastVF == null ? null : _lastVF.getParent(), _lastVF == null ? null : _lastVF.getName());
 
 			if (fileWrapper != null)
 			{
-				String svg = ((ScxmlGraphPanel) c).getSVG();
+				String svg = panel.getSVG();
 				try (FileOutputStream fs = new FileOutputStream(fileWrapper.getFile()))
 				{
 					fs.write(svg.getBytes(StandardCharsets.UTF_8));
 					fs.flush();
-					lastVF = fileWrapper.getVirtualFile();
+					_lastVF = fileWrapper.getVirtualFile();
 				}
 				catch (IOException ex)
 				{

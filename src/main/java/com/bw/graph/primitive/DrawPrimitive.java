@@ -24,29 +24,29 @@ public abstract class DrawPrimitive
 	/**
 	 * Style to use.
 	 */
-	protected final DrawStyle style;
+	protected final DrawStyle _style;
 
-	private final Point2D.Float relativePosition;
-	private final Point2D.Float tempPosition = new Point2D.Float();
-	private boolean editable;
+	private final Point2D.Float _relativePosition;
+	private final Point2D.Float _tempPosition = new Point2D.Float();
+	private boolean _editable;
 
-	private int flags = VisualFlags.ALWAYS;
+	private int _flags = VisualFlags.ALWAYS;
 
 	/**
 	 * Assigned Visual. Will be set temporary during event handling.
 	 * Not reliable during draw-calls.
 	 */
-	private Visual visual;
+	private Visual _visual;
 
 	/**
 	 *
 	 */
-	private Object userData;
+	private Object _userData;
 
 	/**
 	 * The insets of the component.
 	 */
-	private InsetsFloat insets = DEFAULT_INSERTS;
+	private InsetsFloat _insets = DEFAULT_INSERTS;
 
 	/**
 	 * Shared default insets instance.
@@ -57,7 +57,7 @@ public abstract class DrawPrimitive
 	/**
 	 * Graph configuration to use.
 	 */
-	protected GraphConfiguration config;
+	protected GraphConfiguration _config;
 
 	/**
 	 * The default alignment.
@@ -68,7 +68,7 @@ public abstract class DrawPrimitive
 	/**
 	 * The alignment of this primitive.
 	 */
-	protected Alignment alignment;
+	protected Alignment _alignment;
 
 	/**
 	 * Creates a new Primitive.
@@ -82,10 +82,10 @@ public abstract class DrawPrimitive
 	protected DrawPrimitive(float x, float y, GraphConfiguration config, DrawStyle style, int flags)
 	{
 		Objects.requireNonNull(style);
-		this.style = style;
-		this.relativePosition = new Point2D.Float(x, y);
-		this.config = config;
-		this.flags = flags;
+		this._style = style;
+		this._relativePosition = new Point2D.Float(x, y);
+		this._config = config;
+		this._flags = flags;
 	}
 
 	/**
@@ -96,7 +96,7 @@ public abstract class DrawPrimitive
 	 */
 	public void setVisual(Visual v)
 	{
-		visual = v;
+		_visual = v;
 	}
 
 	/**
@@ -107,7 +107,7 @@ public abstract class DrawPrimitive
 	 */
 	public Visual getVisual()
 	{
-		return visual;
+		return _visual;
 	}
 
 	/**
@@ -117,7 +117,7 @@ public abstract class DrawPrimitive
 	 */
 	public void setUserData(Object userData)
 	{
-		this.userData = userData;
+		this._userData = userData;
 	}
 
 	/**
@@ -127,7 +127,7 @@ public abstract class DrawPrimitive
 	 */
 	public Object getUserData()
 	{
-		return userData;
+		return _userData;
 	}
 
 
@@ -140,13 +140,13 @@ public abstract class DrawPrimitive
 	 */
 	public void draw(Graphics2D g2)
 	{
-		tempPosition.x = relativePosition.x + insets.left;
-		tempPosition.y = relativePosition.y + insets.top;
+		_tempPosition.x = _relativePosition.x + _insets.left;
+		_tempPosition.y = _relativePosition.y + _insets.top;
 
 		AffineTransform orgTransform = g2.getTransform();
 		try
 		{
-			g2.translate(tempPosition.x, tempPosition.y);
+			g2.translate(_tempPosition.x, _tempPosition.y);
 			drawIntern(g2);
 		}
 		finally
@@ -180,7 +180,7 @@ public abstract class DrawPrimitive
 	 */
 	public DrawStyle getStyle()
 	{
-		return style;
+		return _style;
 	}
 
 	/**
@@ -190,7 +190,7 @@ public abstract class DrawPrimitive
 	 */
 	public Point2D.Float getRelativePosition()
 	{
-		return relativePosition;
+		return _relativePosition;
 	}
 
 	/**
@@ -217,8 +217,8 @@ public abstract class DrawPrimitive
 	{
 		final Dimension2DFloat dim = getDimension(graphics);
 		return new Rectangle2D.Float(
-				basePositionX + relativePosition.x,
-				basePositionY + relativePosition.y, dim.width, dim.height);
+				basePositionX + _relativePosition.x,
+				basePositionY + _relativePosition.y, dim.width, dim.height);
 	}
 
 	/**
@@ -228,7 +228,7 @@ public abstract class DrawPrimitive
 	 */
 	public Alignment getAlignment()
 	{
-		return (alignment == null) ? DEFAULT_ALIGNMENT : alignment;
+		return (_alignment == null) ? DEFAULT_ALIGNMENT : _alignment;
 	}
 
 	/**
@@ -238,7 +238,7 @@ public abstract class DrawPrimitive
 	 */
 	public void setAlignment(Alignment alignment)
 	{
-		this.alignment = alignment;
+		this._alignment = alignment;
 	}
 
 	/**
@@ -250,8 +250,8 @@ public abstract class DrawPrimitive
 	public Dimension2DFloat getDimension(Graphics2D graphics)
 	{
 		Dimension2DFloat dim = getInnerDimension(graphics);
-		dim.width += insets.left + insets.right;
-		dim.height += insets.top + insets.bottom;
+		dim.width += _insets.left + _insets.right;
+		dim.height += _insets.top + _insets.bottom;
 
 		return dim;
 	}
@@ -275,16 +275,16 @@ public abstract class DrawPrimitive
 	public void toSVG(SVGWriter sw, Graphics2D g2,
 					  Point2D.Float position)
 	{
-		tempPosition.x = relativePosition.x + insets.left;
-		tempPosition.y = relativePosition.y + insets.top;
+		_tempPosition.x = _relativePosition.x + _insets.left;
+		_tempPosition.y = _relativePosition.y + _insets.top;
 
 		if (position != null)
 		{
-			tempPosition.x += position.x;
-			tempPosition.y += position.y;
+			_tempPosition.x += position.x;
+			_tempPosition.y += position.y;
 		}
 
-		toSVGIntern(sw, g2, tempPosition);
+		toSVGIntern(sw, g2, _tempPosition);
 
 	}
 
@@ -307,14 +307,14 @@ public abstract class DrawPrimitive
 	 */
 	public void setInsets(float top, float left, float bottom, float right)
 	{
-		if (insets == DEFAULT_INSERTS)
-			insets = new InsetsFloat(top, left, bottom, right);
+		if (_insets == DEFAULT_INSERTS)
+			_insets = new InsetsFloat(top, left, bottom, right);
 		else
 		{
-			insets.top = top;
-			insets.left = left;
-			insets.bottom = bottom;
-			insets.right = right;
+			_insets.top = top;
+			_insets.left = left;
+			_insets.bottom = bottom;
+			_insets.right = right;
 		}
 	}
 
@@ -327,19 +327,19 @@ public abstract class DrawPrimitive
 	{
 		if (insets != null)
 		{
-			if (this.insets == DEFAULT_INSERTS)
-				this.insets = new InsetsFloat(insets.top, insets.left, insets.bottom, insets.right);
+			if (this._insets == DEFAULT_INSERTS)
+				this._insets = new InsetsFloat(insets.top, insets.left, insets.bottom, insets.right);
 			else
 			{
-				this.insets.top = insets.top;
-				this.insets.left = insets.left;
-				this.insets.bottom = insets.bottom;
-				this.insets.right = insets.right;
+				this._insets.top = insets.top;
+				this._insets.left = insets.left;
+				this._insets.bottom = insets.bottom;
+				this._insets.right = insets.right;
 			}
 		}
 		else
 		{
-			this.insets = DEFAULT_INSERTS;
+			this._insets = DEFAULT_INSERTS;
 		}
 	}
 
@@ -350,7 +350,7 @@ public abstract class DrawPrimitive
 	 */
 	public InsetsFloat getInsets()
 	{
-		return insets;
+		return _insets;
 	}
 
 	/**
@@ -360,7 +360,7 @@ public abstract class DrawPrimitive
 	 */
 	public boolean isEditable()
 	{
-		return editable;
+		return _editable;
 	}
 
 	/**
@@ -370,7 +370,7 @@ public abstract class DrawPrimitive
 	 */
 	public void setEditable(boolean editable)
 	{
-		this.editable = editable;
+		this._editable = editable;
 	}
 
 	/**
@@ -378,7 +378,7 @@ public abstract class DrawPrimitive
 	 */
 	public void dispose()
 	{
-		visual = null;
+		_visual = null;
 	}
 
 	/**
@@ -410,7 +410,7 @@ public abstract class DrawPrimitive
 	 */
 	public void setFlags(int flags)
 	{
-		this.flags |= flags;
+		this._flags |= flags;
 	}
 
 	/**
@@ -421,7 +421,7 @@ public abstract class DrawPrimitive
 	 */
 	public boolean isFlagSet(int flags)
 	{
-		return (this.flags & flags) == flags;
+		return (this._flags & flags) == flags;
 	}
 
 	/**
@@ -431,7 +431,7 @@ public abstract class DrawPrimitive
 	 */
 	public void clearFlags(int flags)
 	{
-		this.flags &= ~flags;
+		this._flags &= ~flags;
 	}
 
 	/**
@@ -441,7 +441,7 @@ public abstract class DrawPrimitive
 	 */
 	public int getFlags()
 	{
-		return flags;
+		return _flags;
 	}
 
 }

@@ -18,7 +18,7 @@ import java.awt.geom.Point2D;
 public class Line extends DrawPrimitive
 {
 
-	private Line2D.Float shape;
+	private Line2D.Float _shape;
 
 	/**
 	 * Creates a new Line Primitive.
@@ -36,22 +36,22 @@ public class Line extends DrawPrimitive
 				DrawStyle style, int flags)
 	{
 		super(x1, y1, config, style, flags);
-		shape = new Line2D.Float(0, 0, x2 - x1, y2 - y1);
+		_shape = new Line2D.Float(0, 0, x2 - x1, y2 - y1);
 	}
 
 
 	@Override
 	protected void drawIntern(Graphics2D g2)
 	{
-		g2.setPaint(style.linePaint);
-		g2.setStroke(style.lineStroke);
-		g2.draw(shape);
+		g2.setPaint(_style.linePaint);
+		g2.setStroke(_style.lineStroke);
+		g2.draw(_shape);
 	}
 
 	@Override
 	protected Dimension2DFloat getInnerDimension(Graphics2D graphics)
 	{
-		return new Dimension2DFloat(shape.x2, shape.y2);
+		return new Dimension2DFloat(_shape.x2, _shape.y2);
 	}
 
 	@Override
@@ -60,10 +60,10 @@ public class Line extends DrawPrimitive
 		sw.startElement(SVGElement.line);
 		sw.writeAttribute(SVGAttribute.X1, pos.x);
 		sw.writeAttribute(SVGAttribute.Y1, pos.y);
-		sw.writeAttribute(SVGAttribute.X2, shape.x2 + pos.x);
-		sw.writeAttribute(SVGAttribute.Y2, shape.y2 + pos.y);
-		sw.writeAttribute(SVGAttribute.Stroke, style.linePaint);
-		sw.writeStrokeWidth(style.getStrokeWidth());
+		sw.writeAttribute(SVGAttribute.X2, _shape.x2 + pos.x);
+		sw.writeAttribute(SVGAttribute.Y2, _shape.y2 + pos.y);
+		sw.writeAttribute(SVGAttribute.Stroke, _style.linePaint);
+		sw.writeStrokeWidth(_style.getStrokeWidth());
 		sw.endElement();
 	}
 

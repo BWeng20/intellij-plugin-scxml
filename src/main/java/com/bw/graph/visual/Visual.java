@@ -3,6 +3,7 @@ package com.bw.graph.visual;
 import com.bw.graph.DrawContext;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
+import com.bw.graph.editor.EditorProxy;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.util.Dimension2DFloat;
 import com.bw.svg.SVGWriter;
@@ -10,6 +11,7 @@ import com.bw.svg.SVGWriter;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -20,53 +22,53 @@ public abstract class Visual
 	/**
 	 * Identification object from caller. Can be null.
 	 */
-	protected Object id;
+	protected Object _id;
 
 	/**
-	 * Name for UI. If null, string-representation of {@link #id} is used.<br>
+	 * Name for UI. If null, string-representation of {@link #_id} is used.<br>
 	 * Can be used of the id is not suitable for UI.
 	 *
 	 * @see #getDisplayName()
 	 */
-	protected String displayName;
+	protected String _displayName;
 
 	/**
 	 * Combination of flag bits.
 	 */
-	protected int flags;
+	protected int _flags;
 
 	/**
 	 * The preferred dimension of the visual.
 	 */
-	protected Dimension2DFloat dimension;
+	protected Dimension2DFloat _dimension;
 
 	/**
 	 * Absolute base position of the visual.
 	 */
-	protected Point2D.Float absolutePosition = new Point2D.Float(0, 0);
+	protected Point2D.Float _absolutePosition = new Point2D.Float(0, 0);
 
 	/**
 	 * The absolute bounds of the visual.<br>
-	 * These bounds are lazy calculated and updated. The bounds may extend the {@link #absolutePosition} in all directions.
-	 * The resulting bounds result from the absolute {@link #absolutePosition} and
+	 * These bounds are lazy calculated and updated. The bounds may extend the {@link #_absolutePosition} in all directions.
+	 * The resulting bounds result from the absolute {@link #_absolutePosition} and
 	 * the combined dimension of the content. But implementations may choose other options. See {@link #updateBounds(Graphics2D)}.
 	 */
-	protected Rectangle2D.Float absoluteBounds = new Rectangle2D.Float(0, 0, -1, -1);
+	protected Rectangle2D.Float _absoluteBounds = new Rectangle2D.Float(0, 0, -1, -1);
 
 	/**
 	 * The drawing context to use for painting and size calculations.
 	 */
-	protected DrawContext context;
+	protected DrawContext _context;
 
 	/**
 	 * True if offscreen buffers needs to be updated.
 	 */
-	protected boolean offscreenBuffersInvalid = false;
+	protected boolean _offscreenBuffersInvalid = false;
 
 	/**
 	 * "Dirty" marker, true if model was externally modified.
 	 */
-	protected boolean dirty = false;
+	protected boolean _dirty = false;
 
 	/**
 	 * Create a new empty visual.
@@ -77,9 +79,9 @@ public abstract class Visual
 	protected Visual(Object id, DrawContext context)
 	{
 		Objects.requireNonNull(context);
-		this.id = id;
-		this.context = context;
-		this.flags = VisualFlags.ALWAYS;
+		this._id = id;
+		this._context = context;
+		this._flags = VisualFlags.ALWAYS;
 	}
 
 
@@ -91,7 +93,7 @@ public abstract class Visual
 	 */
 	public void setDisplayName(String displayName)
 	{
-		this.displayName = displayName;
+		this._displayName = displayName;
 	}
 
 	/**
@@ -101,15 +103,15 @@ public abstract class Visual
 	 */
 	public void draw(Graphics2D g2)
 	{
-		g2.translate(absolutePosition.x, absolutePosition.y);
+		g2.translate(_absolutePosition.x, _absolutePosition.y);
 		try
 		{
 			drawRelative(g2);
-			offscreenBuffersInvalid = false;
+			_offscreenBuffersInvalid = false;
 		}
 		finally
 		{
-			g2.translate(-absolutePosition.x, -absolutePosition.y);
+			g2.translate(-_absolutePosition.x, -_absolutePosition.y);
 		}
 	}
 
@@ -132,11 +134,11 @@ public abstract class Visual
 	 */
 	public boolean containsPoint(float x, float y)
 	{
-		return absoluteBounds.contains(x, y);
+		return _absoluteBounds.contains(x, y);
 	}
 
 	/**
-	 * Updates {@link #absoluteBounds}.
+	 * Updates {@link #_absoluteBounds}.
 	 *
 	 * @param graphics The graphics context to use for calculations.
 	 */
@@ -152,11 +154,11 @@ public abstract class Visual
 	{
 		if (x != 0 || y != 0)
 		{
-			dirty = true;
-			absolutePosition.x += x;
-			absolutePosition.y += y;
-			absoluteBounds.x += x;
-			absoluteBounds.y += y;
+			_dirty = true;
+			_absolutePosition.x += x;
+			_absolutePosition.y += y;
+			_absoluteBounds.x += x;
+			_absoluteBounds.y += y;
 		}
 	}
 
@@ -165,7 +167,7 @@ public abstract class Visual
 	 */
 	public void resetBounds()
 	{
-		absoluteBounds.width = -1;
+		_absoluteBounds.width = -1;
 	}
 
 	/**
@@ -176,11 +178,11 @@ public abstract class Visual
 	 */
 	public Rectangle2D.Float getAbsoluteBounds2D(Graphics2D g2)
 	{
-		if (absoluteBounds.width < 0 && g2 != null)
+		if (_absoluteBounds.width < 0 && g2 != null)
 		{
 			updateBounds(g2);
 		}
-		return new Rectangle2D.Float(absoluteBounds.x, absoluteBounds.y, absoluteBounds.width, absoluteBounds.height);
+		return new Rectangle2D.Float(_absoluteBounds.x, _absoluteBounds.y, _absoluteBounds.width, _absoluteBounds.height);
 	}
 
 	/**
@@ -190,9 +192,9 @@ public abstract class Visual
 	 */
 	public void setFlags(int flags)
 	{
-		if ((flags | this.flags) != this.flags)
+		if ((flags | this._flags) != this._flags)
 		{
-			this.flags |= flags;
+			this._flags |= flags;
 			invalidateBuffers();
 		}
 	}
@@ -205,7 +207,7 @@ public abstract class Visual
 	 */
 	public boolean isFlagSet(int flags)
 	{
-		return (this.flags & flags) == flags;
+		return (this._flags & flags) == flags;
 	}
 
 	/**
@@ -215,9 +217,9 @@ public abstract class Visual
 	 */
 	public void clearFlags(int flags)
 	{
-		if ((this.flags & flags) != 0)
+		if ((this._flags & flags) != 0)
 		{
-			this.flags &= ~flags;
+			this._flags &= ~flags;
 			invalidateBuffers();
 		}
 	}
@@ -229,7 +231,7 @@ public abstract class Visual
 	 */
 	public int getFlags()
 	{
-		return flags;
+		return _flags;
 	}
 
 	/**
@@ -239,7 +241,7 @@ public abstract class Visual
 	 */
 	public DrawStyle getStyle()
 	{
-		return context == null ? null : context.style;
+		return _context == null ? null : _context._style;
 	}
 
 	/**
@@ -264,21 +266,21 @@ public abstract class Visual
 	 */
 	public void setAbsolutePosition(float x, float y, Rectangle2D.Float bounds)
 	{
-		if (absolutePosition.x != x || absolutePosition.y != y ||
-				(bounds != null && !absoluteBounds.equals(bounds)))
+		if (_absolutePosition.x != x || _absolutePosition.y != y ||
+				(bounds != null && !_absoluteBounds.equals(bounds)))
 		{
-			dirty = true;
+			_dirty = true;
 			if (bounds == null)
 			{
-				absoluteBounds.x += x - absolutePosition.x;
-				absoluteBounds.y += y - absolutePosition.y;
+				_absoluteBounds.x += x - _absolutePosition.x;
+				_absoluteBounds.y += y - _absolutePosition.y;
 			}
 			else
 			{
-				absoluteBounds.setRect(bounds);
+				_absoluteBounds.setRect(bounds);
 			}
-			absolutePosition.x = x;
-			absolutePosition.y = y;
+			_absolutePosition.x = x;
+			_absolutePosition.y = y;
 		}
 	}
 
@@ -289,7 +291,7 @@ public abstract class Visual
 	 */
 	public Point2D.Float getAbsolutePosition()
 	{
-		return new Point2D.Float(absolutePosition.x, absolutePosition.y);
+		return new Point2D.Float(_absolutePosition.x, _absolutePosition.y);
 	}
 
 	/**
@@ -299,8 +301,8 @@ public abstract class Visual
 	 */
 	public void getAbsolutePosition(Point2D.Float pt)
 	{
-		pt.x = absolutePosition.x;
-		pt.y = absolutePosition.y;
+		pt.x = _absolutePosition.x;
+		pt.y = _absolutePosition.y;
 	}
 
 	/**
@@ -321,15 +323,15 @@ public abstract class Visual
 	 */
 	public Rectangle2D.Float getBoundsOfPrimitive(Graphics2D g2, DrawPrimitive primitive)
 	{
-		if (absoluteBounds.width < 0)
+		if (_absoluteBounds.width < 0)
 			updateBounds(g2);
 
 		if (primitive != null)
 		{
-			Dimension2DFloat dim = new Dimension2DFloat(absoluteBounds);
+			Dimension2DFloat dim = new Dimension2DFloat(_absoluteBounds);
 			final Point2D.Float pt = getAlignmentOffset(g2, primitive, dim, new Point2D.Float());
-			pt.x += absolutePosition.x;
-			pt.y += absolutePosition.y;
+			pt.x += _absolutePosition.x;
+			pt.y += _absolutePosition.y;
 			return primitive.getBounds2D(pt, g2);
 		}
 		return null;
@@ -391,7 +393,7 @@ public abstract class Visual
 	 */
 	public void invalidateBuffers()
 	{
-		offscreenBuffersInvalid = true;
+		_offscreenBuffersInvalid = true;
 	}
 
 	/**
@@ -409,7 +411,7 @@ public abstract class Visual
 	 */
 	public Object getId()
 	{
-		return id;
+		return _id;
 	}
 
 	/**
@@ -419,7 +421,7 @@ public abstract class Visual
 	 */
 	public void setId(Object id)
 	{
-		this.id = id;
+		this._id = id;
 	}
 
 	/**
@@ -427,8 +429,8 @@ public abstract class Visual
 	 */
 	public void dispose()
 	{
-		id = null;
-		context = null;
+		_id = null;
+		_context = null;
 	}
 
 	/**
@@ -441,9 +443,9 @@ public abstract class Visual
 	{
 		if (dimension == null)
 		{
-			if (this.dimension != null)
+			if (this._dimension != null)
 			{
-				this.dimension = null;
+				this._dimension = null;
 				resetBounds();
 				invalidateBuffers();
 			}
@@ -460,10 +462,10 @@ public abstract class Visual
 	 */
 	public void setPreferredDimension(float width, float height)
 	{
-		if (dimension == null || dimension.width != width || dimension.height != height)
+		if (_dimension == null || _dimension.width != width || _dimension.height != height)
 		{
-			dirty = true;
-			this.dimension = new Dimension2DFloat(width, height);
+			_dirty = true;
+			this._dimension = new Dimension2DFloat(width, height);
 			resetBounds();
 			invalidateBuffers();
 		}
@@ -476,7 +478,7 @@ public abstract class Visual
 	 */
 	public Dimension2DFloat getPreferredDimension()
 	{
-		return dimension;
+		return _dimension;
 	}
 
 	/**
@@ -487,7 +489,7 @@ public abstract class Visual
 	 */
 	public GraphConfiguration getConfiguration()
 	{
-		return context.configuration;
+		return _context._configuration;
 	}
 
 	/**
@@ -497,7 +499,7 @@ public abstract class Visual
 	 */
 	public DrawContext getDrawContext()
 	{
-		return context;
+		return _context;
 	}
 
 
@@ -508,7 +510,7 @@ public abstract class Visual
 	 */
 	public void setModified(boolean modified)
 	{
-		dirty = modified;
+		_dirty = modified;
 	}
 
 	/**
@@ -518,13 +520,13 @@ public abstract class Visual
 	 */
 	public boolean isModified()
 	{
-		return dirty;
+		return _dirty;
 	}
 
 	@Override
 	public String toString()
 	{
-		return String.valueOf(id);
+		return String.valueOf(_id);
 	}
 
 	/**
@@ -534,19 +536,53 @@ public abstract class Visual
 	 * @param <T>            The type of the class.
 	 * @return The primitive or null.
 	 */
-	public abstract <T extends DrawPrimitive> T getPrimitiveOf(Class<T> primitiveClass);
+	public <T extends DrawPrimitive> T getPrimitiveOf(Class<T> primitiveClass)
+	{
+		for (DrawPrimitive primitive : getPrimitives())
+		{
+			if (primitiveClass.isAssignableFrom(primitive.getClass()))
+				return (T) primitive;
+		}
+		return null;
+	}
+
+	/**
+	 * Gets the first primitive proxy with the specified class oder super-class.
+	 *
+	 * @param proxyClass The class to search for.
+	 * @param <T>        The type of the class.
+	 * @return The proxy or null.
+	 */
+	public <T extends EditorProxy> T getProxyOf(Class<T> proxyClass)
+	{
+		for (DrawPrimitive primitive : getPrimitives())
+		{
+			Object proxy = primitive.getUserData();
+			if (proxy != null && proxyClass.isAssignableFrom(proxy.getClass()))
+				return (T) proxy;
+		}
+		return null;
+	}
+
+	/**
+	 * Provides list of all primitives.
+	 *
+	 * @return The list of primitives. Possibly empty but never null.
+	 */
+	public abstract List<DrawPrimitive> getPrimitives();
 
 	/**
 	 * Gets the display name.
-	 * If {@link #displayName} is null, the string representation of {@link #id} is returned.
+	 * If {@link #_displayName} is null, the string representation of {@link #_id} is returned.
 	 *
 	 * @return The display name.
 	 * @see #setDisplayName(String)
-	 * @see #displayName
+	 * @see #_displayName
 	 */
 	public String getDisplayName()
 	{
-		return displayName == null ? String.valueOf(getId()) : displayName;
+		return _displayName == null ? String.valueOf(getId()) : _displayName;
 
 	}
+
 }

@@ -40,9 +40,15 @@ public class StateNameProxy implements EditorProxy
 	public JTextComponent textComponent;
 
 	/**
-	 * The original name of the state from start of edit.
+	 * The name of the state before edit.
 	 */
-	private String originalName;
+	private String nameBeforeEdit;
+
+	/**
+	 * The name of the state in file.
+	 */
+	public String nameInFile;
+
 
 	/**
 	 * State outer draw context.
@@ -68,6 +74,7 @@ public class StateNameProxy implements EditorProxy
 		this.textComponent = textComponent;
 		this.stateOuterContext = stateOuterContext;
 		this.stateInnerContext = stateInnerContext;
+		this.nameInFile = state.name;
 	}
 
 	@Override
@@ -79,7 +86,7 @@ public class StateNameProxy implements EditorProxy
 	@Override
 	public JComponent getEditor(DrawPrimitive text)
 	{
-		originalName = state.name;
+		nameBeforeEdit = state.name;
 		textComponent.setText(state.name);
 		return textComponent;
 	}
@@ -108,9 +115,9 @@ public class StateNameProxy implements EditorProxy
 	@Override
 	public void cancelEdit(DrawPrimitive text)
 	{
-		if (originalName != null && !Objects.equals(originalName, state.name))
+		if (nameBeforeEdit != null && !Objects.equals(nameBeforeEdit, state.name))
 		{
-			state.name = originalName;
+			state.name = nameBeforeEdit;
 			text.getVisual()
 				.setModified(true);
 		}
@@ -129,24 +136,24 @@ public class StateNameProxy implements EditorProxy
 									  GraphExtension.PosAndBounds bounds)
 	{
 		GenericPrimitiveVisual v = (GenericPrimitiveVisual) visual;
-		float fh = stateInnerContext.style.fontMetrics.getHeight();
+		float fh = stateInnerContext._style.fontMetrics.getHeight();
 
-		final boolean hasSubModel = ModelPrimitive.hasSubModel(v);
+		ModelPrimitive modelPrimitive = visual.getPrimitiveOf(ModelPrimitive.class);
+
 		v.removeAllDrawingPrimitives();
-
 		if (bounds == null)
 		{
-			Rectangle2D stringBounds = stateInnerContext.style.fontMetrics.getStringBounds(state.name, g2);
+			Rectangle2D stringBounds = stateInnerContext._style.fontMetrics.getStringBounds(state.name, g2);
 
 			float height = 5 * fh;
-			float width = (float) Math.max(stringBounds.getWidth() + 10, stateInnerContext.configuration.stateMinimalWidth);
+			float width = (float) Math.max(stringBounds.getWidth() + 10, stateInnerContext._configuration.stateMinimalWidth);
 
-			if (hasSubModel)
+			if (modelPrimitive != null)
 			{
 				// For a state with internal states (a sub fsm in this context)
 				// we need space for the small image of the inner fsm.
-				Dimension2DFloat dim = stateInnerContext.configuration.innerModelBoxMinDimension;
-				InsetsFloat insets = stateInnerContext.configuration.innerModelBoxInsets;
+				Dimension2DFloat dim = stateInnerContext._configuration.innerModelBoxMinDimension;
+				InsetsFloat insets = stateInnerContext._configuration.innerModelBoxInsets;
 
 				float w = dim.width + insets.right + insets.left;
 				float h = dim.height + insets.top + insets.bottom;
@@ -159,22 +166,26 @@ public class StateNameProxy implements EditorProxy
 		v.setAbsolutePosition(bounds.position, bounds.bounds);
 
 		Rectangle frame = new Rectangle(
-				0, 0, bounds.bounds.width, bounds.bounds.height, stateOuterContext.configuration.stateCornerArcSize, stateOuterContext.configuration,
-				stateOuterContext.style, VisualFlags.ALWAYS);
+				0, 0, bounds.bounds.width, bounds.bounds.height, stateOuterContext._configuration.stateCornerArcSize, stateOuterContext._configuration,
+				stateOuterContext._style, VisualFlags.ALWAYS);
 
 		frame.setFill(true);
 		v.addDrawingPrimitive(frame);
 
 		Line separator = new Line(0, fh * 1.5f, bounds.bounds.width, fh * 1.5f
-				, stateInnerContext.configuration, stateInnerContext.style, VisualFlags.ALWAYS);
+				, stateInnerContext._configuration, stateInnerContext._style, VisualFlags.ALWAYS);
 		v.addDrawingPrimitive(separator);
 
-		Text label = new Text(0, 0, state.name, stateInnerContext.configuration, stateInnerContext.style, VisualFlags.ALWAYS);
+		Text label = new Text(0, 0, state.name, stateInnerContext._configuration, stateInnerContext._style, VisualFlags.ALWAYS);
 		label.setEditable(true);
 		label.setAlignment(Alignment.Center);
 		label.setInsets(fh * 0.25f, 0, 0, 0);
 		label.setUserData(this);
 		v.addDrawingPrimitive(label);
+
+		if (modelPrimitive != null)
+			v.addDrawingPrimitive(modelPrimitive);
+
 	}
 
 

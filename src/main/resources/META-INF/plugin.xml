@@ -54,6 +54,12 @@
                 icon="com.bw.modelthings.intellij.Icons.SCXML">
             <add-to-group group-id="ScXMLPopupMenu" anchor="first"/>
         </action>
+        <action
+                id="ScXmlEditor.DeleteState"
+                class="com.bw.modelthings.intellij.actions.DeleteState"
+                icon="com.bw.modelthings.intellij.Icons.SCXML">
+            <add-to-group group-id="ScXMLPopupMenu" />
+        </action>
     </actions>
 
 

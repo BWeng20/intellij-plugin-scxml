@@ -8,12 +8,12 @@ public class DrawContext
 	/**
 	 * Style for drawings.
 	 */
-	public DrawStyle style;
+	public DrawStyle _style;
 
 	/**
 	 * The configuration.
 	 */
-	public final GraphConfiguration configuration;
+	public final GraphConfiguration _configuration;
 
 	/**
 	 * Creates a new Context with styles,
@@ -23,7 +23,7 @@ public class DrawContext
 	 */
 	public DrawContext(GraphConfiguration configuration, DrawStyle style)
 	{
-		this.style = style;
-		this.configuration = configuration;
+		this._style = style;
+		this._configuration = configuration;
 	}
 }

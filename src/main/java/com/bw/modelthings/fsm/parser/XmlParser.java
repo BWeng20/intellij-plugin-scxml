@@ -48,18 +48,18 @@ public class XmlParser implements ScxmlTags
 	/**
 	 * The fsm the parser is working on.
 	 */
-	protected FiniteStateMachine fsm;
+	protected FiniteStateMachine _fsm;
 
 	/**
 	 * List of extensions.
 	 */
-	protected Map<String, List<ExtensionParser>> extensionParsers = new HashMap<>();
+	protected Map<String, List<ExtensionParser>> _extensionParsers = new HashMap<>();
 
 
 	/**
 	 * Extension to use for namespace for which no matching extension was found.
 	 */
-	protected ExtensionParser fallbackExtensionParser;
+	protected ExtensionParser _fallbackExtensionParser;
 
 	/**
 	 * Creates a new XMLParser.
@@ -164,7 +164,7 @@ public class XmlParser implements ScxmlTags
 			doc = null;
 		}
 
-		fsm = null;
+		_fsm = null;
 
 		if (doc != null)
 		{
@@ -176,19 +176,19 @@ public class XmlParser implements ScxmlTags
 			Element root = (Element) scxmlElements.item(0);
 			if (ScxmlTags.TAG_SCXML.equals(root.getLocalName()))
 			{
-				fsm = new FiniteStateMachine();
+				_fsm = new FiniteStateMachine();
 
-				fsm.name = getOptionalAttribute(root, ATTR_NAME);
-				fsm.datamodel = getAttributeOrDefault(root, ATTR_DATAMODEL, "Null");
-				fsm.binding = mapBindingType(getAttributeOrDefault(root, ATTR_BINDING, BindingType.Early.name()));
-				fsm.pseudoRoot = parseState(root, false, null);
+				_fsm.name = getOptionalAttribute(root, ATTR_NAME);
+				_fsm.datamodel = getAttributeOrDefault(root, ATTR_DATAMODEL, "Null");
+				_fsm.binding = mapBindingType(getAttributeOrDefault(root, ATTR_BINDING, BindingType.Early.name()));
+				_fsm.pseudoRoot = parseState(root, false, null);
 			}
 			else
 			{
 				throw new ParserException(ScXmlSdkBundle.message("parser.error.root_tag_is_not_scxml", root.getLocalName()));
 			}
 		}
-		return fsm;
+		return _fsm;
 	}
 
 	class ScxmlElementIterator implements Iterator<Element>
@@ -246,11 +246,11 @@ public class XmlParser implements ScxmlTags
 		{
 			for (Element e : notHandled)
 			{
-				List<ExtensionParser> pl = extensionParsers.get(e.getNamespaceURI());
+				List<ExtensionParser> pl = _extensionParsers.get(e.getNamespaceURI());
 				if (pl == null)
 				{
-					if (fallbackExtensionParser != null)
-						fallbackExtensionParser.processChild(fsmElement, e);
+					if (_fallbackExtensionParser != null)
+						_fallbackExtensionParser.processChild(fsmElement, e);
 				}
 				else
 					for (ExtensionParser p : pl)
@@ -277,11 +277,11 @@ public class XmlParser implements ScxmlTags
 			String nsUri = attrNode.getNamespaceURI();
 			if (nsUri != null && !NS_SCXML.equals(nsUri))
 			{
-				List<ExtensionParser> pl = extensionParsers.get(nsUri);
+				List<ExtensionParser> pl = _extensionParsers.get(nsUri);
 				if (pl == null)
 				{
-					if (fallbackExtensionParser != null)
-						fallbackExtensionParser.processAttribute(fsmElement, attrNode);
+					if (_fallbackExtensionParser != null)
+						_fallbackExtensionParser.processAttribute(fsmElement, attrNode);
 
 				}
 				else
@@ -412,7 +412,7 @@ public class XmlParser implements ScxmlTags
 	{
 		Transition t = new Transition();
 
-		t.docId = ++docIdCounter;
+		t.docId = ++_docIdCounter;
 
 		parseSymbolList(getOptionalAttribute(node, TAG_EVENT), t.events);
 		t.cond = getOptionalAttribute(node, ATTR_COND);
@@ -695,8 +695,8 @@ public class XmlParser implements ScxmlTags
 	 */
 	public String generateId()
 	{
-		idCount += 1;
-		return String.format("__id%d", idCount);
+		_idCount += 1;
+		return String.format("__id%d", _idCount);
 	}
 
 	/**
@@ -715,7 +715,7 @@ public class XmlParser implements ScxmlTags
 		{
 			PseudoRoot pseudoRoot = new PseudoRoot();
 			pseudoRoot.name = sname;
-			fsm.states.put(sname, pseudoRoot);
+			_fsm.states.put(sname, pseudoRoot);
 			pseudoRoot.fsmName = getOptionalAttribute(node, ATTR_NAME);
 			state = pseudoRoot;
 		}
@@ -724,13 +724,13 @@ public class XmlParser implements ScxmlTags
 			state = getOrCreateState(sname, parallel);
 		}
 		String initial = getSCXMLAttribute(node, ATTR_INITIAL);
-		state.docId = ++docIdCounter;
+		state.docId = ++_docIdCounter;
 
 		if (initial != null)
 		{
 			// Create initial-transition with the initial states
 			Transition t = new Transition();
-			t.docId = ++docIdCounter;
+			t.docId = ++_docIdCounter;
 			t.transitionType = TransitionType.Internal;
 			t.source = state;
 			parseStateSpecification(initial, t.target);
@@ -761,12 +761,12 @@ public class XmlParser implements ScxmlTags
 	 */
 	public State getOrCreateState(String sname, boolean parallel)
 	{
-		State state = fsm.states.get(sname);
+		State state = _fsm.states.get(sname);
 		if (state == null)
 		{
 			state = new State();
 			state.name = sname;
-			fsm.states.put(sname, state);
+			_fsm.states.put(sname, state);
 		}
 		if (parallel)
 			state.isParallel = parallel;
@@ -845,12 +845,12 @@ public class XmlParser implements ScxmlTags
 	/**
 	 * Id generator if ids are missing
 	 */
-	int idCount = 0;
+	private int _idCount = 0;
 
 	/**
 	 * Document-order-Id generator.
 	 */
-	int docIdCounter = 0;
+	private int _docIdCounter = 0;
 
 	/**
 	 * Parse a state-specification, a white-space separated list of stare references.
@@ -860,7 +860,7 @@ public class XmlParser implements ScxmlTags
 	 */
 	protected void parseStateSpecification(String targetName, java.util.List<State> targets)
 	{
-		Arrays.stream(targetName.split("(?U)\\s"))
+		Arrays.stream(ScxmlTags.splitNameList(targetName))
 			  .forEach(t ->
 					  {
 						  if (!t.isEmpty())
@@ -889,10 +889,7 @@ public class XmlParser implements ScxmlTags
 	 */
 	protected void parseSymbolList(String eventNames, java.util.List<String> events)
 	{
-		if (eventNames != null)
-		{
-			events.addAll(Arrays.asList(eventNames.split("(?U)\\s")));
-		}
+		events.addAll(Arrays.asList(ScxmlTags.splitNameList(eventNames)));
 	}
 
 	/**
@@ -943,10 +940,10 @@ public class XmlParser implements ScxmlTags
 	public void addExtensionParser(String namespace, ExtensionParser parser)
 	{
 		if ("*".equals(namespace))
-			fallbackExtensionParser = parser;
+			_fallbackExtensionParser = parser;
 		else
-			extensionParsers.computeIfAbsent(namespace.intern(), s -> new ArrayList<>())
-							.add(parser);
+			_extensionParsers.computeIfAbsent(namespace.intern(), s -> new ArrayList<>())
+							 .add(parser);
 	}
 
 	/**
@@ -957,8 +954,8 @@ public class XmlParser implements ScxmlTags
 	public void removeExtensionParser(String namespace)
 	{
 		if ("*".equals(namespace))
-			fallbackExtensionParser = null;
+			_fallbackExtensionParser = null;
 		else
-			extensionParsers.remove(namespace);
+			_extensionParsers.remove(namespace);
 	}
 }

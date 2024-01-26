@@ -3,6 +3,7 @@ package com.bw.modelthings.intellij.editor;
 import com.bw.graph.VisualModel;
 import com.bw.graph.editor.InteractionAdapter;
 import com.bw.graph.primitive.ModelPrimitive;
+import com.bw.graph.primitive.Text;
 import com.bw.graph.visual.GenericPrimitiveVisual;
 import com.bw.graph.visual.Visual;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
@@ -12,6 +13,7 @@ import com.bw.modelthings.fsm.parser.ScxmlTags;
 import com.bw.modelthings.fsm.parser.XmlParser;
 import com.bw.modelthings.fsm.ui.GraphExtension;
 import com.bw.modelthings.fsm.ui.GraphFactory;
+import com.bw.modelthings.fsm.ui.StateNameProxy;
 import com.intellij.ide.ui.customization.CustomActionsSchema;
 import com.intellij.openapi.actionSystem.ActionGroup;
 import com.intellij.openapi.actionSystem.ActionManager;
@@ -47,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Graphical SCXML {@link FileEditor}.
@@ -166,15 +169,15 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 			try
 			{
 				inDocumentSync = true;
-				// @TODO Try to avoid to write to disk every time we update!
-				PsiDocumentManager.getInstance(xmlFile.getProject())
-								  .commitDocument(xmlDocument);
 
-				VisualModel model = (component.root == null) ? null : ModelPrimitive.getSubModel(component.root);
+				VisualModel model = (component.root == null) ? null : ModelPrimitive.getChildModel(component.root);
 				if (xmlFile != null && model != null)
 				{
+					//////////////////////////////////////////
+					// Collect data from model
 					HashMap<String, GraphExtension.PosAndBounds> bounds = new HashMap<>();
 					HashMap<String, GraphExtension.PosAndBounds> startBounds = new HashMap<>();
+					HashMap<String, String> statesRenamed = new HashMap<>();
 
 					List<Visual> visuals = new ArrayList<>(model.getVisuals());
 					Visual sv = getStartVisual(model);
@@ -186,33 +189,52 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 						Visual v = visuals.remove(visuals.size() - 1);
 						if (v instanceof GenericPrimitiveVisual)
 						{
-							String id = (String) v.getId();
-							if (id != null)
+							Text text = v.getPrimitiveOf(Text.class);
+							Object userData = text == null ? null : text.getUserData();
+							if (userData instanceof StateNameProxy proxy)
 							{
-								bounds.put(id, new GraphExtension.PosAndBounds(v.getAbsolutePosition(), v.getAbsoluteBounds2D(null)));
-							}
-							VisualModel m = ModelPrimitive.getSubModel(v);
-							if (m != null)
-							{
-								if (m.name != null)
+								String id = (String) v.getId();
+								if (id != null)
 								{
-									sv = getStartVisual(m);
-									if (sv != null)
+									bounds.put(id, new GraphExtension.PosAndBounds(v.getAbsolutePosition(), v.getAbsoluteBounds2D(null)));
+									if (!id.equals(proxy.nameInFile))
 									{
-										startBounds.put(m.name, new GraphExtension.PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
-										System.err.println(m.name + " = " + startBounds.get(m.name));
+										// State was renamed
+										statesRenamed.put(proxy.nameInFile, id);
+										System.err.println("Renamed: " + proxy.nameInFile + " -> " + id);
+										proxy.nameInFile = id;
 									}
 								}
-								else
+								VisualModel m = ModelPrimitive.getChildModel(v);
+								if (m != null)
 								{
-									System.err.println("Submodel of " + v.getId() + " without name");
+									if (m.name != null)
+									{
+										sv = getStartVisual(m);
+										if (sv != null)
+										{
+											startBounds.put(m.name, new GraphExtension.PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
+											System.err.println(m.name + " = " + startBounds.get(m.name));
+										}
+									}
+									else
+									{
+										System.err.println("Submodel of " + v.getId() + " without name");
+									}
+									visuals.addAll(m.getVisuals());
 								}
-								visuals.addAll(m.getVisuals());
 							}
 						}
 					}
+
+					//////////////////////////////////////////
+					// Update psi file
 					try
 					{
+						// @TODO Try to avoid to write to disk every time we update!
+						PsiDocumentManager.getInstance(xmlFile.getProject())
+										  .commitDocument(xmlDocument);
+
 						final float precisionFactor = this.component.getGraphConfiguration().precisionFactor;
 						XmlDocument doc = ((XmlFile) xmlFile).getDocument();
 						XmlTag root = doc.getRootTag();
@@ -224,6 +246,19 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 							while (!allStates.isEmpty())
 							{
 								XmlTag s = allStates.remove(allStates.size() - 1);
+
+								if (!statesRenamed.isEmpty())
+								{
+									// Renaming
+									renameInNameList(s, ScxmlTags.ATTR_ID, null, statesRenamed);
+									renameInNameList(s, ScxmlTags.ATTR_INITIAL, null, statesRenamed);
+									renameInNameList(s.findSubTags(ScxmlTags.TAG_TRANSITION, ScxmlTags.NS_SCXML), ScxmlTags.ATTR_TARGET, null, statesRenamed);
+
+									XmlTag initial = s.findFirstSubTag(ScxmlTags.TAG_INITIAL);
+									if (initial != null)
+										renameInNameList(initial.findSubTags(ScxmlTags.TAG_TRANSITION, ScxmlTags.NS_SCXML), ScxmlTags.ATTR_TARGET, null, statesRenamed);
+								}
+
 								String id = s.getAttributeValue(ScxmlTags.ATTR_ID);
 
 								List<XmlTag> states = Arrays.asList(s.findSubTags(ScxmlTags.TAG_STATE, ScxmlTags.NS_SCXML));
@@ -302,6 +337,62 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	}
 
 	/**
+	 * Temporary used buffer. Usage is not thread safe, shall be used only from synchronized methods.
+	 */
+	private final StringBuilder tempName = new StringBuilder();
+
+	/**
+	 * Method is not thread-safe, must be called only from synchronized methods.
+	 *
+	 * @param tags         The Tags to process.
+	 * @param attribute    The attribute to change.
+	 * @param namespace    The namespace of the attribute.
+	 * @param replacements The replacements.
+	 */
+	private void renameInNameList(XmlTag[] tags, String attribute, String namespace, Map<String, String> replacements)
+	{
+		for (XmlTag tag : tags)
+		{
+			renameInNameList(tag, attribute, namespace, replacements);
+		}
+	}
+
+	/**
+	 * Method is not thread-safe, must be called only from synchronized methods.
+	 *
+	 * @param tag          The Tag to process.
+	 * @param attribute    The attribute to change.
+	 * @param namespace    The namespace of the attribute.
+	 * @param replacements The replacements.
+	 */
+	private void renameInNameList(XmlTag tag, String attribute, String namespace, Map<String, String> replacements)
+	{
+		XmlAttribute attr = tag.getAttribute(attribute, namespace);
+		if (attr != null)
+		{
+			tempName.setLength(0);
+			boolean changed = false;
+			for (String name : ScxmlTags.splitNameList(attr.getValue()))
+			{
+				if (!tempName.isEmpty())
+					tempName.append(' ');
+				String newName = replacements.get(name);
+				if (newName == null)
+				{
+					tempName.append(name);
+				}
+				else
+				{
+					changed = true;
+					tempName.append(newName);
+				}
+			}
+			if (changed)
+				attr.setValue(tempName.toString());
+		}
+	}
+
+	/**
 	 * This method is synchronized because it is possible that this method is called from different worker threads in parallel.
 	 */
 	private synchronized void runGraphUpdate()
@@ -352,7 +443,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 		{
 			if (component.root != null)
 			{
-				VisualModel model = ModelPrimitive.getSubModel(component.root);
+				VisualModel model = ModelPrimitive.getChildModel(component.root);
 				if (model != null && model.isModified())
 				{
 					if (enableSync)

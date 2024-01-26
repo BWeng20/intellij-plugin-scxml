@@ -16,7 +16,7 @@ import java.awt.geom.Point2D;
  */
 public class Circle extends ShapePrimitiveBase
 {
-	private float diameter;
+	private float _diameter;
 
 	/**
 	 * Creates a new Circle Primitive.
@@ -33,28 +33,28 @@ public class Circle extends ShapePrimitiveBase
 				  DrawStyle style, int flags)
 	{
 		super(cx - radius, cy - radius, config, style, flags);
-		this.diameter = 2f * radius;
-		this.shape = new Ellipse2D.Float(0, 0, diameter, diameter);
+		this._diameter = 2f * radius;
+		this._shape = new Ellipse2D.Float(0, 0, _diameter, _diameter);
 	}
 
 	@Override
 	protected Dimension2DFloat getInnerDimension(Graphics2D graphics)
 	{
-		return new Dimension2DFloat(diameter, diameter);
+		return new Dimension2DFloat(_diameter, _diameter);
 	}
 
 	@Override
 	protected void toSVGIntern(SVGWriter sw, Graphics2D g2, Point2D.Float pos)
 	{
 		sw.startElement(SVGElement.circle);
-		sw.writeAttribute(SVGAttribute.Cx, pos.x + (diameter / 2));
-		sw.writeAttribute(SVGAttribute.Cy, pos.y + (diameter / 2));
-		sw.writeAttribute(SVGAttribute.R, (diameter / 2));
+		sw.writeAttribute(SVGAttribute.Cx, pos.x + (_diameter / 2));
+		sw.writeAttribute(SVGAttribute.Cy, pos.y + (_diameter / 2));
+		sw.writeAttribute(SVGAttribute.R, (_diameter / 2));
 		sw.startStyle();
 		if (isFill())
-			sw.writeAttribute(SVGAttribute.Fill, style.fillPaint);
-		sw.writeAttribute(SVGAttribute.Stroke, style.linePaint);
-		sw.writeStrokeWidth(style.getStrokeWidth());
+			sw.writeAttribute(SVGAttribute.Fill, _style.fillPaint);
+		sw.writeAttribute(SVGAttribute.Stroke, _style.linePaint);
+		sw.writeStrokeWidth(_style.getStrokeWidth());
 		sw.endElement();
 	}
 }

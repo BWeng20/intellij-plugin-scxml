@@ -19,9 +19,9 @@ import java.awt.geom.Point2D;
  */
 public class Svg extends DrawPrimitive
 {
-	private ShapePainter painter;
-	private String svgSource;
-	private boolean gray;
+	private ShapePainter _painter;
+	private String _svgSource;
+	private boolean _gray;
 
 	/**
 	 * Creates a new SVG Primitive.
@@ -39,8 +39,8 @@ public class Svg extends DrawPrimitive
 			   DrawStyle style, int flags)
 	{
 		super(x, y, config, style, flags);
-		this.painter = new ShapePainter(shape);
-		this.gray = false;
+		this._painter = new ShapePainter(shape);
+		this._gray = false;
 	}
 
 	/**
@@ -57,7 +57,7 @@ public class Svg extends DrawPrimitive
 			   DrawStyle style) throws SVGException
 	{
 		this(x, y, SVGConverter.convert(svg), config, style, VisualFlags.ALWAYS);
-		this.svgSource = svg;
+		this._svgSource = svg;
 	}
 
 
@@ -68,28 +68,28 @@ public class Svg extends DrawPrimitive
 	 */
 	public void setGray(boolean gray)
 	{
-		this.gray = gray;
+		this._gray = gray;
 	}
 
 
 	@Override
 	protected void drawIntern(Graphics2D g2)
 	{
-		painter.paint(g2, null, style.fillPaint, false, gray);
+		_painter.paint(g2, null, _style.fillPaint, false, _gray);
 	}
 
 	@Override
 	protected Dimension2DFloat getInnerDimension(Graphics2D graphics)
 	{
-		return new Dimension2DFloat(painter.getArea());
+		return new Dimension2DFloat(_painter.getArea());
 	}
 
 	@Override
 	protected void toSVGIntern(SVGWriter sw, Graphics2D g2, Point2D.Float pos)
 	{
-		if (svgSource != null)
+		if (_svgSource != null)
 		{
-			sw.write(svgSource);
+			sw.write(_svgSource);
 		}
 	}
 }

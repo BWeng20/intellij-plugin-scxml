@@ -24,7 +24,7 @@ public class ModelPrimitive extends DrawPrimitive
 	/**
 	 * A sub-model.
 	 */
-	protected VisualModel subModel;
+	protected VisualModel _childModel;
 
 
 	/**
@@ -42,39 +42,39 @@ public class ModelPrimitive extends DrawPrimitive
 	}
 
 	/**
-	 * Sets the sub model.
+	 * Sets the child model.
 	 *
 	 * @param model The model or null
 	 */
-	public void setSubModel(VisualModel model)
+	public void setChildModel(VisualModel model)
 	{
-		subModel = model;
+		_childModel = model;
 	}
 
 	@Override
 	public void repaint()
 	{
 		super.repaint();
-		if (subModel != null)
-			subModel.repaint();
+		if (_childModel != null)
+			_childModel.repaint();
 	}
 
 	/**
-	 * Gets the sub-model.
+	 * Gets the child model.
 	 *
 	 * @return The model or null
 	 */
-	public VisualModel getSubModel()
+	public VisualModel getChildModel()
 	{
-		return subModel;
+		return _childModel;
 	}
 
 	@Override
 	protected void drawIntern(Graphics2D g2)
 	{
-		if (subModel != null)
+		if (_childModel != null)
 		{
-			Rectangle2D.Float subBounds = subModel.getBounds2D(g2);
+			Rectangle2D.Float subBounds = _childModel.getBounds2D(g2);
 			Rectangle2D.Float subModelBox = getInnerDimension(g2).getBounds();
 
 			float innerInset2 = 10;
@@ -84,10 +84,10 @@ public class ModelPrimitive extends DrawPrimitive
 			if (scale > 1f)
 				scale = 1f;
 
-			g2.setPaint(style.background);
+			g2.setPaint(_style.background);
 			g2.fill(subModelBox);
-			g2.setStroke(style.lineStroke);
-			g2.setPaint(style.linePaint);
+			g2.setStroke(_style.lineStroke);
+			g2.setPaint(_style.linePaint);
 			g2.draw(subModelBox);
 
 			AffineTransform orgAft = g2.getTransform();
@@ -96,7 +96,7 @@ public class ModelPrimitive extends DrawPrimitive
 				g2.translate((subModelBox.width - subBounds.width * scale) / 2f,
 						(subModelBox.height - subBounds.height * scale) / 2f);
 				g2.scale(scale, scale);
-				subModel.draw(g2);
+				_childModel.draw(g2);
 			}
 			finally
 			{
@@ -109,9 +109,9 @@ public class ModelPrimitive extends DrawPrimitive
 	@Override
 	protected Dimension2DFloat getInnerDimension(Graphics2D g2)
 	{
-		if (subModel != null)
+		if (_childModel != null)
 		{
-			return new Dimension2DFloat(config.innerModelBoxMinDimension);
+			return new Dimension2DFloat(_config.innerModelBoxMinDimension);
 		}
 		return new Dimension2DFloat(0, 0);
 	}
@@ -119,11 +119,11 @@ public class ModelPrimitive extends DrawPrimitive
 	@Override
 	protected void toSVGIntern(SVGWriter sw, Graphics2D g2, Point2D.Float basePos)
 	{
-		if (subModel != null)
+		if (_childModel != null)
 		{
 			sw.startElement(SVGElement.g);
 
-			Rectangle2D.Float subBounds = subModel.getBounds2D(g2);
+			Rectangle2D.Float subBounds = _childModel.getBounds2D(g2);
 			Rectangle2D.Float subModelBox = getInnerDimension(g2).getBounds();
 
 			float innerInset2 = 10;
@@ -138,11 +138,11 @@ public class ModelPrimitive extends DrawPrimitive
 			float offsetY = basePos.y + (subModelBox.height - subBounds.height * scale) / 2f;
 
 			sw.writeAttribute(SVGAttribute.Transform,
-					"translate(" + XmlWriter.floatToString(offsetX, config.precisionFactor)
-							+ " " + XmlWriter.floatToString(offsetY, config.precisionFactor) + ") scale("
-							+ XmlWriter.floatToString(scale, config.precisionFactor) + ")");
+					"translate(" + XmlWriter.floatToString(offsetX, _config.precisionFactor)
+							+ " " + XmlWriter.floatToString(offsetY, _config.precisionFactor) + ") scale("
+							+ XmlWriter.floatToString(scale, _config.precisionFactor) + ")");
 
-			for (Visual v : subModel.getVisuals())
+			for (Visual v : _childModel.getVisuals())
 			{
 				v.toSVG(sw, g2);
 			}
@@ -153,10 +153,10 @@ public class ModelPrimitive extends DrawPrimitive
 	@Override
 	public void dispose()
 	{
-		if (subModel != null)
+		if (_childModel != null)
 		{
-			subModel.dispose();
-			subModel = null;
+			_childModel.dispose();
+			_childModel = null;
 		}
 		super.dispose();
 	}
@@ -164,7 +164,7 @@ public class ModelPrimitive extends DrawPrimitive
 	@Override
 	public boolean isModified()
 	{
-		return subModel != null && subModel.isModified();
+		return _childModel != null && _childModel.isModified();
 	}
 
 	/**
@@ -175,35 +175,35 @@ public class ModelPrimitive extends DrawPrimitive
 	@Override
 	public void setModified(boolean modified)
 	{
-		if (subModel != null)
-			subModel.setModified(modified);
+		if (_childModel != null)
+			_childModel.setModified(modified);
 	}
 
 
 	/**
-	 * Checks if the visual contains a sub-model.
+	 * Checks if the visual contains a child model.
 	 *
 	 * @param visual The visual to check.
-	 * @return True if the visual contains a sub-model.
+	 * @return True if the visual contains a child model.
 	 */
-	public static boolean hasSubModel(Visual visual)
+	public static boolean hasChildModel(Visual visual)
 	{
-		return getSubModel(visual) != null;
+		return getChildModel(visual) != null;
 	}
 
 	/**
-	 * Gets a sub-model from visual.
+	 * Gets a child model from visual.
 	 *
 	 * @param visual The visual.
-	 * @return The sub-model or null.
+	 * @return The child model or null.
 	 */
-	public static VisualModel getSubModel(Visual visual)
+	public static VisualModel getChildModel(Visual visual)
 	{
 		if (visual != null)
 		{
 			ModelPrimitive modelPrimitive = visual.getPrimitiveOf(ModelPrimitive.class);
 			if (modelPrimitive != null)
-				return modelPrimitive.getSubModel();
+				return modelPrimitive.getChildModel();
 		}
 		return null;
 	}

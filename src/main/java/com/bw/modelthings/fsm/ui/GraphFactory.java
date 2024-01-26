@@ -91,10 +91,10 @@ public class GraphFactory
 	public Visual createStartVisual(State start, float x, float y, float radius, DrawContext style)
 	{
 		GenericPrimitiveVisual startNode = new GenericPrimitiveVisual("*", style);
-		Circle circle = new Circle(radius, radius, radius, style.configuration, style.style, VisualFlags.ALWAYS);
+		Circle circle = new Circle(radius, radius, radius, style._configuration, style._style, VisualFlags.ALWAYS);
 		circle.setFill(true);
 		startNode.addDrawingPrimitive(circle);
-		Circle circleActive = new Circle(radius, radius, radius + 5, style.configuration, style.style, VisualFlags.SELECTED);
+		Circle circleActive = new Circle(radius, radius, radius + 5, style._configuration, style._style, VisualFlags.SELECTED);
 		startNode.addDrawingPrimitive(circleActive);
 		startNode.setModified(false);
 		startNode.setFlags(START_NODE_FLAG);
@@ -169,7 +169,7 @@ public class GraphFactory
 			ConnectorVisual targetConnector = new ConnectorVisual(target, style, VisualFlags.ALWAYS);
 			Rectangle2D.Float targetConnectorBounds = targetConnector.getAbsoluteBounds2D(g2);
 			if (toInnerModel)
-				targetConnector.setRelativePosition(style.configuration.innerModelBoxInsets.left - targetConnectorBounds.width + (targetConnectorBounds.width / 2f), (targetBounds.height - targetConnectorBounds.height) / 2f);
+				targetConnector.setRelativePosition(style._configuration.innerModelBoxInsets.left - targetConnectorBounds.width + (targetConnectorBounds.width / 2f), (targetBounds.height - targetConnectorBounds.height) / 2f);
 			else
 				targetConnector.setRelativePosition(-targetConnectorBounds.width + (targetConnectorBounds.width / 2f), (targetBounds.height - targetConnectorBounds.height) / 2f);
 
@@ -220,9 +220,9 @@ public class GraphFactory
 			states.add(fsm.pseudoRoot);
 
 			final float gapY = 5;
-			float fh = stateOutlineStyles.style.fontMetrics.getHeight();
+			float fh = stateOutlineStyles._style.fontMetrics.getHeight();
 
-			InsetsFloat insets = stateInnerStyles.configuration.innerModelBoxInsets;
+			InsetsFloat insets = stateInnerStyles._configuration.innerModelBoxInsets;
 			insets.top = fh * 2.5f;
 			insets.bottom = fh;
 			insets.left = fh;
@@ -251,7 +251,7 @@ public class GraphFactory
 
 					if (state.parent != null)
 					{
-						VisualModel model = ModelPrimitive.getSubModel(stateVisuals.get(state.parent.name));
+						VisualModel model = ModelPrimitive.getChildModel(stateVisuals.get(state.parent.name));
 						model.addVisual(stateVisual);
 					}
 					else
@@ -267,10 +267,10 @@ public class GraphFactory
 							modelName = pseudoRoot.fsmName;
 						}
 						VisualModel subModel = new VisualModel(modelName);
-						ModelPrimitive modelPrimitive = new ModelPrimitive(0, 0, stateInnerStyles.configuration, stateInnerStyles.style, VisualFlags.ALWAYS);
+						ModelPrimitive modelPrimitive = new ModelPrimitive(0, 0, stateInnerStyles._configuration, stateInnerStyles._style, VisualFlags.ALWAYS);
 						modelPrimitive.setAlignment(Alignment.Center);
-						modelPrimitive.setInsets(stateInnerStyles.configuration.innerModelBoxInsets);
-						modelPrimitive.setSubModel(subModel);
+						modelPrimitive.setInsets(stateInnerStyles._configuration.innerModelBoxInsets);
+						modelPrimitive.setChildModel(subModel);
 						stateVisuals.get(state.name)
 									.addDrawingPrimitive(modelPrimitive);
 						statePosition = new Rectangle2D.Float(3 * fh, fh, 0, 0);
@@ -278,7 +278,7 @@ public class GraphFactory
 						states.addAll(state.states);
 
 					}
-					for (Transition t : state.transitions.asList())
+					for (Transition t : state.transitions)
 					{
 						states.addAll(t.target);
 						transitions.put(t.docId, t);
@@ -295,12 +295,7 @@ public class GraphFactory
 				if (state.parent != null)
 				{
 					statePosition = statePositions.get(state.parent.name);
-					ModelPrimitive modelPrimitive = visual.getPrimitiveOf(ModelPrimitive.class);
 					createStatePrimitives(visual, statePosition.x, statePosition.y, state, g2, stateOutlineStyles, stateInnerStyles);
-
-					if (modelPrimitive != null)
-						visual.addDrawingPrimitive(modelPrimitive);
-
 
 					Rectangle2D.Float bounds = visual.getAbsoluteBounds2D(g2);
 					if (bounds != null)
@@ -323,7 +318,7 @@ public class GraphFactory
 			{
 				for (State target : t.target)
 				{
-					ModelPrimitive.getSubModel(stateVisuals.get(t.source.parent.name))
+					ModelPrimitive.getChildModel(stateVisuals.get(t.source.parent.name))
 								  .addVisual(
 										  createEdge(t.docId, t.source, target, g2, edgeStyles));
 				}
@@ -337,7 +332,7 @@ public class GraphFactory
 					Visual startVisual = createStartVisual(state, fh / 2, fh, fh / 2, startStyles);
 
 					Visual stateVisual = stateVisuals.get(state.name);
-					VisualModel innerModel = ModelPrimitive.getSubModel(stateVisual);
+					VisualModel innerModel = ModelPrimitive.getChildModel(stateVisual);
 					innerModel.addVisual(startVisual);
 
 					List<State> initialStates = new ArrayList<>();

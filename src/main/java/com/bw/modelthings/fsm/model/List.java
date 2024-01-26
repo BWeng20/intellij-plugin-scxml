@@ -1,6 +1,8 @@
 package com.bw.modelthings.fsm.model;
 
-import java.util.Collections;
+import java.util.AbstractCollection;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.function.Predicate;
 
@@ -10,8 +12,9 @@ import java.util.function.Predicate;
  * See <a href="https:/**www.w3.org/TR/scxml/#AlgorithmforSCXMLInterpretation">AlgorithmforSCXMLInterpretation</a>
  * </p>
  * <p>Structs and methods are designed to match the signatures in the W3c-Pseudo-code.</p>
+ * <p>Additional it implements {@link Collection}</p>
  */
-public class List<T>
+public class List<T> extends AbstractCollection<T>
 {
 	final LinkedList<T> _list = new LinkedList<>();
 
@@ -22,14 +25,16 @@ public class List<T>
 	{
 	}
 
-	/**
-	 * This list as unmodifiable {@link java.util.List}.
-	 *
-	 * @return The list.
-	 */
-	public java.util.List<T> asList()
+	@Override
+	public Iterator<T> iterator()
 	{
-		return Collections.unmodifiableList(_list);
+		return _list.iterator();
+	}
+
+	@Override
+	public int size()
+	{
+		return _list.size();
 	}
 
 	/**
@@ -37,10 +42,21 @@ public class List<T>
 	 *
 	 * @param l The element to add.
 	 */
-	public void add(T l)
+	public boolean add(T l)
 	{
-		_list.add(l);
+		return _list.add(l);
 	}
+
+	/**
+	 * Adds all elements to the list.
+	 *
+	 * @param l The list to add.
+	 */
+	public void add(Collection<T> l)
+	{
+		_list.addAll(l);
+	}
+
 
 	/**
 	 * Creates a list filled with all elements from l.
@@ -152,5 +168,13 @@ public class List<T>
 	{
 		return _list.stream()
 					.allMatch(f);
+	}
+
+	/**
+	 * Removes all elements.
+	 */
+	public void clear()
+	{
+		_list.clear();
 	}
 }

@@ -8,14 +8,16 @@ import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Used to visualize connectors in different modes.
  */
 public class PathControlVisual extends Visual implements PathControlPoint
 {
-	private DrawPrimitive primitive;
-	private float radius = 3;
+	private DrawPrimitive _primitive;
+	private float _radius = 3;
 
 	/**
 	 * Creates a new Primitive.
@@ -25,7 +27,7 @@ public class PathControlVisual extends Visual implements PathControlPoint
 	public PathControlVisual(DrawContext context)
 	{
 		super(null, context);
-		this.primitive = new Rectangle(-radius, -radius, 2 * radius, 2 * radius, 0, context.configuration, context.style, VisualFlags.ALWAYS);
+		this._primitive = new Rectangle(-_radius, -_radius, 2 * _radius, 2 * _radius, 0, context._configuration, context._style, VisualFlags.ALWAYS);
 	}
 
 	/**
@@ -38,21 +40,21 @@ public class PathControlVisual extends Visual implements PathControlPoint
 	{
 		if (isFlagSet(VisualFlags.SELECTED))
 		{
-			primitive.draw(g2);
+			_primitive.draw(g2);
 		}
 	}
 
 	@Override
 	public DrawPrimitive getEditablePrimitiveAt(float x, float y)
 	{
-		primitive.setVisual(this);
-		return primitive;
+		_primitive.setVisual(this);
+		return _primitive;
 	}
 
 	@Override
 	protected void updateBounds(Graphics2D graphics)
 	{
-		absoluteBounds.setRect(primitive.getBounds2D(absolutePosition.x, absolutePosition.y, graphics));
+		_absoluteBounds.setRect(_primitive.getBounds2D(_absolutePosition.x, _absolutePosition.y, graphics));
 	}
 
 	@Override
@@ -65,23 +67,20 @@ public class PathControlVisual extends Visual implements PathControlPoint
 	public void dispose()
 	{
 		super.dispose();
-		primitive = null;
+		_primitive = null;
 	}
 
 	@Override
 	public void getControlPosition(Point2D.Float pt)
 	{
 		getAbsolutePosition(pt);
-		pt.x += radius;
-		pt.y += radius;
+		pt.x += _radius;
+		pt.y += _radius;
 	}
 
-	public <T extends DrawPrimitive> T getPrimitiveOf(Class<T> primitiveClass)
+	@Override
+	public List<DrawPrimitive> getPrimitives()
 	{
-		if (primitiveClass.isAssignableFrom(primitive.getClass()))
-			return (T) primitive;
-		return
-				null;
-
+		return Collections.singletonList(_primitive);
 	}
 }

@@ -17,13 +17,13 @@ public abstract class ShapePrimitiveBase extends DrawPrimitive
 	/**
 	 * The shape to draw.
 	 */
-	protected Shape shape;
+	protected Shape _shape;
 
 
 	/**
 	 * If true the shape is filled.
 	 */
-	protected boolean fill;
+	protected boolean _fill;
 
 	/**
 	 * Creates a new Shape Primitive.
@@ -37,7 +37,7 @@ public abstract class ShapePrimitiveBase extends DrawPrimitive
 	protected ShapePrimitiveBase(float x, float y, GraphConfiguration config, DrawStyle style, int flags)
 	{
 		super(x, y, config, style, flags);
-		this.fill = false;
+		this._fill = false;
 	}
 
 	/**
@@ -48,16 +48,16 @@ public abstract class ShapePrimitiveBase extends DrawPrimitive
 	@Override
 	protected void drawIntern(Graphics2D g2)
 	{
-		if (shape != null)
+		if (_shape != null)
 		{
-			if (fill && style.fillPaint != null)
+			if (_fill && _style.fillPaint != null)
 			{
-				g2.setPaint(style.fillPaint);
-				g2.fill(shape);
+				g2.setPaint(_style.fillPaint);
+				g2.fill(_shape);
 			}
-			g2.setPaint(style.linePaint);
-			g2.setStroke(style.lineStroke);
-			g2.draw(shape);
+			g2.setPaint(_style.linePaint);
+			g2.setStroke(_style.lineStroke);
+			g2.draw(_shape);
 		}
 	}
 
@@ -70,9 +70,9 @@ public abstract class ShapePrimitiveBase extends DrawPrimitive
 	@Override
 	protected Dimension2DFloat getInnerDimension(Graphics2D graphics)
 	{
-		if (shape != null)
+		if (_shape != null)
 		{
-			Rectangle2D bounds = shape.getBounds2D();
+			Rectangle2D bounds = _shape.getBounds2D();
 			return new Dimension2DFloat((float) bounds.getWidth(), (float) bounds.getHeight());
 		}
 		else
@@ -86,7 +86,7 @@ public abstract class ShapePrimitiveBase extends DrawPrimitive
 	 */
 	public void setFill(boolean fill)
 	{
-		this.fill = fill;
+		this._fill = fill;
 	}
 
 	/**
@@ -96,7 +96,7 @@ public abstract class ShapePrimitiveBase extends DrawPrimitive
 	 */
 	public boolean isFill()
 	{
-		return fill;
+		return _fill;
 	}
 
 	/**
@@ -106,7 +106,7 @@ public abstract class ShapePrimitiveBase extends DrawPrimitive
 	 */
 	public Shape getShape()
 	{
-		return shape;
+		return _shape;
 	}
 
 }
