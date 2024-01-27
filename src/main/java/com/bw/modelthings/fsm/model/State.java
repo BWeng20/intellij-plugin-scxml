@@ -8,7 +8,6 @@ import java.util.Arrays;
  */
 public class State implements FsmElement
 {
-
 	/**
 	 * Creates a new state.
 	 */
@@ -21,91 +20,91 @@ public class State implements FsmElement
 	 * The unique id, counting in document order.<br>
 	 * "id" is increasing on references to states, not declaration and may not result in correct order.
 	 */
-	public int docId;
+	public int _docId;
 
 	/**
 	 * The SCXML id.
 	 */
-	public String name;
+	public String _name;
 
 	/**
 	 * The initial transition id (if the state has sub-states).
 	 */
-	public Transition initial;
+	public Transition _initial;
 
 	/**
 	 * The sub-states of this state.
 	 */
-	public final java.util.List<State> states = new ArrayList<>();
+	public final java.util.List<State> _states = new ArrayList<>();
 
 	/**
 	 * True for "parallel" states
 	 */
-	public boolean isParallel = false;
+	public boolean _isParallel = false;
 
 	/**
 	 * True for "final" states
 	 */
-	public boolean isFinal = false;
+	public boolean _isFinal = false;
 
 	/**
 	 * The type of hosztory for this state.
 	 */
-	public HistoryType historyType;
+	public HistoryType _historyType;
 
 	/**
 	 * The script that is executed if the state is entered. See W3c comments for &lt;onentry&gt; above.
 	 */
-	public ExecutableContent onentry;
+	public ExecutableContent _onEntry;
 
 	/**
 	 * The script that is executed if the state is left. See W3c comments for &lt;onexit&gt; above.
 	 */
-	public ExecutableContent onexit;
+	public ExecutableContent _onExit;
 
 	/**
 	 * All transitions between sub-states.
 	 */
-	public List<Transition> transitions = new List<>();
+	public List<Transition> _transitions = new List<>();
 
 	/**
 	 * List of invokes to execute if state is entered.
 	 */
-	public java.util.List<Invoke> invoke;
+	public java.util.List<Invoke> _invoke;
 
 	/**
 	 * State history.
 	 */
-	public java.util.List<State> history;
+	public java.util.List<State> _history;
 
 	/**
 	 * The local datamodel
 	 */
-	public DataStore data;
+	public DataStore _data;
 
 	/**
 	 * True if state was never entered.
 	 */
-	public boolean isFirstEntry;
+	public boolean _isFirstEntry;
 
 	/**
 	 * The parent state or null.
 	 */
-	public State parent;
+	public State _parent;
 
 	/**
 	 * DoneData of final states or null.
 	 */
-	public DoneData donedata;
+	public DoneData _doneData;
 
 	@Override
 	public String toString()
 	{
 		StringBuilder sb = new StringBuilder(50);
-		sb.append(name);
-		if (isParallel)
+		sb.append(_name);
+		if (_isParallel)
 			sb.append(" (parallel)");
-		if (isFinal)
+		if (_isFinal)
 			sb.append(" (final)");
 		return sb.toString();
 	}
@@ -117,9 +116,9 @@ public class State implements FsmElement
 	 */
 	public java.util.List<State> getInnerStatesInDocumentOrder()
 	{
-		State[] statesArray = new State[states.size()];
-		statesArray = states.toArray(statesArray);
-		Arrays.sort(statesArray, (s1, s2) -> s1.docId - s2.docId);
+		State[] statesArray = new State[_states.size()];
+		statesArray = _states.toArray(statesArray);
+		Arrays.sort(statesArray, (s1, s2) -> s1._docId - s2._docId);
 		return Arrays.asList(statesArray);
 	}
 

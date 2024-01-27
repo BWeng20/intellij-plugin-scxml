@@ -52,8 +52,8 @@ public class Circle extends ShapePrimitiveBase
 		sw.writeAttribute(SVGAttribute.R, (_diameter / 2));
 		sw.startStyle();
 		if (isFill())
-			sw.writeAttribute(SVGAttribute.Fill, _style.fillPaint);
-		sw.writeAttribute(SVGAttribute.Stroke, _style.linePaint);
+			sw.writeAttribute(SVGAttribute.Fill, _style._fillPaint);
+		sw.writeAttribute(SVGAttribute.Stroke, _style._linePaint);
 		sw.writeStrokeWidth(_style.getStrokeWidth());
 		sw.endElement();
 	}

@@ -37,7 +37,7 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	{
 		super(null, context);
 		this._parent = parent;
-		this._radius = context._configuration.connectorSize;
+		this._radius = context._configuration._connectorSize;
 		this._primitive = new Circle(_radius, _radius, _radius, context._configuration, context._style, flags);
 	}
 
@@ -124,8 +124,8 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 		Dimension2DFloat dim = _primitive.getDimension(graphics);
 		_absoluteBounds.x = _absolutePosition.x;
 		_absoluteBounds.y = _absolutePosition.y;
-		_absoluteBounds.width = dim.width;
-		_absoluteBounds.height = dim.height;
+		_absoluteBounds.width = dim._width;
+		_absoluteBounds.height = dim._height;
 	}
 
 	@Override

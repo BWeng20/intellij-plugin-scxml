@@ -36,43 +36,43 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 	/**
 	 * Message bus for change notification.
 	 */
-	private MessageBusConnection mbCon;
+	private MessageBusConnection _mbCon;
 
 	/**
 	 * The editor component containing the two editors.
 	 */
-	JComponent component;
+	JComponent _component;
 
 	/**
 	 * Graphical editor.
 	 */
-	ScxmlGraphEditor scxmlEditor;
+	ScxmlGraphEditor _scxmlEditor;
 
 	/**
 	 * Textual editor.
 	 */
-	TextEditor xmlTextEditor;
+	TextEditor _xmlTextEditor;
 
 	/**
 	 * The file the editor is showing.
 	 */
-	final VirtualFile file;
+	final VirtualFile _file;
 
 	/**
 	 * The project the current file comes from.
 	 */
-	final Project theProject;
+	final Project _theProject;
 
 	/**
 	 * The layout of XML and Graph editor.
 	 */
-	EditorLayout editorLayout = EditorLayout.Tabs;
+	EditorLayout _editorLayout = EditorLayout.Tabs;
 
 	@Override
 	@NotNull
 	public VirtualFile getFile()
 	{
-		return file;
+		return _file;
 	}
 
 	private static final String PROPORTION_KEY = "ScxmlFileEditor.SplitProportion";
@@ -85,18 +85,18 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 	 */
 	public ScxmlEditor(@NotNull VirtualFile file, @NotNull Project theProject)
 	{
-		this.file = file;
-		this.theProject = theProject;
+		this._file = file;
+		this._theProject = theProject;
 
 		PersistenceService persistenceService = theProject.getService(PersistenceService.class);
 		if (persistenceService != null)
 		{
-			editorLayout = persistenceService.getState().editorLayout;
+			_editorLayout = persistenceService.getState()._editorLayout;
 		}
 
-		mbCon = theProject.getMessageBus()
-						  .connect();
-		mbCon.subscribe(ChangeConfigurationNotifier.CHANGE_CONFIG_TOPIC, (ChangeConfigurationNotifier) this::setConfiguration);
+		_mbCon = theProject.getMessageBus()
+						   .connect();
+		_mbCon.subscribe(ChangeConfigurationNotifier.CHANGE_CONFIG_TOPIC, (ChangeConfigurationNotifier) this::setConfiguration);
 
 		createComponent(theProject);
 
@@ -106,13 +106,13 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 	@Override
 	public @NotNull JComponent getComponent()
 	{
-		return component;
+		return _component;
 	}
 
 	@Override
 	public @Nullable JComponent getPreferredFocusedComponent()
 	{
-		return scxmlEditor.getComponent();
+		return _scxmlEditor.getComponent();
 	}
 
 	@Override
@@ -127,11 +127,11 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 		if (state instanceof ScxmlEditorState)
 		{
 			final ScxmlEditorState compositeState = (ScxmlEditorState) state;
-			if (compositeState.xmlEditorState != null)
+			if (compositeState._xmlEditorState != null)
 			{
 				// xmlTextEditor.setState(compositeState.xmlEditorState);
 			}
-			if (compositeState.scxmlEditorState != null)
+			if (compositeState._scxmlEditorState != null)
 			{
 				// scxmlEditor.setState(compositeState.scxmlEditorState;
 			}
@@ -142,35 +142,35 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 	@Override
 	public boolean isModified()
 	{
-		return xmlTextEditor.isModified() || scxmlEditor.isModified();
+		return _xmlTextEditor.isModified() || _scxmlEditor.isModified();
 	}
 
 	@Override
 	public boolean isValid()
 	{
-		return xmlTextEditor.isValid() && scxmlEditor.isValid();
+		return _xmlTextEditor.isValid() && _scxmlEditor.isValid();
 	}
 
 	@Override
 	public void addPropertyChangeListener(@NotNull PropertyChangeListener listener)
 	{
-		xmlTextEditor.addPropertyChangeListener(listener);
-		scxmlEditor.addPropertyChangeListener(listener);
+		_xmlTextEditor.addPropertyChangeListener(listener);
+		_scxmlEditor.addPropertyChangeListener(listener);
 	}
 
 	@Override
 	public void removePropertyChangeListener(@NotNull PropertyChangeListener listener)
 	{
-		xmlTextEditor.removePropertyChangeListener(listener);
-		scxmlEditor.removePropertyChangeListener(listener);
+		_xmlTextEditor.removePropertyChangeListener(listener);
+		_scxmlEditor.removePropertyChangeListener(listener);
 	}
 
 	@Override
 	public void dispose()
 	{
-		Disposer.dispose(xmlTextEditor);
-		Disposer.dispose(scxmlEditor);
-		Disposer.dispose(mbCon);
+		Disposer.dispose(_xmlTextEditor);
+		Disposer.dispose(_scxmlEditor);
+		Disposer.dispose(_mbCon);
 	}
 
 	/**
@@ -180,13 +180,13 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 	 */
 	protected void createComponent(@NotNull Project project)
 	{
-		scxmlEditor = new ScxmlGraphEditor(file, PsiManager.getInstance(project)
-														   .findFile(file));
+		_scxmlEditor = new ScxmlGraphEditor(_file, PsiManager.getInstance(project)
+															 .findFile(_file));
 
-		xmlTextEditor = (TextEditor) TextEditorProvider.getInstance()
-													   .createEditor(project, file);
+		_xmlTextEditor = (TextEditor) TextEditorProvider.getInstance()
+														.createEditor(project, _file);
 
-		component = new JPanel(new BorderLayout());
+		_component = new JPanel(new BorderLayout());
 
 		applyLayout();
 	}
@@ -196,40 +196,40 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 	 */
 	protected void applyLayout()
 	{
-		component.removeAll();
+		_component.removeAll();
 
-		switch (editorLayout)
+		switch (_editorLayout)
 		{
 			default:
 			case Tabs:
 			{
-				JBTabs tabs = JBTabsFactory.createEditorTabs(theProject, this);
-				TabInfo xmlTabInfo = new TabInfo(xmlTextEditor.getComponent());
+				JBTabs tabs = JBTabsFactory.createEditorTabs(_theProject, this);
+				TabInfo xmlTabInfo = new TabInfo(_xmlTextEditor.getComponent());
 				xmlTabInfo.setText("XML");
 				tabs.addTab(xmlTabInfo);
 
-				TabInfo graphTabInfo = new TabInfo(scxmlEditor.getComponent());
+				TabInfo graphTabInfo = new TabInfo(_scxmlEditor.getComponent());
 				graphTabInfo.setIcon(Icons.STATE_MACHINE);
 
 				tabs.addTab(graphTabInfo);
 				tabs.select(graphTabInfo, false);
-				component.add(tabs.getComponent(), BorderLayout.CENTER);
+				_component.add(tabs.getComponent(), BorderLayout.CENTER);
 			}
 			break;
 			case SplitHorizontal:
 			{
 				JBSplitter splitter = new JBSplitter(false);
-				splitter.setFirstComponent(xmlTextEditor.getComponent());
-				splitter.setSecondComponent(scxmlEditor.getComponent());
-				component.add(splitter, BorderLayout.CENTER);
+				splitter.setFirstComponent(_xmlTextEditor.getComponent());
+				splitter.setSecondComponent(_scxmlEditor.getComponent());
+				_component.add(splitter, BorderLayout.CENTER);
 			}
 			break;
 			case SplitVertical:
 			{
 				JBSplitter splitter = new JBSplitter(true);
-				splitter.setFirstComponent(xmlTextEditor.getComponent());
-				splitter.setSecondComponent(scxmlEditor.getComponent());
-				component.add(splitter, BorderLayout.CENTER);
+				splitter.setFirstComponent(_xmlTextEditor.getComponent());
+				splitter.setSecondComponent(_scxmlEditor.getComponent());
+				_component.add(splitter, BorderLayout.CENTER);
 			}
 			break;
 		}
@@ -246,14 +246,14 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 	{
 		if (config != null)
 		{
-			if (scxmlEditor != null && scxmlEditor.component != null)
+			if (_scxmlEditor != null && _scxmlEditor._component != null)
 			{
-				scxmlEditor.component.setConfiguration(config);
+				_scxmlEditor._component.setConfiguration(config);
 			}
 
-			if (config.editorLayout != editorLayout)
+			if (config._editorLayout != _editorLayout)
 			{
-				editorLayout = config.editorLayout;
+				_editorLayout = config._editorLayout;
 				applyLayout();
 			}
 		}

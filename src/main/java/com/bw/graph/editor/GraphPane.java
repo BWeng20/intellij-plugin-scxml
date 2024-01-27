@@ -13,8 +13,27 @@ import com.bw.svg.SVGWriter;
 import javax.swing.JComponent;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.Point;
+import java.awt.RenderingHints;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.geom.Rectangle2D;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -144,8 +163,8 @@ public class GraphPane extends JComponent
 				x -= _offsetX;
 				y -= _offsetY;
 
-				x /= _configuration.scale;
-				y /= _configuration.scale;
+				x /= _configuration._scale;
+				y /= _configuration._scale;
 
 				DrawPrimitive editablePrimitive = clicked.getEditablePrimitiveAt(x, y);
 				if (editablePrimitive == null)
@@ -195,7 +214,7 @@ public class GraphPane extends JComponent
 		@Override
 		public void mouseWheelMoved(MouseWheelEvent we)
 		{
-			if (_configuration.zoomByMetaMouseWheelEnabled)
+			if (_configuration._zoomByMetaMouseWheelEnabled)
 			{
 				int wheel = we.getWheelRotation();
 				if (wheel != 0)
@@ -203,13 +222,13 @@ public class GraphPane extends JComponent
 					int mod = we.getModifiersEx();
 					if ((mod & (InputEvent.CTRL_DOWN_MASK | InputEvent.META_DOWN_MASK)) != 0)
 					{
-						float scale = _configuration.scale - 0.1f * wheel;
+						float scale = _configuration._scale - 0.1f * wheel;
 						if (scale >= 0.1)
 						{
-							_configuration.scale = scale;
+							_configuration._scale = scale;
 							SwingUtilities.invokeLater(() ->
 							{
-								if (_configuration.buffered)
+								if (_configuration._buffered)
 									_model.repaint();
 								cancelEdit();
 								revalidate();
@@ -276,7 +295,7 @@ public class GraphPane extends JComponent
 
 			if (_draggingVisual != null)
 			{
-				_draggingVisual.moveBy(xd / _configuration.scale, yd / _configuration.scale);
+				_draggingVisual.moveBy(xd / _configuration._scale, yd / _configuration._scale);
 				fireMouseDragging(_draggingVisual);
 				revalidate();
 				repaint();
@@ -325,8 +344,8 @@ public class GraphPane extends JComponent
 		x -= _offsetX;
 		y -= _offsetY;
 
-		x /= _configuration.scale;
-		y /= _configuration.scale;
+		x /= _configuration._scale;
+		y /= _configuration._scale;
 
 		var visuals = _model.getVisuals();
 		for (var it = visuals.listIterator(visuals.size()); it.hasPrevious(); )
@@ -383,16 +402,16 @@ public class GraphPane extends JComponent
 		Graphics2D g2 = (Graphics2D) g.create();
 		g2.translate(_offsetX, _offsetY);
 
-		if (_configuration.antialiasing)
+		if (_configuration._antialiasing)
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		try
 		{
 			if (isOpaque())
 			{
-				g2.setPaint(_configuration.graphBackground == null ? getBackground() : _configuration.graphBackground);
+				g2.setPaint(_configuration._graphBackground == null ? getBackground() : _configuration._graphBackground);
 				g2.fillRect(0, 0, getWidth(), getHeight());
 			}
-			g2.scale(_configuration.scale, _configuration.scale);
+			g2.scale(_configuration._scale, _configuration._scale);
 
 			_model.draw(g2);
 			if (_selectedPrimitive != null && _selectedPrimitiveEditor == null)
@@ -426,23 +445,23 @@ public class GraphPane extends JComponent
 		Graphics2D g2 = (Graphics2D) getGraphics();
 		StringWriter ssw = new StringWriter();
 		SVGWriter sw = new SVGWriter(ssw);
-		sw.precisionFactor = _configuration.precisionFactor;
+		sw._precisionFactor = _configuration._precisionFactor;
 
 		Rectangle2D.Float bounds = getBounds2D();
 		sw.startSVG(bounds);
 
-		Paint bg = _configuration.graphBackground == null ? getBackground() : _configuration.graphBackground;
+		Paint bg = _configuration._graphBackground == null ? getBackground() : _configuration._graphBackground;
 		if (bg != null)
 		{
 			sw.startStyle();
 			sw.writeAttribute(SVGAttribute.BackgroundColor, bg);
 			sw.endStyle();
 		}
-		if (_model.name != null)
+		if (_model._name != null)
 		{
 			sw.startElement("title");
 			sw.startContent();
-			sw.writeEscaped(_model.name);
+			sw.writeEscaped(_model._name);
 			sw.endElement();
 		}
 		for (Visual v : _model.getVisuals())
@@ -584,7 +603,7 @@ public class GraphPane extends JComponent
 			try
 			{
 				g2.translate(_offsetX, _offsetY);
-				g2.scale(_configuration.scale, _configuration.scale);
+				g2.scale(_configuration._scale, _configuration._scale);
 
 				if (_selectedPrimitive != null && _selectedPrimitiveEditor == null)
 				{
@@ -667,10 +686,10 @@ public class GraphPane extends JComponent
 	public Rectangle2D.Float getBounds2D()
 	{
 		Rectangle2D.Float bounds = _model.getBounds2D((Graphics2D) getGraphics());
-		bounds.x *= _configuration.scale;
-		bounds.y *= _configuration.scale;
-		bounds.height = 5 + bounds.height * _configuration.scale;
-		bounds.width = 5 + bounds.width * _configuration.scale;
+		bounds.x *= _configuration._scale;
+		bounds.y *= _configuration._scale;
+		bounds.height = 5 + bounds.height * _configuration._scale;
+		bounds.width = 5 + bounds.width * _configuration._scale;
 
 		return bounds;
 	}
@@ -787,7 +806,7 @@ public class GraphPane extends JComponent
 				_selectedPrimitiveEditor = _selectedPrimitiveEditorProxy.getEditor(_selectedPrimitive);
 				Rectangle2D.Float rt = v.getBoundsOfPrimitive(g2, _selectedPrimitive);
 
-				final float scale = _configuration.scale;
+				final float scale = _configuration._scale;
 				rt.x += _offsetX;
 				rt.y += _offsetY;
 				rt.x *= scale;
@@ -798,21 +817,21 @@ public class GraphPane extends JComponent
 				Font font;
 				FontMetrics fontMetrics;
 				DrawStyle style = _selectedPrimitive.getStyle();
-				if (style.fontMetrics != null)
+				if (style._fontMetrics != null)
 				{
-					font = style.font;
-					fontMetrics = style.fontMetrics;
+					font = style._font;
+					fontMetrics = style._fontMetrics;
 				}
 				else
 				{
 					font = getFont();
 					fontMetrics = getFontMetrics(font);
 				}
-				font = font.deriveFont((float) (int) (0.5 + font.getSize() * _configuration.scale));
+				font = font.deriveFont((float) (int) (0.5 + font.getSize() * _configuration._scale));
 				_selectedPrimitiveEditor.setFont(font);
 				Dimension d = _selectedPrimitiveEditor.getPreferredSize();
 
-				float minWidth = fontMetrics.charWidth('X') * 20 * _configuration.scale;
+				float minWidth = fontMetrics.charWidth('X') * 20 * _configuration._scale;
 				d.width = (int) (0.5 + Math.max(minWidth, d.width));
 
 				rt.x += (rt.width - d.width) / 2f;
@@ -864,7 +883,7 @@ public class GraphPane extends JComponent
 			{
 				Graphics2D g2 = (Graphics2D) getGraphics();
 				g2.translate(_offsetX, _offsetY);
-				g2.scale(_configuration.scale, _configuration.scale);
+				g2.scale(_configuration._scale, _configuration._scale);
 				_selectedPrimitiveEditorProxy.endEdit(_selectedPrimitive, g2);
 			}
 			_selectedPrimitive = null;

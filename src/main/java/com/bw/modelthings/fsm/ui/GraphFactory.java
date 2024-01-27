@@ -45,18 +45,18 @@ public class GraphFactory
 	/**
 	 * State visuals by state name.
 	 */
-	protected java.util.Map<String, GenericPrimitiveVisual> stateVisuals = new HashMap<>();
+	protected java.util.Map<String, GenericPrimitiveVisual> _stateVisuals = new HashMap<>();
 
 
 	/**
 	 * Extensions with layout information
 	 */
-	protected GraphExtension graphExtension;
+	protected GraphExtension _graphExtension;
 
 	/**
 	 * The text field to use as state name editor.
 	 */
-	protected JTextComponent stateNameTextField;
+	protected JTextComponent _stateNameTextField;
 
 	/**
 	 * Creates a new factory.
@@ -65,7 +65,7 @@ public class GraphFactory
 	 */
 	public GraphFactory(GraphExtension graphExtension)
 	{
-		this.graphExtension = graphExtension;
+		this._graphExtension = graphExtension;
 	}
 
 	/**
@@ -75,7 +75,7 @@ public class GraphFactory
 	 */
 	public void setStateNameEditorComponent(JTextComponent textEditor)
 	{
-		stateNameTextField = textEditor;
+		_stateNameTextField = textEditor;
 	}
 
 	/**
@@ -99,7 +99,7 @@ public class GraphFactory
 		startNode.setModified(false);
 		startNode.setFlags(START_NODE_FLAG);
 
-		GraphExtension.PosAndBounds startBounds = graphExtension.startBounds.get(start.docId);
+		GraphExtension.PosAndBounds startBounds = _graphExtension._startBounds.get(start._docId);
 		if (startBounds == null)
 		{
 			startNode.setAbsolutePosition(x, y, null);
@@ -126,17 +126,17 @@ public class GraphFactory
 	{
 		if (source != null && target != null)
 		{
-			GenericPrimitiveVisual sourceVisual = stateVisuals.get(source.name);
+			GenericPrimitiveVisual sourceVisual = _stateVisuals.get(source._name);
 
 			boolean toInnerModel = false;
-			while (target != null && !source.parent.states.contains(target))
+			while (target != null && !source._parent._states.contains(target))
 			{
-				target = target.parent;
+				target = target._parent;
 				toInnerModel = true;
 			}
 			if (target != null)
 			{
-				return createEdge(id, sourceVisual, stateVisuals.get(target.name), g2, style, toInnerModel);
+				return createEdge(id, sourceVisual, _stateVisuals.get(target._name), g2, style, toInnerModel);
 			}
 		}
 		return null;
@@ -169,7 +169,7 @@ public class GraphFactory
 			ConnectorVisual targetConnector = new ConnectorVisual(target, style, VisualFlags.ALWAYS);
 			Rectangle2D.Float targetConnectorBounds = targetConnector.getAbsoluteBounds2D(g2);
 			if (toInnerModel)
-				targetConnector.setRelativePosition(style._configuration.innerModelBoxInsets.left - targetConnectorBounds.width + (targetConnectorBounds.width / 2f), (targetBounds.height - targetConnectorBounds.height) / 2f);
+				targetConnector.setRelativePosition(style._configuration._innerModelBoxInsets._left - targetConnectorBounds.width + (targetConnectorBounds.width / 2f), (targetBounds.height - targetConnectorBounds.height) / 2f);
 			else
 				targetConnector.setRelativePosition(-targetConnectorBounds.width + (targetConnectorBounds.width / 2f), (targetBounds.height - targetConnectorBounds.height) / 2f);
 
@@ -191,8 +191,8 @@ public class GraphFactory
 	 */
 	public void createStatePrimitives(Visual visual, float x, float y, State state, Graphics2D g2, DrawContext stateOuterContext, DrawContext stateInnerContext)
 	{
-		new StateNameProxy(state, stateNameTextField, stateOuterContext, stateInnerContext)
-				.createStatePrimitives(visual, x, y, g2, graphExtension.bounds.get(state.docId));
+		new StateNameProxy(state, _stateNameTextField, stateOuterContext, stateInnerContext)
+				.createStatePrimitives(visual, x, y, g2, _graphExtension._bounds.get(state._docId));
 	}
 
 	/**
@@ -212,89 +212,89 @@ public class GraphFactory
 										 DrawContext stateInnerStyles,
 										 DrawContext edgeStyles)
 	{
-		VisualModel rootModel = new VisualModel(fsm == null ? "none" : fsm.name);
-		if (fsm != null && fsm.pseudoRoot != null)
+		VisualModel rootModel = new VisualModel(fsm == null ? "none" : fsm._name);
+		if (fsm != null && fsm._pseudoRoot != null)
 		{
 			java.util.Queue<State> states = new LinkedList<>();
 
-			states.add(fsm.pseudoRoot);
+			states.add(fsm._pseudoRoot);
 
 			final float gapY = 5;
-			float fh = stateOutlineStyles._style.fontMetrics.getHeight();
+			float fh = stateOutlineStyles._style._fontMetrics.getHeight();
 
-			InsetsFloat insets = stateInnerStyles._configuration.innerModelBoxInsets;
-			insets.top = fh * 2.5f;
-			insets.bottom = fh;
-			insets.left = fh;
-			insets.right = fh;
+			InsetsFloat insets = stateInnerStyles._configuration._innerModelBoxInsets;
+			insets._top = fh * 2.5f;
+			insets._bottom = fh;
+			insets._left = fh;
+			insets._right = fh;
 
 			Rectangle2D.Float statePosition = new Rectangle2D.Float(fh, fh, 0, 0);
 			statePosition.x += 2 * fh;
 
 			final Map<String, Rectangle2D.Float> statePositions = new HashMap<>();
-			statePositions.put(fsm.pseudoRoot.name, statePosition);
+			statePositions.put(fsm._pseudoRoot._name, statePosition);
 
 			final Map<String, State> statesByName = new HashMap<>();
 			java.util.Map<Integer, Transition> transitions = new HashMap<>();
 			while (!states.isEmpty())
 			{
 				State state = states.poll();
-				if (!stateVisuals.containsKey(state.name))
+				if (!_stateVisuals.containsKey(state._name))
 				{
-					statesByName.put(state.name, state);
+					statesByName.put(state._name, state);
 
-					GenericPrimitiveVisual stateVisual = new GenericPrimitiveVisual(state.name, stateInnerStyles);
+					GenericPrimitiveVisual stateVisual = new GenericPrimitiveVisual(state._name, stateInnerStyles);
 					if (state instanceof PseudoRoot pseudoRoot)
 					{
-						stateVisual.setDisplayName(pseudoRoot.fsmName);
+						stateVisual.setDisplayName(pseudoRoot._fsmName);
 					}
 
-					if (state.parent != null)
+					if (state._parent != null)
 					{
-						VisualModel model = ModelPrimitive.getChildModel(stateVisuals.get(state.parent.name));
+						VisualModel model = ModelPrimitive.getChildModel(_stateVisuals.get(state._parent._name));
 						model.addVisual(stateVisual);
 					}
 					else
 						rootModel.addVisual(stateVisual);
 
-					stateVisuals.put(state.name, stateVisual);
+					_stateVisuals.put(state._name, stateVisual);
 
-					if (!state.states.isEmpty())
+					if (!state._states.isEmpty())
 					{
-						String modelName = state.name;
-						if (state instanceof PseudoRoot pseudoRoot && pseudoRoot.fsmName != null)
+						String modelName = state._name;
+						if (state instanceof PseudoRoot pseudoRoot && pseudoRoot._fsmName != null)
 						{
-							modelName = pseudoRoot.fsmName;
+							modelName = pseudoRoot._fsmName;
 						}
 						VisualModel subModel = new VisualModel(modelName);
 						ModelPrimitive modelPrimitive = new ModelPrimitive(0, 0, stateInnerStyles._configuration, stateInnerStyles._style, VisualFlags.ALWAYS);
 						modelPrimitive.setAlignment(Alignment.Center);
-						modelPrimitive.setInsets(stateInnerStyles._configuration.innerModelBoxInsets);
+						modelPrimitive.setInsets(stateInnerStyles._configuration._innerModelBoxInsets);
 						modelPrimitive.setChildModel(subModel);
-						stateVisuals.get(state.name)
-									.addDrawingPrimitive(modelPrimitive);
+						_stateVisuals.get(state._name)
+									 .addDrawingPrimitive(modelPrimitive);
 						statePosition = new Rectangle2D.Float(3 * fh, fh, 0, 0);
-						statePositions.put(state.name, statePosition);
-						states.addAll(state.states);
+						statePositions.put(state._name, statePosition);
+						states.addAll(state._states);
 
 					}
-					for (Transition t : state.transitions)
+					for (Transition t : state._transitions)
 					{
-						states.addAll(t.target);
-						transitions.put(t.docId, t);
+						states.addAll(t._target);
+						transitions.put(t._docId, t);
 					}
 				}
 			}
 
 			// We have now all information to create draw-primitives in the states-visuals.
-			for (var visualEntry : stateVisuals.entrySet())
+			for (var visualEntry : _stateVisuals.entrySet())
 			{
 				GenericPrimitiveVisual visual = visualEntry.getValue();
 
 				State state = statesByName.get(visualEntry.getKey());
-				if (state.parent != null)
+				if (state._parent != null)
 				{
-					statePosition = statePositions.get(state.parent.name);
+					statePosition = statePositions.get(state._parent._name);
 					createStatePrimitives(visual, statePosition.x, statePosition.y, state, g2, stateOutlineStyles, stateInnerStyles);
 
 					Rectangle2D.Float bounds = visual.getAbsoluteBounds2D(g2);
@@ -316,22 +316,22 @@ public class GraphFactory
 			// Create edges
 			for (Transition t : transitions.values())
 			{
-				for (State target : t.target)
+				for (State target : t._target)
 				{
-					ModelPrimitive.getChildModel(stateVisuals.get(t.source.parent.name))
+					ModelPrimitive.getChildModel(_stateVisuals.get(t._source._parent._name))
 								  .addVisual(
-										  createEdge(t.docId, t.source, target, g2, edgeStyles));
+										  createEdge(t._docId, t._source, target, g2, edgeStyles));
 				}
 			}
 
 			// Create start-visuals for all sub-models.
 			for (State state : statesByName.values())
 			{
-				if (!state.states.isEmpty())
+				if (!state._states.isEmpty())
 				{
 					Visual startVisual = createStartVisual(state, fh / 2, fh, fh / 2, startStyles);
 
-					Visual stateVisual = stateVisuals.get(state.name);
+					Visual stateVisual = _stateVisuals.get(state._name);
 					VisualModel innerModel = ModelPrimitive.getChildModel(stateVisual);
 					innerModel.addVisual(startVisual);
 
@@ -339,10 +339,10 @@ public class GraphFactory
 
 					Integer id;
 					// Add initial transitions.
-					if (state.initial != null)
+					if (state._initial != null)
 					{
-						initialStates.addAll(state.initial.target);
-						id = state.initial.docId;
+						initialStates.addAll(state._initial._target);
+						id = state._initial._docId;
 					}
 					else
 					{
@@ -353,18 +353,18 @@ public class GraphFactory
 					for (State initialState : initialStates)
 					{
 						boolean toInnerModel = false;
-						while (initialState != null && !state.states.contains(initialState))
+						while (initialState != null && !state._states.contains(initialState))
 						{
-							initialState = initialState.parent;
+							initialState = initialState._parent;
 							toInnerModel = true;
 						}
 						Visual targetVisual = null;
 						if (initialState != null)
 						{
-							targetVisual = stateVisuals.get(initialState.name);
+							targetVisual = _stateVisuals.get(initialState._name);
 						}
 						if (targetVisual == null)
-							log.warning(String.format("Target state %s of initial transition not found", initialState.name));
+							log.warning(String.format("Target state %s of initial transition not found", initialState._name));
 						else
 						{
 							innerModel.addVisual(createEdge(id, startVisual, targetVisual, g2, edgeStyles, toInnerModel));

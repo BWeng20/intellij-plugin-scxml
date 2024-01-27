@@ -118,7 +118,7 @@ public abstract class Visual
 
 	/**
 	 * Draw the visual with graphics context moved to absolute base position.<br>
-	 * If a sub-model is set, the area described by {@link GraphConfiguration#innerModelBoxInsets} and {@link GraphConfiguration#innerModelBoxMinDimension} shall be spared,
+	 * If a sub-model is set, the area described by {@link GraphConfiguration#_innerModelBoxInsets} and {@link GraphConfiguration#_innerModelBoxMinDimension} shall be spared,
 	 * as this area will be over-drawn by {@link #draw(Graphics2D)}.
 	 *
 	 * @param g2 The Graphics context
@@ -358,13 +358,13 @@ public abstract class Visual
 			case Center:
 			{
 				Dimension2DFloat dim = primitive.getDimension(g2);
-				pt.x = (dimension.width - dim.width) / 2f - 1;
+				pt.x = (dimension._width - dim._width) / 2f - 1;
 			}
 			break;
 			case Right:
 			{
 				Dimension2DFloat dim = primitive.getDimension(g2);
-				pt.x = dimension.width - dim.width;
+				pt.x = dimension._width - dim._width;
 			}
 			break;
 			case Hidden:
@@ -451,7 +451,7 @@ public abstract class Visual
 			}
 		}
 		else
-			setPreferredDimension(dimension.width, dimension.height);
+			setPreferredDimension(dimension._width, dimension._height);
 	}
 
 	/**
@@ -462,7 +462,7 @@ public abstract class Visual
 	 */
 	public void setPreferredDimension(float width, float height)
 	{
-		if (_dimension == null || _dimension.width != width || _dimension.height != height)
+		if (_dimension == null || _dimension._width != width || _dimension._height != height)
 		{
 			_dirty = true;
 			this._dimension = new Dimension2DFloat(width, height);

@@ -17,7 +17,7 @@ public class DrawStyle
 	/**
 	 * Default stroke.
 	 */
-	public final static BasicStroke defaultStroke = new BasicStroke(1);
+	public final static BasicStroke DEFAULT_STROKE = new BasicStroke(1);
 
 	/**
 	 * Create a new empty DrawStyle.
@@ -30,40 +30,40 @@ public class DrawStyle
 	/**
 	 * Paint for lines
 	 */
-	public Paint linePaint = Color.BLACK;
+	public Paint _linePaint = Color.BLACK;
 
 	/**
 	 * Paint for fill
 	 */
-	public Paint fillPaint = Color.GRAY;
+	public Paint _fillPaint = Color.GRAY;
 
 
 	/**
 	 * Paint for background
 	 */
-	public Paint background = Color.LIGHT_GRAY;
+	public Paint _background = Color.LIGHT_GRAY;
 
 
 	/**
 	 * Paint for text
 	 */
 
-	public Paint textPaint = Color.BLACK;
+	public Paint _textPaint = Color.BLACK;
 
 	/**
 	 * Stroke for lines
 	 */
-	public Stroke lineStroke = defaultStroke;
+	public Stroke _lineStroke = DEFAULT_STROKE;
 
 	/**
 	 * Font
 	 */
-	public Font font;
+	public Font _font;
 
 	/**
 	 * Font Metrics
 	 */
-	public FontMetrics fontMetrics;
+	public FontMetrics _fontMetrics;
 
 	/**
 	 * Get stroke width.
@@ -72,8 +72,8 @@ public class DrawStyle
 	 */
 	public float getStrokeWidth()
 	{
-		if (lineStroke instanceof BasicStroke)
-			return ((BasicStroke) lineStroke).getLineWidth();
+		if (_lineStroke instanceof BasicStroke)
+			return ((BasicStroke) _lineStroke).getLineWidth();
 		else
 			return 1f;
 	}

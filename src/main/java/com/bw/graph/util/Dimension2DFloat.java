@@ -11,12 +11,12 @@ public final class Dimension2DFloat extends Dimension2D
 	/**
 	 * The width in floating point precision.
 	 */
-	public float width;
+	public float _width;
 
 	/**
 	 * The height in floating point precision.
 	 */
-	public float height;
+	public float _height;
 
 	/**
 	 * Creates a new Dimension object.
@@ -26,8 +26,8 @@ public final class Dimension2DFloat extends Dimension2D
 	 */
 	public Dimension2DFloat(float width, float height)
 	{
-		this.width = width;
-		this.height = height;
+		this._width = width;
+		this._height = height;
 	}
 
 	/**
@@ -39,12 +39,12 @@ public final class Dimension2DFloat extends Dimension2D
 	{
 		if (rect == null)
 		{
-			width = height = 0f;
+			_width = _height = 0f;
 		}
 		else
 		{
-			width = (float) rect.getWidth();
-			height = (float) rect.getHeight();
+			_width = (float) rect.getWidth();
+			_height = (float) rect.getHeight();
 		}
 	}
 
@@ -55,34 +55,34 @@ public final class Dimension2DFloat extends Dimension2D
 	 */
 	public Dimension2DFloat(Dimension2DFloat other)
 	{
-		width = other.width;
-		height = other.height;
+		_width = other._width;
+		_height = other._height;
 	}
 
 
 	@Override
 	public double getWidth()
 	{
-		return width;
+		return _width;
 	}
 
 	@Override
 	public double getHeight()
 	{
-		return height;
+		return _height;
 	}
 
 	@Override
 	public void setSize(double width, double height)
 	{
-		this.width = (float) width;
-		this.height = (float) height;
+		this._width = (float) width;
+		this._height = (float) height;
 	}
 
 	@Override
 	public String toString()
 	{
-		return "Dimension[" + width + "," + height + "]";
+		return "Dimension[" + _width + "," + _height + "]";
 	}
 
 	/**
@@ -92,6 +92,6 @@ public final class Dimension2DFloat extends Dimension2D
 	 */
 	public Rectangle2D.Float getBounds()
 	{
-		return new Rectangle2D.Float(0, 0, width, height);
+		return new Rectangle2D.Float(0, 0, _width, _height);
 	}
 }

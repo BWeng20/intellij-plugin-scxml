@@ -96,7 +96,7 @@ public class GraphExtension implements ExtensionParser
 			return toXML(1000);
 		}
 
-		private static Pattern boundsSplitRegExp = Pattern.compile("(?U)\\s");
+		private final static Pattern SPLIT_REG_EXP = Pattern.compile("(?U)\\s");
 
 
 		/**
@@ -109,7 +109,7 @@ public class GraphExtension implements ExtensionParser
 		{
 			if (bounds != null)
 			{
-				String[] coordinate = boundsSplitRegExp.split(bounds, 0);
+				String[] coordinate = SPLIT_REG_EXP.split(bounds, 0);
 				if (coordinate.length == 6)
 				{
 					try
@@ -139,12 +139,12 @@ public class GraphExtension implements ExtensionParser
 	/**
 	 * Collected bounds. Key = docId, Value = the bounds.
 	 */
-	protected Map<Integer, PosAndBounds> bounds = new HashMap<>();
+	protected Map<Integer, PosAndBounds> _bounds = new HashMap<>();
 
 	/**
 	 * Collected start-node bounds. Key = docId (of parent state/scxml element), Value = the bounds.
 	 */
-	protected Map<Integer, PosAndBounds> startBounds = new HashMap<>();
+	protected Map<Integer, PosAndBounds> _startBounds = new HashMap<>();
 
 	@Override
 	public void processChild(FsmElement item, Element element)
@@ -176,13 +176,13 @@ public class GraphExtension implements ExtensionParser
 				{
 					PosAndBounds r = parsePosAndBounds(attributeNode.getNodeValue());
 					if (r != null)
-						startBounds.put(((State) item).docId, r);
+						_startBounds.put(((State) item)._docId, r);
 				}
 				case ATTR_BOUNDS ->
 				{
 					PosAndBounds r = parsePosAndBounds(attributeNode.getNodeValue());
 					if (r != null)
-						bounds.put(((State) item).docId, r);
+						_bounds.put(((State) item)._docId, r);
 				}
 			}
 		}

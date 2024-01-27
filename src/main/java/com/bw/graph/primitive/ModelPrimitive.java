@@ -84,10 +84,10 @@ public class ModelPrimitive extends DrawPrimitive
 			if (scale > 1f)
 				scale = 1f;
 
-			g2.setPaint(_style.background);
+			g2.setPaint(_style._background);
 			g2.fill(subModelBox);
-			g2.setStroke(_style.lineStroke);
-			g2.setPaint(_style.linePaint);
+			g2.setStroke(_style._lineStroke);
+			g2.setPaint(_style._linePaint);
 			g2.draw(subModelBox);
 
 			AffineTransform orgAft = g2.getTransform();
@@ -111,7 +111,7 @@ public class ModelPrimitive extends DrawPrimitive
 	{
 		if (_childModel != null)
 		{
-			return new Dimension2DFloat(_config.innerModelBoxMinDimension);
+			return new Dimension2DFloat(_config._innerModelBoxMinDimension);
 		}
 		return new Dimension2DFloat(0, 0);
 	}
@@ -138,9 +138,9 @@ public class ModelPrimitive extends DrawPrimitive
 			float offsetY = basePos.y + (subModelBox.height - subBounds.height * scale) / 2f;
 
 			sw.writeAttribute(SVGAttribute.Transform,
-					"translate(" + XmlWriter.floatToString(offsetX, _config.precisionFactor)
-							+ " " + XmlWriter.floatToString(offsetY, _config.precisionFactor) + ") scale("
-							+ XmlWriter.floatToString(scale, _config.precisionFactor) + ")");
+					"translate(" + XmlWriter.floatToString(offsetX, _config._precisionFactor)
+							+ " " + XmlWriter.floatToString(offsetY, _config._precisionFactor) + ") scale("
+							+ XmlWriter.floatToString(scale, _config._precisionFactor) + ")");
 
 			for (Visual v : _childModel.getVisuals())
 			{

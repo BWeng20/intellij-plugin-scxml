@@ -19,9 +19,9 @@ import org.jetbrains.annotations.Nullable;
 )
 public final class PersistenceService implements PersistentStateComponent<Configuration>
 {
-	private Configuration configuration = new Configuration();
+	private Configuration _configuration = new Configuration();
 
-	private final Project theProject;
+	private final Project _theProject;
 
 	/**
 	 * Creates a new Service, called by framework.
@@ -30,19 +30,19 @@ public final class PersistenceService implements PersistentStateComponent<Config
 	 */
 	public PersistenceService(Project project)
 	{
-		this.theProject = project;
+		this._theProject = project;
 	}
 
 	@Nullable
 	@Override
 	public Configuration getState()
 	{
-		return configuration;
+		return _configuration;
 	}
 
 	@Override
 	public void loadState(@NotNull Configuration configuration)
 	{
-		this.configuration = configuration;
+		this._configuration = configuration;
 	}
 }

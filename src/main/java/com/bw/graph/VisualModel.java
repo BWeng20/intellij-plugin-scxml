@@ -20,13 +20,13 @@ public class VisualModel
 	 */
 	public VisualModel(String name)
 	{
-		this.name = name;
+		this._name = name;
 	}
 
 	/**
 	 * The name of the model.
 	 */
-	public final String name;
+	public final String _name;
 
 	/**
 	 * Listeners
@@ -207,7 +207,7 @@ public class VisualModel
 	@Override
 	public String toString()
 	{
-		return name == null ? "none" : name;
+		return _name == null ? "none" : _name;
 	}
 
 }

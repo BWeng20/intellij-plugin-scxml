@@ -71,7 +71,7 @@ public class XmlParser implements ScxmlTags
 	/**
 	 * Logger for this class.
 	 */
-	protected static Logger log = Logger.getLogger(XmlParser.class.getName());
+	protected final static Logger LOG = Logger.getLogger(XmlParser.class.getName());
 
 	/**
 	 * Resolver that checks that all includes are located inside the same directory subtree as the main file.
@@ -160,7 +160,7 @@ public class XmlParser implements ScxmlTags
 		}
 		catch (Exception e)
 		{
-			log.log(Level.WARNING, e.getMessage(), e);
+			LOG.log(Level.WARNING, e.getMessage(), e);
 			doc = null;
 		}
 
@@ -178,10 +178,10 @@ public class XmlParser implements ScxmlTags
 			{
 				_fsm = new FiniteStateMachine();
 
-				_fsm.name = getOptionalAttribute(root, ATTR_NAME);
-				_fsm.datamodel = getAttributeOrDefault(root, ATTR_DATAMODEL, "Null");
-				_fsm.binding = mapBindingType(getAttributeOrDefault(root, ATTR_BINDING, BindingType.Early.name()));
-				_fsm.pseudoRoot = parseState(root, false, null);
+				_fsm._name = getOptionalAttribute(root, ATTR_NAME);
+				_fsm._dataModel = getAttributeOrDefault(root, ATTR_DATAMODEL, "Null");
+				_fsm._binding = mapBindingType(getAttributeOrDefault(root, ATTR_BINDING, BindingType.Early.name()));
+				_fsm._pseudoRoot = parseState(root, false, null);
 			}
 			else
 			{
@@ -311,8 +311,8 @@ public class XmlParser implements ScxmlTags
 			Element xmlChild = it.next();
 			switch (xmlChild.getLocalName())
 			{
-				case TAG_ON_ENTRY -> state.onentry = parseExecutableContentBlock(xmlChild);
-				case TAG_ON_EXIT -> state.onexit = parseExecutableContentBlock(xmlChild);
+				case TAG_ON_ENTRY -> state._onEntry = parseExecutableContentBlock(xmlChild);
+				case TAG_ON_EXIT -> state._onExit = parseExecutableContentBlock(xmlChild);
 				case TAG_TRANSITION -> parseTransition(xmlChild, state);
 				case TAG_INITIAL -> parseInitialTransition(xmlChild, state);
 				case TAG_STATE -> parseState(xmlChild, false, state);
@@ -320,7 +320,7 @@ public class XmlParser implements ScxmlTags
 				case TAG_FINAL ->
 				{
 					State s = parseState(xmlChild, false, state);
-					s.isFinal = true;
+					s._isFinal = true;
 				}
 				case TAG_HISTORY -> parseToDo(xmlChild, state);
 				case TAG_DATAMODEL -> parseToDo(xmlChild, state);
@@ -341,14 +341,14 @@ public class XmlParser implements ScxmlTags
 	{
 		Invoke invoke = new Invoke();
 
-		invoke.typeName = getOptionalAttribute(node, ATTR_TYPE);
-		invoke.typeExpr = getOptionalAttribute(node, ATTR_TYPEEXPR);
-		invoke.src = getOptionalAttribute(node, ATTR_SRC);
-		invoke.srcexpr = getOptionalAttribute(node, ATTR_SRCEXPR);
-		invoke.id = getOptionalAttribute(node, ATTR_ID);
-		invoke.idLocation = getOptionalAttribute(node, ATTR_IDLOCATION);
-		parseSymbolList(getOptionalAttribute(node, ATTR_NAMELIST), invoke.namelist);
-		invoke.autoforward = parseBoolean(getOptionalAttribute(node, ATTR_AUTOFORWARD), false);
+		invoke._typeName = getOptionalAttribute(node, ATTR_TYPE);
+		invoke._typeExpr = getOptionalAttribute(node, ATTR_TYPEEXPR);
+		invoke._src = getOptionalAttribute(node, ATTR_SRC);
+		invoke._srcExpr = getOptionalAttribute(node, ATTR_SRCEXPR);
+		invoke._id = getOptionalAttribute(node, ATTR_ID);
+		invoke._idLocation = getOptionalAttribute(node, ATTR_IDLOCATION);
+		parseSymbolList(getOptionalAttribute(node, ATTR_NAMELIST), invoke._nameList);
+		invoke._autoforward = parseBoolean(getOptionalAttribute(node, ATTR_AUTOFORWARD), false);
 
 		for (ScxmlElementIterator it = new ScxmlElementIterator(node, invoke); it.hasNext(); )
 		{
@@ -361,7 +361,7 @@ public class XmlParser implements ScxmlTags
 				default -> debug("Unsupported tag %s", xmlChild.getLocalName());
 			}
 		}
-		sourceState.invoke.add(invoke);
+		sourceState._invoke.add(invoke);
 	}
 
 	/**
@@ -375,13 +375,13 @@ public class XmlParser implements ScxmlTags
 	{
 		Transition t = parseTransitionWithAttributes(node);
 
-		if (sourceState.initial != null)
+		if (sourceState._initial != null)
 		{
 			throw new ParserException("<initial> must not be specified if initial-attribute was given");
 		}
 
-		t.source = sourceState;
-		sourceState.initial = t;
+		t._source = sourceState;
+		sourceState._initial = t;
 
 		debug(String.format("Initial %s", t));
 	}
@@ -396,8 +396,8 @@ public class XmlParser implements ScxmlTags
 	protected void parseTransition(Element node, State sourceState) throws ParserException
 	{
 		Transition t = parseTransitionWithAttributes(node);
-		t.source = sourceState;
-		sourceState.transitions.add(t);
+		t._source = sourceState;
+		sourceState._transitions.add(t);
 		debug(String.format("Transition %s", t));
 	}
 
@@ -412,14 +412,14 @@ public class XmlParser implements ScxmlTags
 	{
 		Transition t = new Transition();
 
-		t.docId = ++_docIdCounter;
+		t._docId = ++_docIdCounter;
 
-		parseSymbolList(getOptionalAttribute(node, TAG_EVENT), t.events);
-		t.cond = getOptionalAttribute(node, ATTR_COND);
-		parseStateSpecification(getOptionalAttribute(node, ATTR_TARGET), t.target);
+		parseSymbolList(getOptionalAttribute(node, TAG_EVENT), t._events);
+		t._cond = getOptionalAttribute(node, ATTR_COND);
+		parseStateSpecification(getOptionalAttribute(node, ATTR_TARGET), t._target);
 
-		t.transitionType = mapTransitionType(getOptionalAttribute(node, ATTR_TYPE));
-		t.content = parseExecutableContentBlock(node);
+		t._transitionType = mapTransitionType(getOptionalAttribute(node, ATTR_TYPE));
+		t._content = parseExecutableContentBlock(node);
 
 		return t;
 	}
@@ -427,7 +427,7 @@ public class XmlParser implements ScxmlTags
 	/**
 	 * Mapping from binding mode name to enum.
 	 */
-	protected static final Map<String, BindingType> bindingTypeName =
+	protected static final Map<String, BindingType> BINDING_TYPE_MAP =
 			Map.of(BINDING_TYPE_LATE, BindingType.Late,
 					BINDING_TYPE_EARLY, BindingType.Early);
 
@@ -444,7 +444,7 @@ public class XmlParser implements ScxmlTags
 		BindingType typeValue = null;
 		if (type != null && !type.isEmpty())
 		{
-			typeValue = bindingTypeName.get(type);
+			typeValue = BINDING_TYPE_MAP.get(type);
 			if (typeValue == null)
 			{
 				throw new ParserException(String.format("Unknown binding type value '%s'", type));
@@ -457,7 +457,7 @@ public class XmlParser implements ScxmlTags
 	/**
 	 * Mapping from transition type name to enum.
 	 */
-	protected static final Map<String, TransitionType> transitionTypeName =
+	protected static final Map<String, TransitionType> TRANSITION_TYPE_MAP =
 			Map.of(TRANSITION_TYPE_INTERNAL, TransitionType.Internal,
 					TRANSITION_TYPE_EXTERNAL, TransitionType.External);
 
@@ -473,7 +473,7 @@ public class XmlParser implements ScxmlTags
 		TransitionType typeValue = null;
 		if (type != null && !type.isEmpty())
 		{
-			typeValue = transitionTypeName.get(type);
+			typeValue = TRANSITION_TYPE_MAP.get(type);
 			if (typeValue == null)
 			{
 				throw new ParserException(String.format("Unknown transition type value '%s'", type));
@@ -685,7 +685,7 @@ public class XmlParser implements ScxmlTags
 	 */
 	protected void parseToDo(Element tag, State state)
 	{
-		log.warning(String.format("Not yet handled: %s [state %s]", tag.getLocalName(), state.name));
+		LOG.warning(String.format("Not yet handled: %s [state %s]", tag.getLocalName(), state._name));
 	}
 
 	/**
@@ -714,9 +714,9 @@ public class XmlParser implements ScxmlTags
 		if (TAG_SCXML.equals(node.getLocalName()))
 		{
 			PseudoRoot pseudoRoot = new PseudoRoot();
-			pseudoRoot.name = sname;
-			_fsm.states.put(sname, pseudoRoot);
-			pseudoRoot.fsmName = getOptionalAttribute(node, ATTR_NAME);
+			pseudoRoot._name = sname;
+			_fsm._states.put(sname, pseudoRoot);
+			pseudoRoot._fsmName = getOptionalAttribute(node, ATTR_NAME);
 			state = pseudoRoot;
 		}
 		else
@@ -724,26 +724,26 @@ public class XmlParser implements ScxmlTags
 			state = getOrCreateState(sname, parallel);
 		}
 		String initial = getSCXMLAttribute(node, ATTR_INITIAL);
-		state.docId = ++_docIdCounter;
+		state._docId = ++_docIdCounter;
 
 		if (initial != null)
 		{
 			// Create initial-transition with the initial states
 			Transition t = new Transition();
-			t.docId = ++_docIdCounter;
-			t.transitionType = TransitionType.Internal;
-			t.source = state;
-			parseStateSpecification(initial, t.target);
-			if (!t.target.isEmpty())
-				state.initial = t;
+			t._docId = ++_docIdCounter;
+			t._transitionType = TransitionType.Internal;
+			t._source = state;
+			parseStateSpecification(initial, t._target);
+			if (!t._target.isEmpty())
+				state._initial = t;
 		}
 
 		if (parent != null)
 		{
-			state.parent = parent;
-			if (!parent.states.contains(state))
+			state._parent = parent;
+			if (!parent._states.contains(state))
 			{
-				parent.states.add(state);
+				parent._states.add(state);
 			}
 		}
 
@@ -761,15 +761,15 @@ public class XmlParser implements ScxmlTags
 	 */
 	public State getOrCreateState(String sname, boolean parallel)
 	{
-		State state = _fsm.states.get(sname);
+		State state = _fsm._states.get(sname);
 		if (state == null)
 		{
 			state = new State();
-			state.name = sname;
-			_fsm.states.put(sname, state);
+			state._name = sname;
+			_fsm._states.put(sname, state);
 		}
 		if (parallel)
-			state.isParallel = parallel;
+			state._isParallel = parallel;
 		return state;
 	}
 
@@ -901,7 +901,7 @@ public class XmlParser implements ScxmlTags
 	protected void debug(String format, Object... args)
 	{
 		/// @TODO: Set this correctly to "debug" if we know how to dump it to host console.
-		log.warning(String.format(format, args));
+		LOG.warning(String.format(format, args));
 	}
 
 	/**

@@ -75,7 +75,7 @@ public class Svg extends DrawPrimitive
 	@Override
 	protected void drawIntern(Graphics2D g2)
 	{
-		_painter.paint(g2, null, _style.fillPaint, false, _gray);
+		_painter.paint(g2, null, _style._fillPaint, false, _gray);
 	}
 
 	@Override

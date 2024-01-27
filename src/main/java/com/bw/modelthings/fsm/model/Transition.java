@@ -13,19 +13,17 @@ import java.util.List;
  */
 public class Transition implements FsmElement
 {
-
 	/**
 	 * Creates a new transition.
 	 */
 	public Transition()
 	{
-
 	}
 
 	/**
 	 * The unique id, counting in document order.<br>
 	 */
-	public int docId;
+	public int _docId;
 
 	/**
 	 * <strong>W3C says:</strong><br>
@@ -33,65 +31,65 @@ public class Transition implements FsmElement
 	 * See E Schema for the definition of the datatype.
 	 */
 	// @TODO: Possibly we need some type to express event ids
-	public final List<String> events = new ArrayList<>();
+	public final List<String> _events = new ArrayList<>();
 
 	/**
 	 * The guard condition for this transition. See 3.13 Selecting and Executing Transitions for details.
 	 */
-	public String cond;
+	public String _cond;
 
 	/**
 	 * The source state.
 	 */
 	// @TODO: is this needed?
-	public State source;
+	public State _source;
 
 	/**
 	 * <strong>W3C says:</strong><br>
 	 * The state or parallel region to transition to. See 3.13 Selecting and Executing Transitions for details.
 	 */
-	public final java.util.List<State> target = new ArrayList<>();
+	public final java.util.List<State> _target = new ArrayList<>();
 
 	/**
 	 * <strong>W3C says:</strong><br>
 	 * Determines whether the source state is exited in transitions whose target state is a descendant of the source state.
 	 * See 3.13 Selecting and Executing Transitions for details.
 	 */
-	public TransitionType transitionType;
+	public TransitionType _transitionType;
 
 	/**
 	 * <strong>W3C says:</strong><br>
 	 * The children of &lt;transition&gt; are executable content that is run after all the &lt;onexit&gt; handlers and before the all &lt;onentry&gt; handlers that
 	 * are triggered by this transition. See 4 Executable Content
 	 */
-	public ExecutableContent content;
+	public ExecutableContent _content;
 
 	@Override
 	public String toString()
 	{
 		StringBuilder sb = new StringBuilder(100);
 		sb.append('[');
-		if (source != null)
-			sb.append(source.name);
+		if (_source != null)
+			sb.append(_source._name);
 		sb.append(']');
-		if (cond != null)
+		if (_cond != null)
 			sb.append(" {")
-			  .append(cond)
+			  .append(_cond)
 			  .append('}');
-		if (transitionType != null)
+		if (_transitionType != null)
 			sb.append(" <")
-			  .append(transitionType)
+			  .append(_transitionType)
 			  .append('>');
 
 		sb.append(" -> ");
 		boolean first = true;
-		for (State t : target)
+		for (State t : _target)
 		{
 			if (first)
 				first = false;
 			else
 				sb.append(",");
-			sb.append(t.name);
+			sb.append(t._name);
 		}
 
 		return sb.toString();

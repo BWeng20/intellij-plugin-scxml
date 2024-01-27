@@ -12,12 +12,12 @@ public class ScxmlEditorState implements FileEditorState
 	/**
 	 * State of textual editor.
 	 */
-	public final FileEditorState xmlEditorState;
+	public final FileEditorState _xmlEditorState;
 
 	/**
 	 * State of graphical editor.
 	 */
-	public final FileEditorState scxmlEditorState;
+	public final FileEditorState _scxmlEditorState;
 
 	/**
 	 * Creates a new state from components
@@ -27,15 +27,15 @@ public class ScxmlEditorState implements FileEditorState
 	 */
 	public ScxmlEditorState(@Nullable FileEditorState xmlEditorState, @Nullable FileEditorState scxmlEditorState)
 	{
-		this.xmlEditorState = xmlEditorState;
-		this.scxmlEditorState = scxmlEditorState;
+		this._xmlEditorState = xmlEditorState;
+		this._scxmlEditorState = scxmlEditorState;
 	}
 
 	@Override
 	public boolean canBeMergedWith(FileEditorState otherState, FileEditorStateLevel level)
 	{
 		return otherState instanceof ScxmlEditorState
-				&& (xmlEditorState == null || xmlEditorState.canBeMergedWith(((ScxmlEditorState) otherState).xmlEditorState, level))
-				&& (scxmlEditorState == null || scxmlEditorState.canBeMergedWith(((ScxmlEditorState) otherState).scxmlEditorState, level));
+				&& (_xmlEditorState == null || _xmlEditorState.canBeMergedWith(((ScxmlEditorState) otherState)._xmlEditorState, level))
+				&& (_scxmlEditorState == null || _scxmlEditorState.canBeMergedWith(((ScxmlEditorState) otherState)._scxmlEditorState, level));
 	}
 }

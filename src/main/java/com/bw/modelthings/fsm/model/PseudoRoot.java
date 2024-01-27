@@ -5,7 +5,6 @@ package com.bw.modelthings.fsm.model;
  */
 public class PseudoRoot extends State
 {
-
 	/**
 	 * Creates a new state.
 	 */
@@ -14,11 +13,11 @@ public class PseudoRoot extends State
 	}
 
 	/**
-	 * The state property {@link #name} of the pseudo root has a synthetic value,
+	 * The state property {@link #_name} of the pseudo root has a synthetic value,
 	 * as attribute "name" from &lt;scxml&gt; is not guaranteed to be unique.<br>
 	 * Instaed "fsmName" is set to "name".
 	 */
-	public String fsmName;
+	public String _fsmName;
 
 
 }

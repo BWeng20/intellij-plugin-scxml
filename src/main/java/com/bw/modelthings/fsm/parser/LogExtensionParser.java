@@ -17,7 +17,7 @@ public class LogExtensionParser implements ExtensionParser
 	 */
 	public LogExtensionParser()
 	{
-		this.logger = log;
+		this._logger = LOG;
 	}
 
 	/**
@@ -27,30 +27,30 @@ public class LogExtensionParser implements ExtensionParser
 	 */
 	public LogExtensionParser(Logger log)
 	{
-		this.logger = log;
+		this._logger = log;
 	}
 
 	/**
 	 * Default Logger.
 	 */
-	protected static Logger log = Logger.getLogger(XmlParser.class.getName() + ".unhandled");
+	protected final static Logger LOG = Logger.getLogger(XmlParser.class.getName() + ".unhandled");
 
 	/**
 	 * Logger to use
 	 */
-	protected final Logger logger;
+	protected final Logger _logger;
 
 
 	@Override
 	public void processChild(FsmElement item, Element element)
 	{
-		logger.warning("Unhandled: " + element.getNodeName() + " @ " + item);
+		_logger.warning("Unhandled: " + element.getNodeName() + " @ " + item);
 	}
 
 	@Override
 	public void processAttribute(FsmElement item, Node attributeNode)
 	{
-		logger.warning("Unhandled: " + attributeNode.getNamespaceURI() + ":" + attributeNode.getLocalName() + "=" + attributeNode.getNodeValue() + " @ " + item);
+		_logger.warning("Unhandled: " + attributeNode.getNamespaceURI() + ":" + attributeNode.getLocalName() + "=" + attributeNode.getNodeValue() + " @ " + item);
 	}
 
 }

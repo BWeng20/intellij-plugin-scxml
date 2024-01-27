@@ -17,21 +17,21 @@ public class Configuration
 	/**
 	 * Graph is shown with antialiasing if true.
 	 */
-	public boolean antialiasing;
+	public boolean _antialiasing;
 
 	/**
 	 * Graph uses buffers to render elements.
 	 */
-	public boolean buffered;
+	public boolean _buffered;
 
 	/**
 	 * Enables zooms by mouse-wheel if Meta/Ctrl-Key is hold.
 	 */
-	public boolean zoomByMetaMouseWheelEnabled;
+	public boolean _zoomByMetaMouseWheelEnabled;
 
 	/**
 	 * Editor Layout mode.
 	 */
-	public EditorLayout editorLayout = EditorLayout.Tabs;
+	public EditorLayout _editorLayout = EditorLayout.Tabs;
 
 }

@@ -143,7 +143,7 @@ public class EdgeVisual extends Visual
 	 */
 	public boolean containsPoint(float x, float y)
 	{
-		return _path.getDistanceTo(new Point2D.Float(x, y)) < _context._configuration.selectEdgeMaxDistance;
+		return _path.getDistanceTo(new Point2D.Float(x, y)) < _context._configuration._selectEdgeMaxDistance;
 	}
 
 

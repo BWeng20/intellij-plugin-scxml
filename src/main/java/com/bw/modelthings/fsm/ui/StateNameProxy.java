@@ -32,33 +32,33 @@ public class StateNameProxy implements EditorProxy
 	/**
 	 * The handled state.
 	 */
-	public State state;
+	public State _state;
 
 	/**
 	 * The editor component.
 	 */
-	public JTextComponent textComponent;
+	public JTextComponent _textComponent;
 
 	/**
 	 * The name of the state before edit.
 	 */
-	private String nameBeforeEdit;
+	private String _nameBeforeEdit;
 
 	/**
 	 * The name of the state in file.
 	 */
-	public String nameInFile;
+	public String _nameInFile;
 
 
 	/**
 	 * State outer draw context.
 	 */
-	private DrawContext stateOuterContext;
+	private DrawContext _stateOuterContext;
 
 	/**
 	 * The draw context for inner primitives.
 	 */
-	private DrawContext stateInnerContext;
+	private DrawContext _stateInnerContext;
 
 	/**
 	 * Create a new state proxy.
@@ -70,39 +70,39 @@ public class StateNameProxy implements EditorProxy
 	 */
 	public StateNameProxy(State state, JTextComponent textComponent, DrawContext stateOuterContext, DrawContext stateInnerContext)
 	{
-		this.state = state;
-		this.textComponent = textComponent;
-		this.stateOuterContext = stateOuterContext;
-		this.stateInnerContext = stateInnerContext;
-		this.nameInFile = state.name;
+		this._state = state;
+		this._textComponent = textComponent;
+		this._stateOuterContext = stateOuterContext;
+		this._stateInnerContext = stateInnerContext;
+		this._nameInFile = state._name;
 	}
 
 	@Override
 	public String toString()
 	{
-		return state.name;
+		return _state._name;
 	}
 
 	@Override
 	public JComponent getEditor(DrawPrimitive text)
 	{
-		nameBeforeEdit = state.name;
-		textComponent.setText(state.name);
-		return textComponent;
+		_nameBeforeEdit = _state._name;
+		_textComponent.setText(_state._name);
+		return _textComponent;
 	}
 
 	@Override
 	public void endEdit(DrawPrimitive text, Graphics2D g2)
 	{
-		String newName = textComponent.getText()
-									  .trim();
-		if (!Objects.equals(newName, state.name))
+		String newName = _textComponent.getText()
+									   .trim();
+		if (!Objects.equals(newName, _state._name))
 		{
 			if (text instanceof Text)
 			{
 				((Text) text).setText(newName);
 			}
-			state.name = textComponent.getText();
+			_state._name = _textComponent.getText();
 			GenericPrimitiveVisual v = (GenericPrimitiveVisual) text.getVisual();
 			v.setId(newName);
 			v.setModified(true);
@@ -115,9 +115,9 @@ public class StateNameProxy implements EditorProxy
 	@Override
 	public void cancelEdit(DrawPrimitive text)
 	{
-		if (nameBeforeEdit != null && !Objects.equals(nameBeforeEdit, state.name))
+		if (_nameBeforeEdit != null && !Objects.equals(_nameBeforeEdit, _state._name))
 		{
-			state.name = nameBeforeEdit;
+			_state._name = _nameBeforeEdit;
 			text.getVisual()
 				.setModified(true);
 		}
@@ -136,27 +136,27 @@ public class StateNameProxy implements EditorProxy
 									  GraphExtension.PosAndBounds bounds)
 	{
 		GenericPrimitiveVisual v = (GenericPrimitiveVisual) visual;
-		float fh = stateInnerContext._style.fontMetrics.getHeight();
+		float fh = _stateInnerContext._style._fontMetrics.getHeight();
 
 		ModelPrimitive modelPrimitive = visual.getPrimitiveOf(ModelPrimitive.class);
 
 		v.removeAllDrawingPrimitives();
 		if (bounds == null)
 		{
-			Rectangle2D stringBounds = stateInnerContext._style.fontMetrics.getStringBounds(state.name, g2);
+			Rectangle2D stringBounds = _stateInnerContext._style._fontMetrics.getStringBounds(_state._name, g2);
 
 			float height = 5 * fh;
-			float width = (float) Math.max(stringBounds.getWidth() + 10, stateInnerContext._configuration.stateMinimalWidth);
+			float width = (float) Math.max(stringBounds.getWidth() + 10, _stateInnerContext._configuration._stateMinimalWidth);
 
 			if (modelPrimitive != null)
 			{
 				// For a state with internal states (a sub fsm in this context)
 				// we need space for the small image of the inner fsm.
-				Dimension2DFloat dim = stateInnerContext._configuration.innerModelBoxMinDimension;
-				InsetsFloat insets = stateInnerContext._configuration.innerModelBoxInsets;
+				Dimension2DFloat dim = _stateInnerContext._configuration._innerModelBoxMinDimension;
+				InsetsFloat insets = _stateInnerContext._configuration._innerModelBoxInsets;
 
-				float w = dim.width + insets.right + insets.left;
-				float h = dim.height + insets.top + insets.bottom;
+				float w = dim._width + insets._right + insets._left;
+				float h = dim._height + insets._top + insets._bottom;
 
 				if (width < w) width = w;
 				if (height < h) height = h;
@@ -166,17 +166,17 @@ public class StateNameProxy implements EditorProxy
 		v.setAbsolutePosition(bounds.position, bounds.bounds);
 
 		Rectangle frame = new Rectangle(
-				0, 0, bounds.bounds.width, bounds.bounds.height, stateOuterContext._configuration.stateCornerArcSize, stateOuterContext._configuration,
-				stateOuterContext._style, VisualFlags.ALWAYS);
+				0, 0, bounds.bounds.width, bounds.bounds.height, _stateOuterContext._configuration._stateCornerArcSize, _stateOuterContext._configuration,
+				_stateOuterContext._style, VisualFlags.ALWAYS);
 
 		frame.setFill(true);
 		v.addDrawingPrimitive(frame);
 
 		Line separator = new Line(0, fh * 1.5f, bounds.bounds.width, fh * 1.5f
-				, stateInnerContext._configuration, stateInnerContext._style, VisualFlags.ALWAYS);
+				, _stateInnerContext._configuration, _stateInnerContext._style, VisualFlags.ALWAYS);
 		v.addDrawingPrimitive(separator);
 
-		Text label = new Text(0, 0, state.name, stateInnerContext._configuration, stateInnerContext._style, VisualFlags.ALWAYS);
+		Text label = new Text(0, 0, _state._name, _stateInnerContext._configuration, _stateInnerContext._style, VisualFlags.ALWAYS);
 		label.setEditable(true);
 		label.setAlignment(Alignment.Center);
 		label.setInsets(fh * 0.25f, 0, 0, 0);

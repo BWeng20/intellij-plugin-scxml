@@ -9,22 +9,22 @@ public final class InsetsFloat
 	/**
 	 * The inset from the top.
 	 */
-	public float top;
+	public float _top;
 
 	/**
 	 * The inset from the left.
 	 */
-	public float left;
+	public float _left;
 
 	/**
 	 * The inset from the bottom.
 	 */
-	public float bottom;
+	public float _bottom;
 
 	/**
 	 * The inset from the right.
 	 */
-	public float right;
+	public float _right;
 
 	/**
 	 * Creates and initializes a new {@code InsetsFloat} object.
@@ -36,15 +36,15 @@ public final class InsetsFloat
 	 */
 	public InsetsFloat(float top, float left, float bottom, float right)
 	{
-		this.top = top;
-		this.left = left;
-		this.bottom = bottom;
-		this.right = right;
+		this._top = top;
+		this._left = left;
+		this._bottom = bottom;
+		this._right = right;
 	}
 
 	@Override
 	public String toString()
 	{
-		return "Inserts[" + top + "," + left + "," + bottom + "," + right + "]";
+		return "Inserts[" + _top + "," + _left + "," + _bottom + "," + _right + "]";
 	}
 }

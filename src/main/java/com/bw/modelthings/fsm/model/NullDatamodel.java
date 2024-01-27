@@ -5,7 +5,7 @@ package com.bw.modelthings.fsm.model;
  */
 public class NullDatamodel implements Datamodel
 {
-	private GlobalData globalData = new GlobalData();
+	private GlobalData _globalData = new GlobalData();
 
 	/**
 	 * Creates a new Null model.
@@ -18,7 +18,7 @@ public class NullDatamodel implements Datamodel
 	@Override
 	public GlobalData global()
 	{
-		return globalData;
+		return _globalData;
 	}
 
 	@Override

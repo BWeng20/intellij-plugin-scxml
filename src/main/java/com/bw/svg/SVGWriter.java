@@ -16,8 +16,8 @@ import java.io.Writer;
  */
 public class SVGWriter extends XmlWriter
 {
-	private boolean inStyle = false;
-	private boolean atStyleStart = false;
+	private boolean _inStyle = false;
+	private boolean _atStyleStart = false;
 
 	/**
 	 * Creates an SVG Writer on top of some other writer.
@@ -75,14 +75,14 @@ public class SVGWriter extends XmlWriter
 	 */
 	public void startStyle()
 	{
-		if (inStyle)
+		if (_inStyle)
 			throw new IllegalStateException("startStyle called inside style definition.");
-		if (tagStack.empty())
+		if (_tagStack.empty())
 			throw new IllegalStateException("startStyle called outside element.");
-		if (elementHasContent)
+		if (_elementHasContent)
 			throw new IllegalStateException("startStyle called inside content.");
-		inStyle = true;
-		atStyleStart = true;
+		_inStyle = true;
+		_atStyleStart = true;
 	}
 
 	/**
@@ -91,11 +91,11 @@ public class SVGWriter extends XmlWriter
 	 */
 	public void endStyle()
 	{
-		if (!inStyle)
+		if (!_inStyle)
 			throw new IllegalStateException("endStyle called outside style definition.");
-		if (!atStyleStart)
+		if (!_atStyleStart)
 			write("'");
-		inStyle = false;
+		_inStyle = false;
 	}
 
 	/**
@@ -153,7 +153,7 @@ public class SVGWriter extends XmlWriter
 	@Override
 	public void startContent()
 	{
-		if (inStyle)
+		if (_inStyle)
 			endStyle();
 		super.startContent();
 	}
@@ -164,7 +164,7 @@ public class SVGWriter extends XmlWriter
 	@Override
 	public void endElement()
 	{
-		if (inStyle)
+		if (_inStyle)
 		{
 			endStyle();
 		}
@@ -178,7 +178,7 @@ public class SVGWriter extends XmlWriter
 	 */
 	public void endSVG()
 	{
-		while (!tagStack.empty())
+		while (!_tagStack.empty())
 		{
 			endElement();
 		}
@@ -213,12 +213,12 @@ public class SVGWriter extends XmlWriter
 	@Override
 	protected void writeAttributeProlog()
 	{
-		if (inStyle)
+		if (_inStyle)
 		{
-			if (atStyleStart)
+			if (_atStyleStart)
 			{
 				write(" style='");
-				atStyleStart = false;
+				_atStyleStart = false;
 			}
 			else
 				write(';');
@@ -230,7 +230,7 @@ public class SVGWriter extends XmlWriter
 	@Override
 	protected void writeAttributeEpilog()
 	{
-		if (!inStyle)
+		if (!_inStyle)
 		{
 			super.writeAttributeEpilog();
 		}
@@ -239,7 +239,7 @@ public class SVGWriter extends XmlWriter
 	@Override
 	protected void writeAssign()
 	{
-		write(inStyle ? ":" : "='");
+		write(_inStyle ? ":" : "='");
 	}
 
 	/**
@@ -302,7 +302,7 @@ public class SVGWriter extends XmlWriter
 	 */
 	public String toBox(Rectangle2D.Float box)
 	{
-		return toBox(box, precisionFactor);
+		return toBox(box, _precisionFactor);
 	}
 
 	/**

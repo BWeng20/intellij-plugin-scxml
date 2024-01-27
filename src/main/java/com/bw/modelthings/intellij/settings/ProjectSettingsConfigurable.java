@@ -15,7 +15,7 @@ import javax.swing.JPanel;
  */
 public class ProjectSettingsConfigurable implements com.intellij.openapi.options.Configurable
 {
-	private com.intellij.openapi.project.Project theProject;
+	private com.intellij.openapi.project.Project _theProject;
 
 	/**
 	 * Creates a new instance. Called by the framework.
@@ -24,7 +24,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 	 */
 	public ProjectSettingsConfigurable(com.intellij.openapi.project.Project project)
 	{
-		theProject = project;
+		_theProject = project;
 	}
 
 
@@ -34,46 +34,46 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 		return "SCXML SDK";
 	}
 
-	private JPanel editorComponent;
-	private JBCheckBox antialiasing;
-	private JBCheckBox buffered;
-	private JBCheckBox zoomByMouseWheel;
+	private JPanel _editorComponent;
+	private JBCheckBox _antialiasing;
+	private JBCheckBox _buffered;
+	private JBCheckBox _zoomByMouseWheel;
 
-	private ComboBox editorLayout;
+	private ComboBox _editorLayout;
 
 	@Override
 	public @Nullable JComponent createComponent()
 	{
-		if (editorComponent == null)
+		if (_editorComponent == null)
 		{
-			antialiasing = new JBCheckBox(ScXmlSdkBundle.message("settings.antialiasing"));
-			buffered = new JBCheckBox(ScXmlSdkBundle.message("settings.states.buffered"));
-			zoomByMouseWheel = new JBCheckBox(ScXmlSdkBundle.message("settings.zoomByCtrlKey"));
-			editorLayout = new ComboBox(EditorLayout.values());
+			_antialiasing = new JBCheckBox(ScXmlSdkBundle.message("settings.antialiasing"));
+			_buffered = new JBCheckBox(ScXmlSdkBundle.message("settings.states.buffered"));
+			_zoomByMouseWheel = new JBCheckBox(ScXmlSdkBundle.message("settings.zoomByCtrlKey"));
+			_editorLayout = new ComboBox(EditorLayout.values());
 
 
-			editorComponent = FormBuilder.createFormBuilder()
-										 .addLabeledComponent(ScXmlSdkBundle.message("settings.editorLayoutLabel"), editorLayout, 1)
-										 .addComponent(antialiasing, 1)
-										 .addComponent(buffered, 1)
-										 .addComponent(zoomByMouseWheel, 1)
-										 .addComponentFillVertically(new JPanel(), 0)
-										 .getPanel();
+			_editorComponent = FormBuilder.createFormBuilder()
+										  .addLabeledComponent(ScXmlSdkBundle.message("settings.editorLayoutLabel"), _editorLayout, 1)
+										  .addComponent(_antialiasing, 1)
+										  .addComponent(_buffered, 1)
+										  .addComponent(_zoomByMouseWheel, 1)
+										  .addComponentFillVertically(new JPanel(), 0)
+										  .getPanel();
 		}
-		return editorComponent;
+		return _editorComponent;
 	}
 
 	@Override
 	public boolean isModified()
 	{
-		PersistenceService service = theProject.getService(PersistenceService.class);
+		PersistenceService service = _theProject.getService(PersistenceService.class);
 		if (service != null)
 		{
 			Configuration configuration = service.getState();
-			return configuration.buffered != buffered.isSelected() ||
-					configuration.antialiasing != antialiasing.isSelected() ||
-					configuration.zoomByMetaMouseWheelEnabled != zoomByMouseWheel.isSelected() ||
-					configuration.editorLayout != editorLayout.getSelectedItem();
+			return configuration._buffered != _buffered.isSelected() ||
+					configuration._antialiasing != _antialiasing.isSelected() ||
+					configuration._zoomByMetaMouseWheelEnabled != _zoomByMouseWheel.isSelected() ||
+					configuration._editorLayout != _editorLayout.getSelectedItem();
 		}
 		return false;
 	}
@@ -81,20 +81,20 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 	@Override
 	public void apply() throws ConfigurationException
 	{
-		PersistenceService service = theProject.getService(PersistenceService.class);
+		PersistenceService service = _theProject.getService(PersistenceService.class);
 		if (service == null)
 			throw new ConfigurationException("Persistence Service not available");
 
 		if (isModified())
 		{
 			Configuration configuration = service.getState();
-			configuration.buffered = buffered.isSelected();
-			configuration.antialiasing = antialiasing.isSelected();
-			configuration.zoomByMetaMouseWheelEnabled = zoomByMouseWheel.isSelected();
-			configuration.editorLayout = (EditorLayout) editorLayout.getSelectedItem();
+			configuration._buffered = _buffered.isSelected();
+			configuration._antialiasing = _antialiasing.isSelected();
+			configuration._zoomByMetaMouseWheelEnabled = _zoomByMouseWheel.isSelected();
+			configuration._editorLayout = (EditorLayout) _editorLayout.getSelectedItem();
 
-			ChangeConfigurationNotifier publisher = theProject.getMessageBus()
-															  .syncPublisher(ChangeConfigurationNotifier.CHANGE_CONFIG_TOPIC);
+			ChangeConfigurationNotifier publisher = _theProject.getMessageBus()
+															   .syncPublisher(ChangeConfigurationNotifier.CHANGE_CONFIG_TOPIC);
 			publisher.onChange(configuration);
 		}
 	}
@@ -102,14 +102,14 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 	@Override
 	public void reset()
 	{
-		PersistenceService service = theProject.getService(PersistenceService.class);
+		PersistenceService service = _theProject.getService(PersistenceService.class);
 		if (service != null)
 		{
 			Configuration configuration = service.getState();
-			buffered.setSelected(configuration.buffered);
-			antialiasing.setSelected(configuration.antialiasing);
-			zoomByMouseWheel.setSelected(configuration.zoomByMetaMouseWheelEnabled);
-			editorLayout.setSelectedItem(configuration.editorLayout);
+			_buffered.setSelected(configuration._buffered);
+			_antialiasing.setSelected(configuration._antialiasing);
+			_zoomByMouseWheel.setSelected(configuration._zoomByMetaMouseWheelEnabled);
+			_editorLayout.setSelectedItem(configuration._editorLayout);
 		}
 	}
 

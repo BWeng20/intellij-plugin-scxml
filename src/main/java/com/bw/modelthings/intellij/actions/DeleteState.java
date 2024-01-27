@@ -48,7 +48,8 @@ public class DeleteState extends AnAction implements DumbAware
 		{
 			enable = null != panel.getSelectedState();
 		}
-		anActionEvent.getPresentation().setEnabledAndVisible(enable);
+		anActionEvent.getPresentation()
+					 .setEnabledAndVisible(enable);
 	}
 
 	@Override

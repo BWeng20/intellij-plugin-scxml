@@ -50,13 +50,13 @@ public abstract class ShapePrimitiveBase extends DrawPrimitive
 	{
 		if (_shape != null)
 		{
-			if (_fill && _style.fillPaint != null)
+			if (_fill && _style._fillPaint != null)
 			{
-				g2.setPaint(_style.fillPaint);
+				g2.setPaint(_style._fillPaint);
 				g2.fill(_shape);
 			}
-			g2.setPaint(_style.linePaint);
-			g2.setStroke(_style.lineStroke);
+			g2.setPaint(_style._linePaint);
+			g2.setStroke(_style._lineStroke);
 			g2.draw(_shape);
 		}
 	}

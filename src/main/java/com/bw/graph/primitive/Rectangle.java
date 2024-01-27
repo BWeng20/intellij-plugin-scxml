@@ -57,8 +57,8 @@ public class Rectangle extends ShapePrimitiveBase
 
 		sw.startStyle();
 		if (isFill())
-			sw.writeAttribute(SVGAttribute.Fill, _style.fillPaint);
-		sw.writeAttribute(SVGAttribute.Stroke, _style.linePaint);
+			sw.writeAttribute(SVGAttribute.Fill, _style._fillPaint);
+		sw.writeAttribute(SVGAttribute.Stroke, _style._linePaint);
 		sw.writeStrokeWidth(_style.getStrokeWidth());
 		sw.endElement();
 	}

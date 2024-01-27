@@ -74,8 +74,8 @@ public class GenericPrimitiveVisual extends Visual
 		final GraphConfiguration graphConfiguration = _context._configuration;
 		final GraphicsConfiguration graphicsConfiguration = g2.getDeviceConfiguration();
 
-		if (graphConfiguration.buffered && graphicsConfiguration.getDevice()
-																.getType() != GraphicsDevice.TYPE_PRINTER)
+		if (graphConfiguration._buffered && graphicsConfiguration.getDevice()
+																 .getType() != GraphicsDevice.TYPE_PRINTER)
 		{
 			// The buffer-image needs to use native, unscaled coordinates,
 			// otherwise the result will get blurry.
@@ -118,7 +118,7 @@ public class GenericPrimitiveVisual extends Visual
 						g2Buffered.setComposite(c);
 					}
 
-					if (graphConfiguration.antialiasing)
+					if (graphConfiguration._antialiasing)
 						g2Buffered.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
 					g2Buffered.scale(scaleX, scaleY);
@@ -237,8 +237,8 @@ public class GenericPrimitiveVisual extends Visual
 		{
 			this._absoluteBounds.x = _absolutePosition.x;
 			this._absoluteBounds.y = _absolutePosition.y;
-			this._absoluteBounds.width = dim.width;
-			this._absoluteBounds.height = dim.height;
+			this._absoluteBounds.width = dim._width;
+			this._absoluteBounds.height = dim._height;
 		}
 	}
 

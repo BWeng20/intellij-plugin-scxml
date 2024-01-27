@@ -14,7 +14,7 @@ import java.util.List;
  */
 class GraphLafManagerListener implements LafManagerListener
 {
-	private static List<GraphLafListener> listener = Collections.synchronizedList(new ArrayList<>());
+	private final static List<GraphLafListener> LISTENERS = Collections.synchronizedList(new ArrayList<>());
 
 	/**
 	 * Creates the listener. Called by platform.
@@ -26,7 +26,7 @@ class GraphLafManagerListener implements LafManagerListener
 	@Override
 	public void lookAndFeelChanged(@NotNull LafManager lafManager)
 	{
-		List<GraphLafListener> l = new ArrayList<>(listener);
+		List<GraphLafListener> l = new ArrayList<>(LISTENERS);
 		for (GraphLafListener gl : l)
 			gl.lafChanged();
 
@@ -39,8 +39,8 @@ class GraphLafManagerListener implements LafManagerListener
 	 */
 	public static void addGraphLafListener(GraphLafListener listener)
 	{
-		GraphLafManagerListener.listener.remove(listener);
-		GraphLafManagerListener.listener.add(listener);
+		GraphLafManagerListener.LISTENERS.remove(listener);
+		GraphLafManagerListener.LISTENERS.add(listener);
 	}
 
 	/**
@@ -50,6 +50,6 @@ class GraphLafManagerListener implements LafManagerListener
 	 */
 	public static void removeGraphLafListener(GraphLafListener listener)
 	{
-		GraphLafManagerListener.listener.remove(listener);
+		GraphLafManagerListener.LISTENERS.remove(listener);
 	}
 }

@@ -23,55 +23,55 @@ public class FiniteStateMachine
 	/**
 	 * The trace, possibly null.
 	 */
-	public Tracer tracer;
+	public Tracer _tracer;
 
 	/**
 	 * The data model type to use.
 	 */
-	public String datamodel;
+	public String _dataModel;
 
 	/**
 	 * The binding mode
 	 */
-	public BindingType binding;
+	public BindingType _binding;
 
 	/**
 	 * The version
 	 */
-	public String version;
+	public String _version;
 
 	/**
 	 * All states by Id
 	 */
-	public final HashMap<String, State> states = new HashMap<>();
+	public final HashMap<String, State> _states = new HashMap<>();
 
 	/**
 	 * The name of the FSM.
 	 */
-	public String name;
+	public String _name;
 
 	/**
 	 * An FSM can have actual multiple initial-target-states, so this state may be artificial.
 	 * Reader has to generate a parent state if needed.
 	 * This state also serve as the "scxml" state element were mentioned.
 	 */
-	public State pseudoRoot;
+	public State _pseudoRoot;
 
 	/**
 	 * <strong>W3C says:</strong><br>
 	 * The &lt;script&gt; element adds scripting capability to the state machine.
 	 */
-	public ExecutableContent script;
+	public ExecutableContent _script;
 
 	/**
 	 * The invoke-id of the caller or null.
 	 */
-	public String callerInvokeId;
+	public String _callerInvokeId;
 
 	/**
 	 * Timer used for delays.
 	 */
-	public Timer timer;
+	public Timer _timer;
 
 	/**
 	 * Removes a state.
@@ -83,7 +83,7 @@ public class FiniteStateMachine
 	public List<State> remove(State state, boolean keepSubStates)
 	{
 		List<State> removed = new ArrayList<>();
-		removeState(pseudoRoot, state, keepSubStates, removed);
+		removeState(_pseudoRoot, state, keepSubStates, removed);
 		return removed;
 	}
 
@@ -99,26 +99,26 @@ public class FiniteStateMachine
 	{
 		if (stateToRemove != null)
 		{
-			if (stateToRemove.parent != null)
+			if (stateToRemove._parent != null)
 			{
 				// Walk down the tree of the state to remove and move states and transitions recursively up.
-				for (State s : stateToRemove.states)
+				for (State s : stateToRemove._states)
 					removeState(null, s, keepSubStates, removed);
 
 				if (keepSubStates)
 				{
 					// Keep states.
-					stateToRemove.parent.states.addAll(stateToRemove.states);
+					stateToRemove._parent._states.addAll(stateToRemove._states);
 					// Keep also transitions.
-					stateToRemove.parent.transitions.addAll(stateToRemove.transitions);
+					stateToRemove._parent._transitions.addAll(stateToRemove._transitions);
 				}
-				stateToRemove.parent.states.remove(stateToRemove);
-				stateToRemove.parent = null;
+				stateToRemove._parent._states.remove(stateToRemove);
+				stateToRemove._parent = null;
 
 				// Children should be empty already, no need to stateToRemove.states.clear();
-				stateToRemove.transitions.clear();
-				if (stateToRemove.history != null)
-					stateToRemove.history.clear();
+				stateToRemove._transitions.clear();
+				if (stateToRemove._history != null)
+					stateToRemove._history.clear();
 				removed.add(stateToRemove);
 			}
 		}
@@ -128,16 +128,16 @@ public class FiniteStateMachine
 		{
 			// We are in the top most call or already going down startAt-tree.
 
-			Iterator<Transition> tit = startAt.transitions.iterator();
+			Iterator<Transition> tit = startAt._transitions.iterator();
 			while (tit.hasNext())
 			{
 				Transition t = tit.next();
-				if (removed.contains(t.source) || (t.target.removeAll(removed) && t.target.isEmpty()))
+				if (removed.contains(t._source) || (t._target.removeAll(removed) && t._target.isEmpty()))
 					tit.remove();
 			}
-			if (startAt.history != null)
-				startAt.history.removeAll(removed);
-			for (State child : startAt.states)
+			if (startAt._history != null)
+				startAt._history.removeAll(removed);
+			for (State child : startAt._states)
 			{
 				removeState(child, null, false, removed);
 			}

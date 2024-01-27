@@ -140,8 +140,8 @@ public abstract class DrawPrimitive
 	 */
 	public void draw(Graphics2D g2)
 	{
-		_tempPosition.x = _relativePosition.x + _insets.left;
-		_tempPosition.y = _relativePosition.y + _insets.top;
+		_tempPosition.x = _relativePosition.x + _insets._left;
+		_tempPosition.y = _relativePosition.y + _insets._top;
 
 		AffineTransform orgTransform = g2.getTransform();
 		try
@@ -218,7 +218,7 @@ public abstract class DrawPrimitive
 		final Dimension2DFloat dim = getDimension(graphics);
 		return new Rectangle2D.Float(
 				basePositionX + _relativePosition.x,
-				basePositionY + _relativePosition.y, dim.width, dim.height);
+				basePositionY + _relativePosition.y, dim._width, dim._height);
 	}
 
 	/**
@@ -250,8 +250,8 @@ public abstract class DrawPrimitive
 	public Dimension2DFloat getDimension(Graphics2D graphics)
 	{
 		Dimension2DFloat dim = getInnerDimension(graphics);
-		dim.width += _insets.left + _insets.right;
-		dim.height += _insets.top + _insets.bottom;
+		dim._width += _insets._left + _insets._right;
+		dim._height += _insets._top + _insets._bottom;
 
 		return dim;
 	}
@@ -275,8 +275,8 @@ public abstract class DrawPrimitive
 	public void toSVG(SVGWriter sw, Graphics2D g2,
 					  Point2D.Float position)
 	{
-		_tempPosition.x = _relativePosition.x + _insets.left;
-		_tempPosition.y = _relativePosition.y + _insets.top;
+		_tempPosition.x = _relativePosition.x + _insets._left;
+		_tempPosition.y = _relativePosition.y + _insets._top;
 
 		if (position != null)
 		{
@@ -311,10 +311,10 @@ public abstract class DrawPrimitive
 			_insets = new InsetsFloat(top, left, bottom, right);
 		else
 		{
-			_insets.top = top;
-			_insets.left = left;
-			_insets.bottom = bottom;
-			_insets.right = right;
+			_insets._top = top;
+			_insets._left = left;
+			_insets._bottom = bottom;
+			_insets._right = right;
 		}
 	}
 
@@ -328,13 +328,13 @@ public abstract class DrawPrimitive
 		if (insets != null)
 		{
 			if (this._insets == DEFAULT_INSERTS)
-				this._insets = new InsetsFloat(insets.top, insets.left, insets.bottom, insets.right);
+				this._insets = new InsetsFloat(insets._top, insets._left, insets._bottom, insets._right);
 			else
 			{
-				this._insets.top = insets.top;
-				this._insets.left = insets.left;
-				this._insets.bottom = insets.bottom;
-				this._insets.right = insets.right;
+				this._insets._top = insets._top;
+				this._insets._left = insets._left;
+				this._insets._bottom = insets._bottom;
+				this._insets._right = insets._right;
 			}
 		}
 		else

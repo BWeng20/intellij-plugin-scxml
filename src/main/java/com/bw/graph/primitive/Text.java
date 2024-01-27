@@ -44,8 +44,8 @@ public class Text extends DrawPrimitive
 	@Override
 	protected void drawIntern(Graphics2D g2)
 	{
-		g2.setFont(_style.font);
-		g2.setPaint(_style.textPaint);
+		g2.setFont(_style._font);
+		g2.setPaint(_style._textPaint);
 		g2.drawString(_text, 0, g2.getFontMetrics()
 								  .getAscent());
 	}
@@ -55,7 +55,7 @@ public class Text extends DrawPrimitive
 	{
 		if (graphics != null)
 		{
-			Rectangle2D r = _style.fontMetrics.getStringBounds(_text, graphics);
+			Rectangle2D r = _style._fontMetrics.getStringBounds(_text, graphics);
 			_lastStringDimension = new Dimension2DFloat((float) r.getWidth(), (float) r.getHeight());
 		}
 		else if (_lastStringDimension == null)
@@ -68,12 +68,12 @@ public class Text extends DrawPrimitive
 	{
 		sw.startElement(SVGElement.text);
 		sw.writeAttribute(SVGAttribute.X, pos.x);
-		sw.writeAttribute(SVGAttribute.Y, pos.y + _style.fontMetrics.getAscent());
+		sw.writeAttribute(SVGAttribute.Y, pos.y + _style._fontMetrics.getAscent());
 		sw.startStyle();
 		sw.writeAttribute(SVGAttribute.Stroke, (Color) null);
-		sw.writeAttribute(SVGAttribute.Fill, _style.textPaint);
-		sw.writeAttribute(SVGAttribute.FontFamily, _style.font.getFamily());
-		sw.writeAttribute(SVGAttribute.FontSize, _style.font.getSize2D());
+		sw.writeAttribute(SVGAttribute.Fill, _style._textPaint);
+		sw.writeAttribute(SVGAttribute.FontFamily, _style._font.getFamily());
+		sw.writeAttribute(SVGAttribute.FontSize, _style._font.getSize2D());
 		sw.startContent();
 		sw.writeEscaped(_text);
 		sw.endElement();

@@ -47,88 +47,88 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	/**
 	 * Dummy to show something
 	 */
-	protected JLabel info;
+	protected JLabel _info;
 
 	/**
 	 * The in-place editor for state-names.
 	 */
-	protected JBTextField stateNameEditorComponent = new JBTextField();
+	protected JBTextField _stateNameEditorComponent = new JBTextField();
 
 	/**
 	 * Breadcrumbs to show and select the parent states of the current model.
 	 */
-	protected Breadcrumbs stateHierarchyBreadCrumbs;
+	protected Breadcrumbs _stateHierarchyBreadCrumbs;
 
 	/**
-	 * Array to add the state crumbs for {@link #stateHierarchyBreadCrumbs}.
+	 * Array to add the state crumbs for {@link #_stateHierarchyBreadCrumbs}.
 	 */
-	protected List<Crumb> stateHierarchyCrumbs = new ArrayList<>();
+	protected List<Crumb> _stateHierarchyCrumbs = new ArrayList<>();
 
 	/**
 	 * Root model.
 	 */
-	protected Visual root;
+	protected Visual _root;
 
 	/**
 	 * The graph pane.
 	 */
-	protected GraphPane pane = new GraphPane();
+	protected GraphPane _pane = new GraphPane();
 
 	/**
 	 * The FSM.
 	 */
-	protected FiniteStateMachine fsm;
+	protected FiniteStateMachine _fsm;
 
 	/**
 	 * Style for state outline.
 	 */
-	protected DrawStyle stateOutlineStyle = new DrawStyle();
+	protected DrawStyle _stateOutlineStyle = new DrawStyle();
 
 	/**
 	 * Style for inner drawings in the states.
 	 */
-	protected DrawStyle stateInnerStyle = new DrawStyle();
+	protected DrawStyle _stateInnerStyle = new DrawStyle();
 
 	/**
 	 * Style for start nodes.
 	 */
-	protected DrawStyle startStyle = new DrawStyle();
+	protected DrawStyle _startStyle = new DrawStyle();
 
 	/**
 	 * Context for state outline.
 	 */
-	protected DrawContext stateOutlineContext = new DrawContext(pane.getGraphConfiguration(), stateOutlineStyle);
+	protected DrawContext _stateOutlineContext = new DrawContext(_pane.getGraphConfiguration(), _stateOutlineStyle);
 
 	/**
 	 * The context for inner drawing for states.
 	 */
-	protected DrawContext stateInnerContext = new DrawContext(pane.getGraphConfiguration(), stateInnerStyle);
+	protected DrawContext _stateInnerContext = new DrawContext(_pane.getGraphConfiguration(), _stateInnerStyle);
 
 	/**
 	 * Context for edges.
 	 */
-	protected DrawContext edgeContext = new DrawContext(pane.getGraphConfiguration(), stateInnerStyle);
+	protected DrawContext _edgeContext = new DrawContext(_pane.getGraphConfiguration(), _stateInnerStyle);
 
 	/**
 	 * Context for start node.
 	 */
-	protected DrawContext startContext = new DrawContext(pane.getGraphConfiguration(), startStyle);
+	protected DrawContext _startContext = new DrawContext(_pane.getGraphConfiguration(), _startStyle);
 
 	/**
 	 * The project of the file.
 	 */
-	protected Project theProject;
+	protected Project _theProject;
 
 	@Override
 	public void dispose()
 	{
-		GraphLafManagerListener.removeGraphLafListener(lafListener);
-		if (fsm != null)
+		GraphLafManagerListener.removeGraphLafListener(_lafListener);
+		if (_fsm != null)
 		{
-			fsm.dispose();
-			fsm = null;
+			_fsm.dispose();
+			_fsm = null;
 		}
-		pane.dispose();
+		_pane.dispose();
 	}
 
 	/**
@@ -140,19 +140,19 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	{
 		if (config != null)
 		{
-			var graphConfig = pane.getGraphConfiguration();
-			if (graphConfig.buffered != config.buffered ||
-					graphConfig.antialiasing != config.antialiasing ||
-					graphConfig.zoomByMetaMouseWheelEnabled != config.zoomByMetaMouseWheelEnabled
+			var graphConfig = _pane.getGraphConfiguration();
+			if (graphConfig._buffered != config._buffered ||
+					graphConfig._antialiasing != config._antialiasing ||
+					graphConfig._zoomByMetaMouseWheelEnabled != config._zoomByMetaMouseWheelEnabled
 			)
 			{
-				graphConfig.buffered = config.buffered;
-				graphConfig.antialiasing = config.antialiasing;
-				graphConfig.zoomByMetaMouseWheelEnabled = config.zoomByMetaMouseWheelEnabled;
+				graphConfig._buffered = config._buffered;
+				graphConfig._antialiasing = config._antialiasing;
+				graphConfig._zoomByMetaMouseWheelEnabled = config._zoomByMetaMouseWheelEnabled;
 				SwingUtilities.invokeLater(() ->
 				{
-					pane.invalidate();
-					pane.repaint();
+					_pane.invalidate();
+					_pane.repaint();
 				});
 			}
 		}
@@ -165,7 +165,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 */
 	public String getSVG()
 	{
-		return pane.toSVG();
+		return _pane.toSVG();
 	}
 
 	/**
@@ -175,13 +175,13 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 */
 	public State getSelectedState()
 	{
-		Visual v = pane.getSelectedVisual();
+		Visual v = _pane.getSelectedVisual();
 		if (v != null)
 		{
 			StateNameProxy stateProxy = v.getProxyOf(StateNameProxy.class);
 			if (stateProxy != null)
 			{
-				return stateProxy.state;
+				return stateProxy._state;
 			}
 		}
 		return null;
@@ -195,9 +195,9 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 */
 	public void removeState(State state, boolean keepChildStates)
 	{
-		if (fsm != null)
+		if (_fsm != null)
 		{
-			List<State> removedStates = fsm.remove(state, keepChildStates);
+			List<State> removedStates = _fsm.remove(state, keepChildStates);
 		}
 	}
 
@@ -214,7 +214,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 			StateNameProxy stateProxy = stateVisual.getProxyOf(StateNameProxy.class);
 			if (stateProxy != null)
 			{
-				return stateProxy.state.name;
+				return stateProxy._state._name;
 			}
 		}
 		return null;
@@ -227,7 +227,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 */
 	public GraphConfiguration getGraphConfiguration()
 	{
-		return pane.getGraphConfiguration();
+		return _pane.getGraphConfiguration();
 	}
 
 	/**
@@ -308,26 +308,26 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	public ScxmlGraphPanel(Project theProject)
 	{
 		super(new BorderLayout());
-		this.theProject = theProject;
+		this._theProject = theProject;
 
-		info = new JLabel("SCXML");
+		_info = new JLabel("SCXML");
 
-		stateHierarchyBreadCrumbs = new StateBreadCrumbs();
-		add(stateHierarchyBreadCrumbs, BorderLayout.SOUTH);
+		_stateHierarchyBreadCrumbs = new StateBreadCrumbs();
+		add(_stateHierarchyBreadCrumbs, BorderLayout.SOUTH);
 
-		stateHierarchyBreadCrumbs.onHover((crumb, inputEvent) ->
+		_stateHierarchyBreadCrumbs.onHover((crumb, inputEvent) ->
 		{
 		});
 
-		stateHierarchyBreadCrumbs.onSelect((crumb, inputEvent) ->
+		_stateHierarchyBreadCrumbs.onSelect((crumb, inputEvent) ->
 		{
 			StateCrumb sc = (StateCrumb) crumb;
 			if (sc != null)
-				pane.setModel(ModelPrimitive.getChildModel(sc.state));
+				_pane.setModel(ModelPrimitive.getChildModel(sc.state));
 		});
 
 		// add(bc, BorderLayout.NORTH);
-		add(new JScrollPane(pane), BorderLayout.CENTER);
+		add(new JScrollPane(_pane), BorderLayout.CENTER);
 
 		updateLaf();
 
@@ -337,7 +337,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 			setConfiguration(persistenceService.getState());
 		}
 
-		pane.addInteractionListener(new InteractionAdapter()
+		_pane.addInteractionListener(new InteractionAdapter()
 		{
 			@Override
 			public void hierarchyChanged()
@@ -347,13 +347,13 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 
 		});
 
-		GraphLafManagerListener.addGraphLafListener(lafListener);
+		GraphLafManagerListener.addGraphLafListener(_lafListener);
 	}
 
 	/**
 	 * The Laf listener.
 	 */
-	protected LafListener lafListener = new LafListener();
+	protected LafListener _lafListener = new LafListener();
 
 	/**
 	 * Updates graphical settings from current LAF.
@@ -368,11 +368,11 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 														  .getAttributes(HighlighterColors.TEXT);
 		Color background = textAttribute.getBackgroundColor();
 
-		pane.setOpaque(true);
-		pane.getGraphConfiguration().graphBackground = background;
-		pane.setBackground(background);
+		_pane.setOpaque(true);
+		_pane.getGraphConfiguration()._graphBackground = background;
+		_pane.setBackground(background);
 
-		stateHierarchyBreadCrumbs.setBackground(background);
+		_stateHierarchyBreadCrumbs.setBackground(background);
 
 		Font font = getFont();
 		if (font == null)
@@ -380,27 +380,27 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 
 		FontMetrics fontMetrics = getFontMetrics(font);
 
-		startStyle.linePaint = textAttribute.getForegroundColor();
-		startStyle.fillPaint = textAttribute.getForegroundColor();
+		_startStyle._linePaint = textAttribute.getForegroundColor();
+		_startStyle._fillPaint = textAttribute.getForegroundColor();
 
-		stateOutlineStyle.linePaint = textAttribute.getForegroundColor();
-		stateOutlineStyle.fillPaint = textAttribute.getBackgroundColor();
-		stateOutlineStyle.lineStroke = new BasicStroke(2);
-		stateOutlineStyle.textPaint = textAttribute.getForegroundColor();
+		_stateOutlineStyle._linePaint = textAttribute.getForegroundColor();
+		_stateOutlineStyle._fillPaint = textAttribute.getBackgroundColor();
+		_stateOutlineStyle._lineStroke = new BasicStroke(2);
+		_stateOutlineStyle._textPaint = textAttribute.getForegroundColor();
 
-		stateOutlineStyle.font = font;
-		stateOutlineStyle.fontMetrics = fontMetrics;
+		_stateOutlineStyle._font = font;
+		_stateOutlineStyle._fontMetrics = fontMetrics;
 
-		stateInnerStyle.linePaint = stateOutlineStyle.linePaint;
-		stateInnerStyle.fillPaint = stateOutlineStyle.fillPaint;
-		stateInnerStyle.lineStroke = new BasicStroke(1);
-		stateInnerStyle.textPaint = stateOutlineStyle.textPaint;
-		stateInnerStyle.background = background;
-		stateInnerStyle.font = font;
-		stateInnerStyle.fontMetrics = fontMetrics;
+		_stateInnerStyle._linePaint = _stateOutlineStyle._linePaint;
+		_stateInnerStyle._fillPaint = _stateOutlineStyle._fillPaint;
+		_stateInnerStyle._lineStroke = new BasicStroke(1);
+		_stateInnerStyle._textPaint = _stateOutlineStyle._textPaint;
+		_stateInnerStyle._background = background;
+		_stateInnerStyle._font = font;
+		_stateInnerStyle._fontMetrics = fontMetrics;
 
-		pane.getModel()
-			.repaint();
+		_pane.getModel()
+			 .repaint();
 	}
 
 	/**
@@ -434,16 +434,16 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 */
 	protected void updatedStateBreadcrumbs()
 	{
-		stateHierarchyCrumbs.clear();
-		if (root != null)
+		_stateHierarchyCrumbs.clear();
+		if (_root != null)
 		{
-			stateHierarchyCrumbs.add(new StateCrumb(root));
+			_stateHierarchyCrumbs.add(new StateCrumb(_root));
 		}
-		for (Visual v : pane.getHierarchy())
+		for (Visual v : _pane.getHierarchy())
 		{
-			stateHierarchyCrumbs.add(new StateCrumb(v));
+			_stateHierarchyCrumbs.add(new StateCrumb(v));
 		}
-		stateHierarchyBreadCrumbs.setCrumbs(stateHierarchyCrumbs);
+		_stateHierarchyBreadCrumbs.setCrumbs(_stateHierarchyCrumbs);
 	}
 
 	/**
@@ -455,30 +455,30 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	public void setStateMachine(FiniteStateMachine fsm, GraphExtension graphExtension)
 	{
 		GraphFactory factory = new GraphFactory(graphExtension);
-		factory.setStateNameEditorComponent(stateNameEditorComponent);
+		factory.setStateNameEditorComponent(_stateNameEditorComponent);
 
-		pane.setModel(null);
-		if (root != null)
+		_pane.setModel(null);
+		if (_root != null)
 		{
-			root.dispose();
-			root = null;
+			_root.dispose();
+			_root = null;
 		}
-		this.fsm = fsm;
+		this._fsm = fsm;
 		VisualModel rootModel =
-				factory.createVisualModel(fsm, (Graphics2D) pane.getGraphics(),
-						startContext, stateOutlineContext, stateInnerContext, edgeContext);
+				factory.createVisualModel(fsm, (Graphics2D) _pane.getGraphics(),
+						_startContext, _stateOutlineContext, _stateInnerContext, _edgeContext);
 
 		if (!rootModel.getVisuals()
 					  .isEmpty())
 		{
-			root = rootModel.getVisuals()
-							.get(0);
-			pane.setModel(ModelPrimitive.getChildModel(root));
+			_root = rootModel.getVisuals()
+							 .get(0);
+			_pane.setModel(ModelPrimitive.getChildModel(_root));
 		}
 		else
 		{
-			root = null;
-			pane.setModel(null);
+			_root = null;
+			_pane.setModel(null);
 		}
 		updatedStateBreadcrumbs();
 	}
@@ -490,6 +490,6 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 */
 	public void setError(Throwable cause)
 	{
-		info.setText(cause == null ? "---" : cause.getLocalizedMessage());
+		_info.setText(cause == null ? "---" : cause.getLocalizedMessage());
 	}
 }

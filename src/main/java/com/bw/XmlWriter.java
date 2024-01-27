@@ -12,19 +12,19 @@ public class XmlWriter extends PrintWriter
 	/**
 	 * Precision factor for float values.
 	 */
-	public float precisionFactor = 10 * 10 * 10;
+	public float _precisionFactor = 10 * 10 * 10;
 
-	private StringBuilder lineIndent = new StringBuilder(20);
+	private final StringBuilder _lineIndent = new StringBuilder(20);
 
 	/**
 	 * The stack of currently open tags.
 	 */
-	protected final Stack<String> tagStack = new Stack<>();
+	protected final Stack<String> _tagStack = new Stack<>();
 
 	/**
 	 * True if the current element has some content.
 	 */
-	protected boolean elementHasContent = false;
+	protected boolean _elementHasContent = false;
 
 	/**
 	 * Creates an XML Writer on top of some other writer.
@@ -34,7 +34,7 @@ public class XmlWriter extends PrintWriter
 	public XmlWriter(Writer out)
 	{
 		super(out);
-		lineIndent.append("\n ");
+		_lineIndent.append("\n ");
 	}
 
 	/**
@@ -44,14 +44,14 @@ public class XmlWriter extends PrintWriter
 	 */
 	public void startElement(String tag)
 	{
-		if ((!tagStack.empty()) && !elementHasContent)
+		if ((!_tagStack.empty()) && !_elementHasContent)
 			write(">");
-		tagStack.push(tag);
-		write(lineIndent.toString());
+		_tagStack.push(tag);
+		write(_lineIndent.toString());
 		write('<');
 		write(tag);
-		lineIndent.append('\t');
-		elementHasContent = false;
+		_lineIndent.append('\t');
+		_elementHasContent = false;
 	}
 
 	/**
@@ -59,12 +59,12 @@ public class XmlWriter extends PrintWriter
 	 */
 	public void startContent()
 	{
-		if (!elementHasContent)
+		if (!_elementHasContent)
 		{
 			write('>');
-			write(lineIndent.toString());
+			write(_lineIndent.toString());
 		}
-		elementHasContent = true;
+		_elementHasContent = true;
 	}
 
 	/**
@@ -72,15 +72,15 @@ public class XmlWriter extends PrintWriter
 	 */
 	public void endElement()
 	{
-		if (tagStack.empty())
+		if (_tagStack.empty())
 		{
 			throw new IllegalStateException("endElement called on empty element-stack.");
 		}
-		final String element = tagStack.pop();
-		lineIndent.setLength(lineIndent.length() - 1);
-		if (elementHasContent)
+		final String element = _tagStack.pop();
+		_lineIndent.setLength(_lineIndent.length() - 1);
+		if (_elementHasContent)
 		{
-			write(lineIndent.toString());
+			write(_lineIndent.toString());
 			write("</");
 			write(element);
 			write('>');
@@ -89,7 +89,7 @@ public class XmlWriter extends PrintWriter
 		{
 			write("/>");
 		}
-		elementHasContent = true;
+		_elementHasContent = true;
 	}
 
 	/**
@@ -174,7 +174,7 @@ public class XmlWriter extends PrintWriter
 	 */
 	public void writeRestrictedFloat(float value)
 	{
-		write(floatToString(value, precisionFactor));
+		write(floatToString(value, _precisionFactor));
 	}
 
 	/**

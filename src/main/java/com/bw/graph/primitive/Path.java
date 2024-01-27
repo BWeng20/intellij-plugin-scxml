@@ -83,9 +83,9 @@ public class Path extends DrawPrimitive
 	{
 		super(0, 0, config, style, flags);
 
-		_arrow.moveTo(-2f * config.connectorSize, -config.connectorSize);
+		_arrow.moveTo(-2f * config._connectorSize, -config._connectorSize);
 		_arrow.lineTo(0, 0);
-		_arrow.lineTo(-2f * config.connectorSize, config.connectorSize);
+		_arrow.lineTo(-2f * config._connectorSize, config._connectorSize);
 		_arrow.closePath();
 	}
 
@@ -147,7 +147,7 @@ public class Path extends DrawPrimitive
 						}
 					}
 					ShapeHelper sh = new ShapeHelper(_path2D);
-					var pos = sh.pointAtLength(sh.getOutlineLength() - _config.connectorSize);
+					var pos = sh.pointAtLength(sh.getOutlineLength() - _config._connectorSize);
 					double theta = pos == null ? 0 : pos.angle_;
 
 					AffineTransform aft = new AffineTransform();
@@ -158,8 +158,8 @@ public class Path extends DrawPrimitive
 			}
 		}
 
-		g2.setStroke(_style.lineStroke);
-		g2.setPaint(_style.linePaint);
+		g2.setStroke(_style._lineStroke);
+		g2.setPaint(_style._linePaint);
 		g2.draw(_path2D);
 		if (_arrowEndTranslated != null)
 			g2.fill(_arrowEndTranslated);
@@ -214,11 +214,11 @@ public class Path extends DrawPrimitive
 		sw.startElement(SVGElement.g);
 		sw.startElement(SVGElement.path);
 		sw.writeAttribute(SVGAttribute.Fill, (Paint) null);
-		sw.writeAttribute(SVGAttribute.Stroke, _style.linePaint);
+		sw.writeAttribute(SVGAttribute.Stroke, _style._linePaint);
 		sw.writeStrokeWidth(_style.getStrokeWidth());
 		sw.writeAttribute(SVGAttribute.D, pathB.toString());
 		sw.endElement();
-		sw.writeShape(_arrowEndTranslated, 1, _style.linePaint, null, 0);
+		sw.writeShape(_arrowEndTranslated, 1, _style._linePaint, null, 0);
 		sw.endElement();
 	}
 

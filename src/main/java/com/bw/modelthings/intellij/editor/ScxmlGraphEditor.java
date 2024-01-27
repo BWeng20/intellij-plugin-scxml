@@ -56,69 +56,69 @@ import java.util.Map;
  */
 public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 {
-	private static final Logger log = Logger.getInstance(ScxmlGraphEditor.class);
+	private static final Logger LOG = Logger.getInstance(ScxmlGraphEditor.class);
 
 	/**
 	 * The Graphical Editor component.
 	 */
-	final ScxmlGraphPanel component;
+	final ScxmlGraphPanel _component;
 
 	/**
 	 * The file that is shown.
 	 */
-	final VirtualFile file;
+	final VirtualFile _file;
 
 	/**
-	 * The XML file that is shown (Psi file for {@link #file}).
+	 * The XML file that is shown (Psi file for {@link #_file}).
 	 */
-	PsiFile xmlFile;
+	PsiFile _xmlFile;
 
 	/**
 	 * The document of the xml file.
 	 */
-	Document xmlDocument;
+	Document _xmlDocument;
 
 	/**
 	 * True if an update of the graph was triggered.
 	 */
-	boolean updateGraphTriggered = false;
+	boolean _updateGraphTriggered = false;
 
 	/**
 	 * True if an update of the XML file was triggered.
 	 */
-	boolean updateXmlTriggered = false;
+	boolean _updateXmlTriggered = false;
 
 	/**
 	 * Sync to document is in progress, if this flag is true.
 	 */
-	boolean inDocumentSync = false;
+	boolean _inDocumentSync = false;
 
 	/**
 	 * Enables file/graph synchronization.
 	 */
-	boolean enableSync = true;
+	boolean _enableSync = true;
 
 	/**
 	 * Timer to trigger graph to document synchronization.
 	 */
-	Timer updateXmlTimer;
+	Timer _updateXmlTimer;
 
 
 	/**
 	 * Listener for document changes.
 	 */
-	com.intellij.openapi.editor.event.DocumentListener documentListener = new DocumentListener()
+	com.intellij.openapi.editor.event.DocumentListener _documentListener = new DocumentListener()
 	{
 		@Override
 		public void documentChanged(@NotNull DocumentEvent event)
 		{
-			if (inDocumentSync)
+			if (_inDocumentSync)
 			{
-				log.warn("(Sync) Ignored Document Event " + event);
+				LOG.warn("(Sync) Ignored Document Event " + event);
 			}
 			else
 			{
-				log.warn("Document Event " + event);
+				LOG.warn("Document Event " + event);
 				triggerGraphUpdate();
 			}
 		}
@@ -129,9 +129,9 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	 */
 	protected void triggerGraphUpdate()
 	{
-		if (!updateGraphTriggered)
+		if (!_updateGraphTriggered)
 		{
-			updateGraphTriggered = true;
+			_updateGraphTriggered = true;
 			// Executes in worker thread with read-lock.
 			ApplicationManager.getApplication()
 							  .executeOnPooledThread(() -> ApplicationManager.getApplication()
@@ -144,17 +144,21 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	 */
 	protected void triggerXmlUpdate()
 	{
-		if (!updateXmlTriggered)
+		if (!_updateXmlTriggered)
 		{
-			updateXmlTriggered = true;
+			_updateXmlTriggered = true;
 			ApplicationManager.getApplication()
-							  .invokeLater(() -> WriteCommandAction.runWriteCommandAction(xmlFile.getProject(), this::runXmlUpdate));
+							  .invokeLater(() -> WriteCommandAction.runWriteCommandAction(_xmlFile.getProject(), this::runXmlUpdate));
 		}
 	}
 
 	private Visual getStartVisual(VisualModel model)
 	{
-		return model.getVisuals().stream().filter(v -> v.isFlagSet(GraphFactory.START_NODE_FLAG)).findFirst().orElse(null);
+		return model.getVisuals()
+					.stream()
+					.filter(v -> v.isFlagSet(GraphFactory.START_NODE_FLAG))
+					.findFirst()
+					.orElse(null);
 	}
 
 	/**
@@ -163,15 +167,15 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	private synchronized void runXmlUpdate()
 	{
 		// @TODO: move calculation of graphextensions to worker thread, then use the result here in write action.
-		if (updateXmlTriggered)
+		if (_updateXmlTriggered)
 		{
-			updateXmlTriggered = false;
+			_updateXmlTriggered = false;
 			try
 			{
-				inDocumentSync = true;
+				_inDocumentSync = true;
 
-				VisualModel model = (component.root == null) ? null : ModelPrimitive.getChildModel(component.root);
-				if (xmlFile != null && model != null)
+				VisualModel model = (_component._root == null) ? null : ModelPrimitive.getChildModel(_component._root);
+				if (_xmlFile != null && model != null)
 				{
 					//////////////////////////////////////////
 					// Collect data from model
@@ -182,7 +186,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 					List<Visual> visuals = new ArrayList<>(model.getVisuals());
 					Visual sv = getStartVisual(model);
 					if (sv != null)
-						startBounds.put(model.name, new GraphExtension.PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
+						startBounds.put(model._name, new GraphExtension.PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
 
 					while (!visuals.isEmpty())
 					{
@@ -197,24 +201,24 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 								if (id != null)
 								{
 									bounds.put(id, new GraphExtension.PosAndBounds(v.getAbsolutePosition(), v.getAbsoluteBounds2D(null)));
-									if (!id.equals(proxy.nameInFile))
+									if (!id.equals(proxy._nameInFile))
 									{
 										// State was renamed
-										statesRenamed.put(proxy.nameInFile, id);
-										System.err.println("Renamed: " + proxy.nameInFile + " -> " + id);
-										proxy.nameInFile = id;
+										statesRenamed.put(proxy._nameInFile, id);
+										System.err.println("Renamed: " + proxy._nameInFile + " -> " + id);
+										proxy._nameInFile = id;
 									}
 								}
 								VisualModel m = ModelPrimitive.getChildModel(v);
 								if (m != null)
 								{
-									if (m.name != null)
+									if (m._name != null)
 									{
 										sv = getStartVisual(m);
 										if (sv != null)
 										{
-											startBounds.put(m.name, new GraphExtension.PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
-											System.err.println(m.name + " = " + startBounds.get(m.name));
+											startBounds.put(m._name, new GraphExtension.PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
+											System.err.println(m._name + " = " + startBounds.get(m._name));
 										}
 									}
 									else
@@ -232,11 +236,11 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 					try
 					{
 						// @TODO Try to avoid to write to disk every time we update!
-						PsiDocumentManager.getInstance(xmlFile.getProject())
-										  .commitDocument(xmlDocument);
+						PsiDocumentManager.getInstance(_xmlFile.getProject())
+										  .commitDocument(_xmlDocument);
 
-						final float precisionFactor = this.component.getGraphConfiguration().precisionFactor;
-						XmlDocument doc = ((XmlFile) xmlFile).getDocument();
+						final float precisionFactor = this._component.getGraphConfiguration()._precisionFactor;
+						XmlDocument doc = ((XmlFile) _xmlFile).getDocument();
 						XmlTag root = doc.getRootTag();
 						if (root != null)
 						{
@@ -317,8 +321,8 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 								}
 							}
 						}
-						PsiDocumentManager.getInstance(xmlFile.getProject())
-										  .commitDocument(xmlDocument);
+						PsiDocumentManager.getInstance(_xmlFile.getProject())
+										  .commitDocument(_xmlDocument);
 					}
 					catch (ProcessCanceledException pce)
 					{
@@ -329,8 +333,8 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 			}
 			finally
 			{
-				inDocumentSync = false;
-				log.warn("XML updated");
+				_inDocumentSync = false;
+				LOG.warn("XML updated");
 				// @TODO some unlock?
 			}
 		}
@@ -339,7 +343,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	/**
 	 * Temporary used buffer. Usage is not thread safe, shall be used only from synchronized methods.
 	 */
-	private final StringBuilder tempName = new StringBuilder();
+	private final StringBuilder _tempName = new StringBuilder();
 
 	/**
 	 * Method is not thread-safe, must be called only from synchronized methods.
@@ -370,25 +374,25 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 		XmlAttribute attr = tag.getAttribute(attribute, namespace);
 		if (attr != null)
 		{
-			tempName.setLength(0);
+			_tempName.setLength(0);
 			boolean changed = false;
 			for (String name : ScxmlTags.splitNameList(attr.getValue()))
 			{
-				if (!tempName.isEmpty())
-					tempName.append(' ');
+				if (!_tempName.isEmpty())
+					_tempName.append(' ');
 				String newName = replacements.get(name);
 				if (newName == null)
 				{
-					tempName.append(name);
+					_tempName.append(name);
 				}
 				else
 				{
 					changed = true;
-					tempName.append(newName);
+					_tempName.append(newName);
 				}
 			}
 			if (changed)
-				attr.setValue(tempName.toString());
+				attr.setValue(_tempName.toString());
 		}
 	}
 
@@ -397,10 +401,10 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	 */
 	private synchronized void runGraphUpdate()
 	{
-		if (updateGraphTriggered)
+		if (_updateGraphTriggered)
 		{
-			updateGraphTriggered = false;
-			if (file != null)
+			_updateGraphTriggered = false;
+			if (_file != null)
 			{
 				try
 				{
@@ -410,9 +414,9 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 					GraphExtension ge = new GraphExtension();
 					parser.addExtensionParser(GraphExtension.NS_GRAPH_EXTENSION, ge);
 
-					final FiniteStateMachine fsm = parser.parse(file.toNioPath(), xmlDocument.getText());
+					final FiniteStateMachine fsm = parser.parse(_file.toNioPath(), _xmlDocument.getText());
 					ApplicationManager.getApplication()
-									  .invokeLater(() -> component.setStateMachine(fsm, ge));
+									  .invokeLater(() -> _component.setStateMachine(fsm, ge));
 				}
 				catch (ProcessCanceledException pce)
 				{
@@ -421,7 +425,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 				}
 				catch (ParserException pe)
 				{
-					component.setError(pe);
+					_component.setError(pe);
 				}
 			}
 		}
@@ -435,33 +439,33 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	 */
 	public ScxmlGraphEditor(@NotNull VirtualFile file, @Nullable PsiFile psiFile)
 	{
-		component = new ScxmlGraphPanel(psiFile == null ? null : psiFile.getProject());
-		this.file = file;
+		_component = new ScxmlGraphPanel(psiFile == null ? null : psiFile.getProject());
+		this._file = file;
 		setXmlFile(psiFile);
 
-		updateXmlTimer = new Timer(2000, e ->
+		_updateXmlTimer = new Timer(2000, e ->
 		{
-			if (component.root != null)
+			if (_component._root != null)
 			{
-				VisualModel model = ModelPrimitive.getChildModel(component.root);
+				VisualModel model = ModelPrimitive.getChildModel(_component._root);
 				if (model != null && model.isModified())
 				{
-					if (enableSync)
+					if (_enableSync)
 					{
-						log.warn("Model modified, sync with file");
+						LOG.warn("Model modified, sync with file");
 						model.setModified(false);
 						triggerXmlUpdate();
 					}
 					else
 					{
-						log.warn("Model modified, but sync disabled");
+						LOG.warn("Model modified, but sync disabled");
 					}
 				}
 			}
 		});
-		updateXmlTimer.start();
+		_updateXmlTimer.start();
 
-		component.pane.addMouseListener(new MouseAdapter()
+		_component._pane.addMouseListener(new MouseAdapter()
 		{
 			@Override
 			public void mouseReleased(MouseEvent event)
@@ -473,31 +477,31 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 					JPopupMenu popupMenu = ActionManager.getInstance()
 														.createActionPopupMenu(ActionPlaces.EDITOR_POPUP, ag)
 														.getComponent();
-					popupMenu.show(component, event.getX(), event.getY());
+					popupMenu.show(_component, event.getX(), event.getY());
 				}
 
 			}
 		});
 
-		component.pane.addInteractionListener(new InteractionAdapter()
+		_component._pane.addInteractionListener(new InteractionAdapter()
 		{
 			@Override
 			public void deselected(Visual visual)
 			{
-				enableSync = true;
+				_enableSync = true;
 			}
 
 			@Override
 			public void mouseDragging(Visual visual)
 			{
 				// Disable sync to xml file during dragging.
-				enableSync = (visual == null);
+				_enableSync = (visual == null);
 			}
 
 			@Override
 			public void mouseOver(Visual visual)
 			{
-				log.warn("MouseOver " + visual);
+				LOG.warn("MouseOver " + visual);
 			}
 		});
 
@@ -511,24 +515,24 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	 */
 	public void setXmlFile(PsiFile xmlFile)
 	{
-		if (this.xmlDocument != null)
+		if (this._xmlDocument != null)
 		{
-			this.xmlDocument.removeDocumentListener(documentListener);
+			this._xmlDocument.removeDocumentListener(_documentListener);
 		}
-		this.xmlFile = xmlFile;
+		this._xmlFile = xmlFile;
 		if (xmlFile == null)
 		{
-			component.setError(null);
+			_component.setError(null);
 		}
 		else
 		{
-			xmlDocument = PsiDocumentManager.getInstance(xmlFile.getProject())
-											.getDocument(xmlFile);
-			if (xmlDocument != null)
+			_xmlDocument = PsiDocumentManager.getInstance(xmlFile.getProject())
+											 .getDocument(xmlFile);
+			if (_xmlDocument != null)
 			{
-				log.warn("Document " + xmlDocument + " " + xmlDocument.getClass()
-																	  .getName());
-				xmlDocument.addDocumentListener(documentListener);
+				LOG.warn("Document " + _xmlDocument + " " + _xmlDocument.getClass()
+																		.getName());
+				_xmlDocument.addDocumentListener(_documentListener);
 			}
 			triggerGraphUpdate();
 		}
@@ -537,13 +541,13 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	@Override
 	public @NotNull JComponent getComponent()
 	{
-		return component;
+		return _component;
 	}
 
 	@Override
 	public @Nullable JComponent getPreferredFocusedComponent()
 	{
-		return component;
+		return _component;
 	}
 
 	@Override
@@ -572,30 +576,30 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 	@Override
 	public void addPropertyChangeListener(@NotNull PropertyChangeListener listener)
 	{
-		component.addPropertyChangeListener(listener);
+		_component.addPropertyChangeListener(listener);
 	}
 
 	@Override
 	public void removePropertyChangeListener(@NotNull PropertyChangeListener listener)
 	{
-		component.removePropertyChangeListener(listener);
+		_component.removePropertyChangeListener(listener);
 	}
 
 	@Override
 	public VirtualFile getFile()
 	{
-		return file;
+		return _file;
 	}
 
 	@Override
 	public void dispose()
 	{
-		if (component != null)
-			component.dispose();
-		if (xmlDocument != null)
+		if (_component != null)
+			_component.dispose();
+		if (_xmlDocument != null)
 		{
-			xmlDocument.removeDocumentListener(documentListener);
-			xmlDocument = null;
+			_xmlDocument.removeDocumentListener(_documentListener);
+			_xmlDocument = null;
 		}
 	}
 }

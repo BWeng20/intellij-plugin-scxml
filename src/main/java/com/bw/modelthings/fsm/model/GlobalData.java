@@ -38,16 +38,16 @@ public class GlobalData
 	/**
 	 * True if running.
 	 */
-	public boolean running = false;
+	public boolean _running = false;
 
 	/**
 	 * The queue of internal events. All internal events are processed before the next external is handled.
 	 */
-	public final Queue<Event> internalQueue = new Queue<>();
+	public final Queue<Event> _internalQueue = new Queue<>();
 
 	/**
 	 * The queue of external events.
 	 */
-	public final BlockingQueue<Event> externalQueue = new BlockingQueue<>();
+	public final BlockingQueue<Event> _externalQueue = new BlockingQueue<>();
 
 }
