@@ -88,18 +88,18 @@ public class GraphFactory
 	 * @param style  The style to use.
 	 * @return The visual
 	 */
-	public Visual createStartVisual(State start, float x, float y, float radius, DrawContext style)
+	public Visual createStartVisual(State parent, float x, float y, float radius, DrawContext style)
 	{
-		GenericPrimitiveVisual startNode = new GenericPrimitiveVisual("*", style);
+		GenericPrimitiveVisual startNode = new GenericPrimitiveVisual(parent._docId, style);
 		Circle circle = new Circle(radius, radius, radius, style._configuration, style._style, VisualFlags.ALWAYS);
 		circle.setFill(true);
 		startNode.addDrawingPrimitive(circle);
 		Circle circleActive = new Circle(radius, radius, radius + 5, style._configuration, style._style, VisualFlags.SELECTED);
 		startNode.addDrawingPrimitive(circleActive);
-		startNode.setModified(false);
+		startNode.clearFlags(VisualFlags.MODIFIED);
 		startNode.setFlags(START_NODE_FLAG);
 
-		GraphExtension.PosAndBounds startBounds = _graphExtension._startBounds.get(start._docId);
+		GraphExtension.PosAndBounds startBounds = _graphExtension._startBounds.get(parent._docId);
 		if (startBounds == null)
 		{
 			startNode.setAbsolutePosition(x, y, null);
@@ -163,7 +163,7 @@ public class GraphFactory
 			ConnectorVisual sourceConnector = new ConnectorVisual(source, style, VisualFlags.ALWAYS);
 			Rectangle2D.Float sourceConnectorBounds = sourceConnector.getAbsoluteBounds2D(g2);
 			sourceConnector.setRelativePosition(startBounds.width - (sourceConnectorBounds.width / 2f), (startBounds.height - sourceConnectorBounds.height) / 2f);
-			sourceConnector.setModified(false);
+			sourceConnector.clearFlags(VisualFlags.MODIFIED);
 
 			Rectangle2D.Float targetBounds = target.getAbsoluteBounds2D(g2);
 			ConnectorVisual targetConnector = new ConnectorVisual(target, style, VisualFlags.ALWAYS);
@@ -373,7 +373,7 @@ public class GraphFactory
 				}
 			}
 		}
-		rootModel.setModified(false);
+		rootModel.clearFlags(VisualFlags.MODIFIED);
 		return rootModel;
 	}
 

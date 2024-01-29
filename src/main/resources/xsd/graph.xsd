@@ -10,18 +10,18 @@
 		</xsd:documentation>
 	</xsd:annotation>
 
-	<xsd:attribute name="start-bounds" type="PosAndBoundsType">
+	<xsd:attribute name="start-pos" type="PosAndBoundsType">
 		<xsd:annotation>
 			<xsd:documentation>
-				Define the bounding box of the start-node.
+				Define the position and dimension of the start-node.
 			</xsd:documentation>
 		</xsd:annotation>
 	</xsd:attribute>
 
-	<xsd:attribute name="bounds" type="PosAndBoundsType">
+	<xsd:attribute name="pos" type="PosAndBoundsType">
 		<xsd:annotation>
 			<xsd:documentation>
-				Allows to define a bounding box.
+				Allows to define the position and dimension.
 				The value must consist of six floating point values, separated by spaces.
 				First the X- and Y-ordinates of base-position, then the X,Y,width and height of the bounding box.
 			</xsd:documentation>

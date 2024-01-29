@@ -65,10 +65,6 @@ public abstract class Visual
 	 */
 	protected boolean _offscreenBuffersInvalid = false;
 
-	/**
-	 * "Dirty" marker, true if model was externally modified.
-	 */
-	protected boolean _dirty = false;
 
 	/**
 	 * Create a new empty visual.
@@ -154,7 +150,7 @@ public abstract class Visual
 	{
 		if (x != 0 || y != 0)
 		{
-			_dirty = true;
+			setModified();
 			_absolutePosition.x += x;
 			_absolutePosition.y += y;
 			_absoluteBounds.x += x;
@@ -269,7 +265,7 @@ public abstract class Visual
 		if (_absolutePosition.x != x || _absolutePosition.y != y ||
 				(bounds != null && !_absoluteBounds.equals(bounds)))
 		{
-			_dirty = true;
+			setModified();
 			if (bounds == null)
 			{
 				_absoluteBounds.x += x - _absolutePosition.x;
@@ -464,7 +460,7 @@ public abstract class Visual
 	{
 		if (_dimension == null || _dimension._width != width || _dimension._height != height)
 		{
-			_dirty = true;
+			setModified();
 			this._dimension = new Dimension2DFloat(width, height);
 			resetBounds();
 			invalidateBuffers();
@@ -505,12 +501,10 @@ public abstract class Visual
 
 	/**
 	 * Sets modified status.
-	 *
-	 * @param modified The new modified.
 	 */
-	public void setModified(boolean modified)
+	public void setModified()
 	{
-		_dirty = modified;
+		setFlags(VisualFlags.MODIFIED);
 	}
 
 	/**
@@ -520,7 +514,7 @@ public abstract class Visual
 	 */
 	public boolean isModified()
 	{
-		return _dirty;
+		return  isFlagSet(VisualFlags.MODIFIED);
 	}
 
 	@Override

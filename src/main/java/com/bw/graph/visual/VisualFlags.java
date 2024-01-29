@@ -1,5 +1,4 @@
 package com.bw.graph.visual;
-
 /**
  * Static interface with possible flags bits.
  */
@@ -14,4 +13,8 @@ public interface VisualFlags
 	 * Draw if selected.
 	 */
 	int SELECTED = 2;
+
+	int MODIFIED = 4;
+
+	int EDITABLE = 8;
 }

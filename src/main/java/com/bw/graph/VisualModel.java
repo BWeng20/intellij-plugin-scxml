@@ -1,6 +1,7 @@
 package com.bw.graph;
 
 import com.bw.graph.visual.Visual;
+import com.bw.graph.visual.VisualFlags;
 
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
@@ -41,9 +42,9 @@ public class VisualModel
 
 
 	/**
-	 * Marks the model as modified.
+	 * Flags.
 	 */
-	private boolean _dirty = false;
+	private int _flags = 0;
 
 	/**
 	 * Gets the visuals. Modification of the returned list will lead to undefined behaviour.
@@ -64,7 +65,7 @@ public class VisualModel
 	{
 		if (visual != null)
 		{
-			_dirty = true;
+			setModified();
 			visual.resetBounds();
 			_visuals.add(visual);
 			fireModelChange();
@@ -186,22 +187,15 @@ public class VisualModel
 	 */
 	public boolean isModified()
 	{
-		return _dirty || _visuals.stream()
-								 .anyMatch(Visual::isModified);
+		return isFlagSetDeep(VisualFlags.MODIFIED);
 	}
 
 	/**
 	 * Sets modified status.
-	 *
-	 * @param modified The new modified.
 	 */
-	public void setModified(boolean modified)
+	public void setModified()
 	{
-		_dirty = modified;
-		if (!modified)
-		{
-			_visuals.forEach(v -> v.setModified(false));
-		}
+		setFlags(VisualFlags.MODIFIED);
 	}
 
 	@Override
@@ -210,4 +204,43 @@ public class VisualModel
 		return _name == null ? "none" : _name;
 	}
 
+	public boolean isFlagSet(int flags)
+	{
+		return (_flags & flags) == flags;
+	}
+
+	/**
+	 * Checks if themodel itself or any visual has the visual set.
+	 * @param flags The bit-wise flags to check.
+	 * @return True if all bits are set in the model or any contained visual.
+	 */
+	public boolean isFlagSetDeep(int flags)
+	{
+		return (_flags & flags) == flags ||
+				_visuals.stream().anyMatch(visual -> visual.isFlagSet(flags));
+	}
+
+	/**
+	 * Sets the flags in the model and all visuals.
+	 * @param flags The bit-wise combination of flags to set.
+	 */
+	public void setFlags(int flags)
+	{
+		_flags |= flags;
+		for ( Visual v : _visuals)
+			v.clearFlags(flags);
+	}
+
+
+	/**
+	 * Clears the flags in the model and all visuals.
+	 * @param flags The bit-wise combination of flags to clear.
+	 */
+	public void clearFlags(int flags)
+	{
+		_flags &= ~flags;
+
+		for ( Visual v : _visuals)
+			v.clearFlags(flags);
+	}
 }

@@ -105,7 +105,7 @@ public class StateNameProxy implements EditorProxy
 			_state._name = _textComponent.getText();
 			GenericPrimitiveVisual v = (GenericPrimitiveVisual) text.getVisual();
 			v.setId(newName);
-			v.setModified(true);
+			v.setFlags(VisualFlags.MODIFIED);
 			Point2D.Float pt = v.getAbsolutePosition();
 			createStatePrimitives(v, pt.x, pt.y, g2, null);
 			v.setPreferredDimension(null);
@@ -119,7 +119,7 @@ public class StateNameProxy implements EditorProxy
 		{
 			_state._name = _nameBeforeEdit;
 			text.getVisual()
-				.setModified(true);
+				.setFlags(VisualFlags.MODIFIED);
 		}
 	}
 
@@ -177,7 +177,7 @@ public class StateNameProxy implements EditorProxy
 		v.addDrawingPrimitive(separator);
 
 		Text label = new Text(0, 0, _state._name, _stateInnerContext._configuration, _stateInnerContext._style, VisualFlags.ALWAYS);
-		label.setEditable(true);
+		label.setFlags(VisualFlags.EDITABLE);
 		label.setAlignment(Alignment.Center);
 		label.setInsets(fh * 0.25f, 0, 0, 0);
 		label.setUserData(this);
@@ -187,6 +187,5 @@ public class StateNameProxy implements EditorProxy
 			v.addDrawingPrimitive(modelPrimitive);
 
 	}
-
 
 }

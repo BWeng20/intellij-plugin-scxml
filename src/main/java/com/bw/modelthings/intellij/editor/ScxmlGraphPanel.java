@@ -10,6 +10,7 @@ import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.visual.Visual;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
 import com.bw.modelthings.fsm.model.State;
+import com.bw.modelthings.fsm.ui.FsmGraphPanel;
 import com.bw.modelthings.fsm.ui.GraphExtension;
 import com.bw.modelthings.fsm.ui.GraphFactory;
 import com.bw.modelthings.fsm.ui.StateNameProxy;
@@ -42,17 +43,12 @@ import java.util.List;
 /**
  * Panel to show the FSM as Graphical State Machine.
  */
-public class ScxmlGraphPanel extends JPanel implements Disposable
+public class ScxmlGraphPanel extends FsmGraphPanel implements Disposable
 {
 	/**
 	 * Dummy to show something
 	 */
 	protected JLabel _info;
-
-	/**
-	 * The in-place editor for state-names.
-	 */
-	protected JBTextField _stateNameEditorComponent = new JBTextField();
 
 	/**
 	 * Breadcrumbs to show and select the parent states of the current model.
@@ -65,56 +61,6 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	protected List<Crumb> _stateHierarchyCrumbs = new ArrayList<>();
 
 	/**
-	 * Root model.
-	 */
-	protected Visual _root;
-
-	/**
-	 * The graph pane.
-	 */
-	protected GraphPane _pane = new GraphPane();
-
-	/**
-	 * The FSM.
-	 */
-	protected FiniteStateMachine _fsm;
-
-	/**
-	 * Style for state outline.
-	 */
-	protected DrawStyle _stateOutlineStyle = new DrawStyle();
-
-	/**
-	 * Style for inner drawings in the states.
-	 */
-	protected DrawStyle _stateInnerStyle = new DrawStyle();
-
-	/**
-	 * Style for start nodes.
-	 */
-	protected DrawStyle _startStyle = new DrawStyle();
-
-	/**
-	 * Context for state outline.
-	 */
-	protected DrawContext _stateOutlineContext = new DrawContext(_pane.getGraphConfiguration(), _stateOutlineStyle);
-
-	/**
-	 * The context for inner drawing for states.
-	 */
-	protected DrawContext _stateInnerContext = new DrawContext(_pane.getGraphConfiguration(), _stateInnerStyle);
-
-	/**
-	 * Context for edges.
-	 */
-	protected DrawContext _edgeContext = new DrawContext(_pane.getGraphConfiguration(), _stateInnerStyle);
-
-	/**
-	 * Context for start node.
-	 */
-	protected DrawContext _startContext = new DrawContext(_pane.getGraphConfiguration(), _startStyle);
-
-	/**
 	 * The project of the file.
 	 */
 	protected Project _theProject;
@@ -123,12 +69,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	public void dispose()
 	{
 		GraphLafManagerListener.removeGraphLafListener(_lafListener);
-		if (_fsm != null)
-		{
-			_fsm.dispose();
-			_fsm = null;
-		}
-		_pane.dispose();
+		super.dispose();
 	}
 
 	/**
@@ -158,34 +99,6 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		}
 	}
 
-	/**
-	 * Get the SVG for the current model.
-	 *
-	 * @return The SVG source code.
-	 */
-	public String getSVG()
-	{
-		return _pane.toSVG();
-	}
-
-	/**
-	 * Get the state of the currently selected visual.
-	 *
-	 * @return The state or null.
-	 */
-	public State getSelectedState()
-	{
-		Visual v = _pane.getSelectedVisual();
-		if (v != null)
-		{
-			StateNameProxy stateProxy = v.getProxyOf(StateNameProxy.class);
-			if (stateProxy != null)
-			{
-				return stateProxy._state;
-			}
-		}
-		return null;
-	}
 
 	/**
 	 * Remove a state.
@@ -193,41 +106,10 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 * @param state           The state.
 	 * @param keepChildStates If true child-states and internal transitions are moved to parent-state.
 	 */
+	@Override
 	public void removeState(State state, boolean keepChildStates)
 	{
-		if (_fsm != null)
-		{
-			List<State> removedStates = _fsm.remove(state, keepChildStates);
-		}
-	}
-
-	/**
-	 * Extracts the name of the state behind the visual.
-	 *
-	 * @param stateVisual The state visual.
-	 * @return The name or null - if the visual is no state or if the name is not set.
-	 */
-	public String getNameOfState(Visual stateVisual)
-	{
-		if (stateVisual != null)
-		{
-			StateNameProxy stateProxy = stateVisual.getProxyOf(StateNameProxy.class);
-			if (stateProxy != null)
-			{
-				return stateProxy._state._name;
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Get the graph configuration.
-	 *
-	 * @return The graph configuration.
-	 */
-	public GraphConfiguration getGraphConfiguration()
-	{
-		return _pane.getGraphConfiguration();
+		super.removeState(state, keepChildStates);
 	}
 
 	/**
@@ -307,9 +189,10 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 */
 	public ScxmlGraphPanel(Project theProject)
 	{
-		super(new BorderLayout());
-		this._theProject = theProject;
+		// Reconfigure the in-place editor to use JBTextField
+		_stateNameEditorComponent = new JBTextField();
 
+		this._theProject = theProject;
 		_info = new JLabel("SCXML");
 
 		_stateHierarchyBreadCrumbs = new StateBreadCrumbs();
@@ -326,9 +209,6 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 				_pane.setModel(ModelPrimitive.getChildModel(sc.state));
 		});
 
-		// add(bc, BorderLayout.NORTH);
-		add(new JScrollPane(_pane), BorderLayout.CENTER);
-
 		updateLaf();
 
 		PersistenceService persistenceService = theProject.getService(PersistenceService.class);
@@ -336,7 +216,6 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 		{
 			setConfiguration(persistenceService.getState());
 		}
-
 		_pane.addInteractionListener(new InteractionAdapter()
 		{
 			@Override
@@ -346,7 +225,6 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 			}
 
 		});
-
 		GraphLafManagerListener.addGraphLafListener(_lafListener);
 	}
 
@@ -454,32 +332,7 @@ public class ScxmlGraphPanel extends JPanel implements Disposable
 	 */
 	public void setStateMachine(FiniteStateMachine fsm, GraphExtension graphExtension)
 	{
-		GraphFactory factory = new GraphFactory(graphExtension);
-		factory.setStateNameEditorComponent(_stateNameEditorComponent);
-
-		_pane.setModel(null);
-		if (_root != null)
-		{
-			_root.dispose();
-			_root = null;
-		}
-		this._fsm = fsm;
-		VisualModel rootModel =
-				factory.createVisualModel(fsm, (Graphics2D) _pane.getGraphics(),
-						_startContext, _stateOutlineContext, _stateInnerContext, _edgeContext);
-
-		if (!rootModel.getVisuals()
-					  .isEmpty())
-		{
-			_root = rootModel.getVisuals()
-							 .get(0);
-			_pane.setModel(ModelPrimitive.getChildModel(_root));
-		}
-		else
-		{
-			_root = null;
-			_pane.setModel(null);
-		}
+		super.setStateMachine(fsm, graphExtension);
 		updatedStateBreadcrumbs();
 	}
 

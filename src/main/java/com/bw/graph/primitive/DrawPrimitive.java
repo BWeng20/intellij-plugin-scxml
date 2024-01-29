@@ -3,6 +3,7 @@ package com.bw.graph.primitive;
 import com.bw.graph.Alignment;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
+import com.bw.graph.editor.EditorProxy;
 import com.bw.graph.util.Dimension2DFloat;
 import com.bw.graph.util.InsetsFloat;
 import com.bw.graph.visual.Visual;
@@ -28,7 +29,6 @@ public abstract class DrawPrimitive
 
 	private final Point2D.Float _relativePosition;
 	private final Point2D.Float _tempPosition = new Point2D.Float();
-	private boolean _editable;
 
 	private int _flags = VisualFlags.ALWAYS;
 
@@ -354,53 +354,11 @@ public abstract class DrawPrimitive
 	}
 
 	/**
-	 * Checks if this primitive is editable.
-	 *
-	 * @return True if editable, false if readonly.
-	 */
-	public boolean isEditable()
-	{
-		return _editable;
-	}
-
-	/**
-	 * Sets editable property.
-	 *
-	 * @param editable true if editable.
-	 */
-	public void setEditable(boolean editable)
-	{
-		this._editable = editable;
-	}
-
-	/**
 	 * Release resource.
 	 */
 	public void dispose()
 	{
 		_visual = null;
-	}
-
-	/**
-	 * Check if the primitive is modified.<br>
-	 * Needs to be overwritten for primitives that carry modifiable data.
-	 *
-	 * @return in base implementation always false
-	 */
-	public boolean isModified()
-	{
-		return false;
-	}
-
-	/**
-	 * Sets modified flag.<br>
-	 * Needs to be overwritten for primitives that carry modifiable data.<br>
-	 * Base implementation does nothing.
-	 *
-	 * @param modified The new modified state.
-	 */
-	public void setModified(boolean modified)
-	{
 	}
 
 	/**

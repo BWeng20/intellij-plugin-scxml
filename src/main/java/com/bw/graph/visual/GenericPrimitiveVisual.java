@@ -163,7 +163,7 @@ public class GenericPrimitiveVisual extends Visual
 
 		for (DrawPrimitive pw : _primitives)
 		{
-			if (pw.isEditable())
+			if (pw.isFlagSet(VisualFlags.EDITABLE))
 			{
 				Rectangle2D.Float rt = pw.getBounds2D(pt, null);
 				getAlignmentOffset(null, pw, dimension, alignedPos);
@@ -370,22 +370,8 @@ public class GenericPrimitiveVisual extends Visual
 	@Override
 	public boolean isModified()
 	{
-		if (_dirty)
-			return true;
-		else
-		{
-			for (DrawPrimitive primitive : _primitives)
-			{
-				if (primitive.isModified())
-				{
-					_dirty = true;
-					return true;
-				}
-			}
-		}
-		return false;
+		return isFlagSet(VisualFlags.MODIFIED);
 	}
-
 
 	@Override
 	public void dispose()
@@ -406,13 +392,25 @@ public class GenericPrimitiveVisual extends Visual
 	}
 
 	@Override
-	public void setModified(boolean modified)
+	public void setFlags(int flags)
 	{
-		super.setModified(modified);
-		if (!modified)
+		if ((flags | this._flags) != this._flags)
 		{
+			super.setFlags(flags);
 			for (DrawPrimitive primitive : _primitives)
-				primitive.setModified(false);
+				primitive.setFlags(flags);
+		}
+	}
+
+
+	@Override
+	public void clearFlags(int flags)
+	{
+		if ((this._flags & flags) != 0)
+		{
+			super.clearFlags(flags);
+			for (DrawPrimitive primitive : _primitives)
+				primitive.clearFlags(flags);
 		}
 	}
 

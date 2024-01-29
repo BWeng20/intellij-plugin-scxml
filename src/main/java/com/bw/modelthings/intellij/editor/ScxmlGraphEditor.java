@@ -6,6 +6,7 @@ import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.primitive.Text;
 import com.bw.graph.visual.GenericPrimitiveVisual;
 import com.bw.graph.visual.Visual;
+import com.bw.graph.visual.VisualFlags;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
 import com.bw.modelthings.fsm.parser.LogExtensionParser;
 import com.bw.modelthings.fsm.parser.ParserException;
@@ -152,15 +153,6 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 		}
 	}
 
-	private Visual getStartVisual(VisualModel model)
-	{
-		return model.getVisuals()
-					.stream()
-					.filter(v -> v.isFlagSet(GraphFactory.START_NODE_FLAG))
-					.findFirst()
-					.orElse(null);
-	}
-
 	/**
 	 * This method is synchronized because it is possible that this method is called from different worker threads in parallel.
 	 */
@@ -174,8 +166,11 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 			{
 				_inDocumentSync = true;
 
-				VisualModel model = (_component._root == null) ? null : ModelPrimitive.getChildModel(_component._root);
-				if (_xmlFile != null && model != null)
+				FiniteStateMachine fsm = _component.getStateMachine();
+				GraphExtension graphExtension = _component.getGraphExtension();
+				VisualModel model = _component.getGraphPane()
+											  .getModel();
+				if (_xmlFile != null && fsm != null && graphExtension != null)
 				{
 					//////////////////////////////////////////
 					// Collect data from model
@@ -184,7 +179,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 					HashMap<String, String> statesRenamed = new HashMap<>();
 
 					List<Visual> visuals = new ArrayList<>(model.getVisuals());
-					Visual sv = getStartVisual(model);
+					Visual sv = _component.getStartVisual(model);
 					if (sv != null)
 						startBounds.put(model._name, new GraphExtension.PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
 
@@ -214,7 +209,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 								{
 									if (m._name != null)
 									{
-										sv = getStartVisual(m);
+										sv = _component.getStartVisual(m);
 										if (sv != null)
 										{
 											startBounds.put(m._name, new GraphExtension.PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
@@ -277,10 +272,10 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 									if (r != null)
 									{
 										String bs = r.toXML(precisionFactor);
-										XmlAttribute attr = s.getAttribute(GraphExtension.ATTR_BOUNDS, GraphExtension.NS_GRAPH_EXTENSION);
+										XmlAttribute attr = s.getAttribute(GraphExtension.ATTR_POS, GraphExtension.NS_GRAPH_EXTENSION);
 										if (attr == null)
 										{
-											s.setAttribute(GraphExtension.ATTR_BOUNDS, GraphExtension.NS_GRAPH_EXTENSION, bs);
+											s.setAttribute(GraphExtension.ATTR_POS, GraphExtension.NS_GRAPH_EXTENSION, bs);
 										}
 										else
 										{
@@ -305,10 +300,10 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 									if (startNodeBounds != null)
 									{
 										String bs = startNodeBounds.toXML(precisionFactor);
-										XmlAttribute attrStart = s.getAttribute(GraphExtension.ATTR_START_BOUNDS, GraphExtension.NS_GRAPH_EXTENSION);
+										XmlAttribute attrStart = s.getAttribute(GraphExtension.ATTR_START_POS, GraphExtension.NS_GRAPH_EXTENSION);
 										if (attrStart == null)
 										{
-											s.setAttribute(GraphExtension.ATTR_START_BOUNDS, GraphExtension.NS_GRAPH_EXTENSION, bs);
+											s.setAttribute(GraphExtension.ATTR_START_POS, GraphExtension.NS_GRAPH_EXTENSION, bs);
 										}
 										else
 										{
@@ -445,15 +440,16 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 
 		_updateXmlTimer = new Timer(2000, e ->
 		{
-			if (_component._root != null)
+			Visual root = _component.getRootVisual();
+			if (root != null)
 			{
-				VisualModel model = ModelPrimitive.getChildModel(_component._root);
+				VisualModel model = ModelPrimitive.getChildModel(root);
 				if (model != null && model.isModified())
 				{
 					if (_enableSync)
 					{
 						LOG.warn("Model modified, sync with file");
-						model.setModified(false);
+						model.clearFlags(VisualFlags.MODIFIED);
 						triggerXmlUpdate();
 					}
 					else
@@ -465,7 +461,8 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 		});
 		_updateXmlTimer.start();
 
-		_component._pane.addMouseListener(new MouseAdapter()
+		_component.getGraphPane()
+				  .addMouseListener(new MouseAdapter()
 		{
 			@Override
 			public void mouseReleased(MouseEvent event)
@@ -483,7 +480,8 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 			}
 		});
 
-		_component._pane.addInteractionListener(new InteractionAdapter()
+		_component.getGraphPane()
+				  .addInteractionListener(new InteractionAdapter()
 		{
 			@Override
 			public void deselected(Visual visual)

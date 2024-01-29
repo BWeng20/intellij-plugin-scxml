@@ -43,12 +43,12 @@ public class GraphExtension implements ExtensionParser
 	/**
 	 * Name of attribute used for bounds
 	 */
-	public static final String ATTR_BOUNDS = "bounds";
+	public static final String ATTR_POS = "pos";
 
 	/**
 	 * Name of attribute used for bounds of the start-node
 	 */
-	public static final String ATTR_START_BOUNDS = "start-bounds";
+	public static final String ATTR_START_POS = "start-pos";
 
 	/**
 	 * Holds a position and the bounding-rectangle.
@@ -146,6 +146,8 @@ public class GraphExtension implements ExtensionParser
 	 */
 	protected Map<Integer, PosAndBounds> _startBounds = new HashMap<>();
 
+	public Map<String,String> _statesRenamed;
+
 	@Override
 	public void processChild(FsmElement item, Element element)
 	{
@@ -172,13 +174,13 @@ public class GraphExtension implements ExtensionParser
 		{
 			switch (attributeNode.getLocalName())
 			{
-				case ATTR_START_BOUNDS ->
+				case ATTR_START_POS ->
 				{
 					PosAndBounds r = parsePosAndBounds(attributeNode.getNodeValue());
 					if (r != null)
 						_startBounds.put(((State) item)._docId, r);
 				}
-				case ATTR_BOUNDS ->
+				case ATTR_POS ->
 				{
 					PosAndBounds r = parsePosAndBounds(attributeNode.getNodeValue());
 					if (r != null)

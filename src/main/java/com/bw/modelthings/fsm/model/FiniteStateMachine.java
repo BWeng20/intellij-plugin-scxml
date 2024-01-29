@@ -11,14 +11,12 @@ import java.util.Timer;
  */
 public class FiniteStateMachine
 {
-
 	/**
 	 * Creates a new empty State Machine.
 	 */
 	public FiniteStateMachine()
 	{
 	}
-
 
 	/**
 	 * The trace, possibly null.
@@ -101,8 +99,9 @@ public class FiniteStateMachine
 		{
 			if (stateToRemove._parent != null)
 			{
-				// Walk down the tree of the state to remove and move states and transitions recursively up.
-				for (State s : stateToRemove._states)
+				// Walk down the tree of the state to move states and transitions recursively up.
+				List<State> tmp= new ArrayList<>(stateToRemove._states);
+				for (State s : tmp)
 					removeState(null, s, keepSubStates, removed);
 
 				if (keepSubStates)
@@ -112,6 +111,7 @@ public class FiniteStateMachine
 					// Keep also transitions.
 					stateToRemove._parent._transitions.addAll(stateToRemove._transitions);
 				}
+
 				stateToRemove._parent._states.remove(stateToRemove);
 				stateToRemove._parent = null;
 
@@ -119,8 +119,9 @@ public class FiniteStateMachine
 				stateToRemove._transitions.clear();
 				if (stateToRemove._history != null)
 					stateToRemove._history.clear();
-				removed.add(stateToRemove);
 			}
+			if (startAt != null || !keepSubStates)
+				removed.add(stateToRemove);
 		}
 		// At this point "removed" should contain already all states that are removed.
 

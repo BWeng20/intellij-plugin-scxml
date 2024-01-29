@@ -41,6 +41,29 @@ public class ModelPrimitive extends DrawPrimitive
 		super(x, y, config, style, flags);
 	}
 
+	public void setFlags(int flags)
+	{
+		super.setFlags(flags);
+		if ( _childModel != null)
+			_childModel.setFlags(flags);
+	}
+
+	@Override
+	public boolean isFlagSet(int flags)
+	{
+		return super.isFlagSet(flags) || (_childModel != null && _childModel.isFlagSetDeep(flags));
+	}
+
+
+	@Override
+	public void clearFlags(int flags)
+	{
+		super.clearFlags(flags);
+		if ( _childModel != null)
+			_childModel.clearFlags(flags);
+	}
+
+
 	/**
 	 * Sets the child model.
 	 *
@@ -159,24 +182,6 @@ public class ModelPrimitive extends DrawPrimitive
 			_childModel = null;
 		}
 		super.dispose();
-	}
-
-	@Override
-	public boolean isModified()
-	{
-		return _childModel != null && _childModel.isModified();
-	}
-
-	/**
-	 * Sets the modified state of the sub-model. Has no effect if no sub-model is set.
-	 *
-	 * @param modified The new modified state.
-	 */
-	@Override
-	public void setModified(boolean modified)
-	{
-		if (_childModel != null)
-			_childModel.setModified(modified);
 	}
 
 
