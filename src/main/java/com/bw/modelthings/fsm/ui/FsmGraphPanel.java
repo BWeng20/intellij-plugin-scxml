@@ -6,8 +6,6 @@ import com.bw.graph.GraphConfiguration;
 import com.bw.graph.VisualModel;
 import com.bw.graph.editor.GraphPane;
 import com.bw.graph.primitive.ModelPrimitive;
-import com.bw.graph.primitive.Text;
-import com.bw.graph.visual.GenericPrimitiveVisual;
 import com.bw.graph.visual.Visual;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
 import com.bw.modelthings.fsm.model.State;
@@ -19,7 +17,6 @@ import javax.swing.text.JTextComponent;
 import java.awt.BorderLayout;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -37,13 +34,20 @@ public class FsmGraphPanel extends JPanel
 	 */
 	protected Visual _root;
 
+	/**
+	 * The generic graph pane.
+	 */
 	protected GraphPane _pane = new GraphPane();
 
 	/**
 	 * The FSM.
 	 */
 	protected FiniteStateMachine _fsm;
-	protected GraphExtension _graphExtension;
+
+	/**
+	 * The extension from parser that was used for the current FSM.
+	 */
+	protected ScxmlGraphExtension _graphExtension;
 
 	/**
 	 * Style for state outline.
@@ -117,15 +121,17 @@ public class FsmGraphPanel extends JPanel
 		return getState(_pane.getSelectedVisual());
 	}
 
+	/**
+	 * Get the state of a state-visual.
+	 *
+	 * @param v The visual.
+	 * @return The state or null if the visual contains no state.
+	 */
 	public State getState(Visual v)
 	{
-		if (v != null)
+		if (v instanceof StateVisual stateVisual)
 		{
-			StateNameProxy stateProxy = v.getProxyOf(StateNameProxy.class);
-			if (stateProxy != null)
-			{
-				return stateProxy._state;
-			}
+			stateVisual.getState();
 		}
 		return null;
 	}
@@ -168,6 +174,11 @@ public class FsmGraphPanel extends JPanel
 		return _pane.getGraphConfiguration();
 	}
 
+	/**
+	 * Gets the root node visual.
+	 *
+	 * @return The visual or null.
+	 */
 	public Visual getRootVisual()
 	{
 		return _root;
@@ -182,75 +193,91 @@ public class FsmGraphPanel extends JPanel
 		add(new JScrollPane(_pane), BorderLayout.CENTER);
 	}
 
+	/**
+	 * Gets the current state machine
+	 *
+	 * @return The state machine or null
+	 */
 	public FiniteStateMachine getStateMachine()
 	{
 		return _fsm;
 	}
 
-	public GraphExtension getGraphExtension()
+	/**
+	 * Gets the graph-extension used to create the FSM.
+	 *
+	 * @return The extension or null.
+	 */
+	public ScxmlGraphExtension getGraphExtension()
 	{
 		return _graphExtension;
 	}
 
-	public GraphExtension getGraphExtensionFromVisual()
+	/**
+	 * Get the editor updates and commits all changes in the model.
+	 *
+	 * @return The updates. Never null.
+	 */
+	public EditorUpdate getEditorUpdate()
 	{
-		GraphExtension graphExtension = new GraphExtension();
+		EditorUpdate update = new EditorUpdate();
 
 		//////////////////////////////////////////
 		// Collect data from model
-
-		graphExtension._statesRenamed = new HashMap<>();
 
 		VisualModel model = _pane.getModel();
 
 		List<Visual> visuals = new ArrayList<>(model.getVisuals());
 		Visual sv = getStartVisual(model);
 		if (sv != null)
-			graphExtension._startBounds.put(
-					((Number)getStartVisual(model).getId()).intValue(),
-					new GraphExtension.PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
+			update._startBounds.put(
+					"xxx", new PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
 
 		while (!visuals.isEmpty())
 		{
 			Visual v = visuals.remove(visuals.size() - 1);
-			if (v instanceof GenericPrimitiveVisual)
+			if (v instanceof StateVisual stateVisual)
 			{
-				Text text = v.getPrimitiveOf(Text.class);
-				Object userData = text == null ? null : text.getUserData();
-				if (userData instanceof StateNameProxy proxy)
+				String name = stateVisual.getCurrentName();
+
+				if (name != null)
 				{
-					String id = (String) v.getId();
-					if (id != null)
+					update._bounds.put(name, new PosAndBounds(v.getAbsolutePosition(), v.getAbsoluteBounds2D(null)));
+
+					String originalName = stateVisual.getState()._name;
+					if (!name.equals(originalName))
 					{
-						graphExtension._bounds.put(proxy._state._docId, new GraphExtension.PosAndBounds(v.getAbsolutePosition(), v.getAbsoluteBounds2D(null)));
-						if (!id.equals(proxy._nameInFile))
-						{
-							// State was renamed
-							graphExtension._statesRenamed.put(proxy._nameInFile, id);
-						}
+						update._statesRenamed.put(originalName, name);
 					}
-					VisualModel childModel = ModelPrimitive.getChildModel(v);
-					if ( childModel != null )
+
+					VisualModel childModel = stateVisual.getChildModel();
+					if (childModel != null)
 					{
 						visuals.addAll(childModel.getVisuals());
 						sv = getStartVisual(childModel);
 						if (sv != null)
 						{
-							graphExtension._startBounds.put(proxy._state._docId,
-									new GraphExtension.PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
+							update._startBounds.put(stateVisual._state._name,
+									new PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
 						}
 					}
 				}
 			}
 		}
-		return graphExtension;
+		return update;
 	}
 
+	/**
+	 * Gets the visual for the start-node of the model.
+	 *
+	 * @param model The model.
+	 * @return The start node or null.
+	 */
 	public static Visual getStartVisual(VisualModel model)
 	{
 		return model.getVisuals()
 					.stream()
-					.filter(v -> v.isFlagSet(GraphFactory.START_NODE_FLAG))
+					.filter(v -> v.isFlagSet(ScxmlGraphFactory.START_NODE_FLAG))
 					.findFirst()
 					.orElse(null);
 	}
@@ -262,9 +289,9 @@ public class FsmGraphPanel extends JPanel
 	 * @param fsm            The FSM to show.
 	 * @param graphExtension The graph-extension or null
 	 */
-	public void setStateMachine(FiniteStateMachine fsm, GraphExtension graphExtension)
+	public void setStateMachine(FiniteStateMachine fsm, ScxmlGraphExtension graphExtension)
 	{
-		GraphFactory factory = new GraphFactory(graphExtension);
+		ScxmlGraphFactory factory = new ScxmlGraphFactory(graphExtension);
 		factory.setStateNameEditorComponent(_stateNameEditorComponent);
 
 		_pane.setModel(null);
@@ -295,6 +322,7 @@ public class FsmGraphPanel extends JPanel
 
 	/**
 	 * Gets the graph pane.
+	 *
 	 * @return The pane.
 	 */
 	public GraphPane getGraphPane()

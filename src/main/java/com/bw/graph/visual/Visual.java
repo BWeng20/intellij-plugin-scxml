@@ -514,7 +514,7 @@ public abstract class Visual
 	 */
 	public boolean isModified()
 	{
-		return  isFlagSet(VisualFlags.MODIFIED);
+		return isFlagSet(VisualFlags.MODIFIED);
 	}
 
 	@Override

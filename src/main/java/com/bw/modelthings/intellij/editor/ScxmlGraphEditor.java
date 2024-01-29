@@ -3,8 +3,6 @@ package com.bw.modelthings.intellij.editor;
 import com.bw.graph.VisualModel;
 import com.bw.graph.editor.InteractionAdapter;
 import com.bw.graph.primitive.ModelPrimitive;
-import com.bw.graph.primitive.Text;
-import com.bw.graph.visual.GenericPrimitiveVisual;
 import com.bw.graph.visual.Visual;
 import com.bw.graph.visual.VisualFlags;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
@@ -12,9 +10,9 @@ import com.bw.modelthings.fsm.parser.LogExtensionParser;
 import com.bw.modelthings.fsm.parser.ParserException;
 import com.bw.modelthings.fsm.parser.ScxmlTags;
 import com.bw.modelthings.fsm.parser.XmlParser;
-import com.bw.modelthings.fsm.ui.GraphExtension;
-import com.bw.modelthings.fsm.ui.GraphFactory;
-import com.bw.modelthings.fsm.ui.StateNameProxy;
+import com.bw.modelthings.fsm.ui.EditorUpdate;
+import com.bw.modelthings.fsm.ui.PosAndBounds;
+import com.bw.modelthings.fsm.ui.ScxmlGraphExtension;
 import com.intellij.ide.ui.customization.CustomActionsSchema;
 import com.intellij.openapi.actionSystem.ActionGroup;
 import com.intellij.openapi.actionSystem.ActionManager;
@@ -48,7 +46,6 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -133,6 +130,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 		if (!_updateGraphTriggered)
 		{
 			_updateGraphTriggered = true;
+			System.err.println("updateGraphTriggered runReadAction");
 			// Executes in worker thread with read-lock.
 			ApplicationManager.getApplication()
 							  .executeOnPooledThread(() -> ApplicationManager.getApplication()
@@ -167,66 +165,9 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 				_inDocumentSync = true;
 
 				FiniteStateMachine fsm = _component.getStateMachine();
-				GraphExtension graphExtension = _component.getGraphExtension();
-				VisualModel model = _component.getGraphPane()
-											  .getModel();
-				if (_xmlFile != null && fsm != null && graphExtension != null)
+				EditorUpdate update = _component.getEditorUpdate();
+				if (_xmlFile != null && fsm != null && update != null)
 				{
-					//////////////////////////////////////////
-					// Collect data from model
-					HashMap<String, GraphExtension.PosAndBounds> bounds = new HashMap<>();
-					HashMap<String, GraphExtension.PosAndBounds> startBounds = new HashMap<>();
-					HashMap<String, String> statesRenamed = new HashMap<>();
-
-					List<Visual> visuals = new ArrayList<>(model.getVisuals());
-					Visual sv = _component.getStartVisual(model);
-					if (sv != null)
-						startBounds.put(model._name, new GraphExtension.PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
-
-					while (!visuals.isEmpty())
-					{
-						Visual v = visuals.remove(visuals.size() - 1);
-						if (v instanceof GenericPrimitiveVisual)
-						{
-							Text text = v.getPrimitiveOf(Text.class);
-							Object userData = text == null ? null : text.getUserData();
-							if (userData instanceof StateNameProxy proxy)
-							{
-								String id = (String) v.getId();
-								if (id != null)
-								{
-									bounds.put(id, new GraphExtension.PosAndBounds(v.getAbsolutePosition(), v.getAbsoluteBounds2D(null)));
-									if (!id.equals(proxy._nameInFile))
-									{
-										// State was renamed
-										statesRenamed.put(proxy._nameInFile, id);
-										System.err.println("Renamed: " + proxy._nameInFile + " -> " + id);
-										proxy._nameInFile = id;
-									}
-								}
-								VisualModel m = ModelPrimitive.getChildModel(v);
-								if (m != null)
-								{
-									if (m._name != null)
-									{
-										sv = _component.getStartVisual(m);
-										if (sv != null)
-										{
-											startBounds.put(m._name, new GraphExtension.PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
-											System.err.println(m._name + " = " + startBounds.get(m._name));
-										}
-									}
-									else
-									{
-										System.err.println("Submodel of " + v.getId() + " without name");
-									}
-									visuals.addAll(m.getVisuals());
-								}
-							}
-						}
-					}
-
-					//////////////////////////////////////////
 					// Update psi file
 					try
 					{
@@ -246,16 +187,16 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 							{
 								XmlTag s = allStates.remove(allStates.size() - 1);
 
-								if (!statesRenamed.isEmpty())
+								if (!update._statesRenamed.isEmpty())
 								{
 									// Renaming
-									renameInNameList(s, ScxmlTags.ATTR_ID, null, statesRenamed);
-									renameInNameList(s, ScxmlTags.ATTR_INITIAL, null, statesRenamed);
-									renameInNameList(s.findSubTags(ScxmlTags.TAG_TRANSITION, ScxmlTags.NS_SCXML), ScxmlTags.ATTR_TARGET, null, statesRenamed);
+									renameInNameList(s, ScxmlTags.ATTR_ID, null, update._statesRenamed);
+									renameInNameList(s, ScxmlTags.ATTR_INITIAL, null, update._statesRenamed);
+									renameInNameList(s.findSubTags(ScxmlTags.TAG_TRANSITION, ScxmlTags.NS_SCXML), ScxmlTags.ATTR_TARGET, null, update._statesRenamed);
 
 									XmlTag initial = s.findFirstSubTag(ScxmlTags.TAG_INITIAL);
 									if (initial != null)
-										renameInNameList(initial.findSubTags(ScxmlTags.TAG_TRANSITION, ScxmlTags.NS_SCXML), ScxmlTags.ATTR_TARGET, null, statesRenamed);
+										renameInNameList(initial.findSubTags(ScxmlTags.TAG_TRANSITION, ScxmlTags.NS_SCXML), ScxmlTags.ATTR_TARGET, null, update._statesRenamed);
 								}
 
 								String id = s.getAttributeValue(ScxmlTags.ATTR_ID);
@@ -268,14 +209,14 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 
 								if (id != null)
 								{
-									GraphExtension.PosAndBounds r = bounds.get(id);
+									PosAndBounds r = update._bounds.get(id);
 									if (r != null)
 									{
 										String bs = r.toXML(precisionFactor);
-										XmlAttribute attr = s.getAttribute(GraphExtension.ATTR_POS, GraphExtension.NS_GRAPH_EXTENSION);
+										XmlAttribute attr = s.getAttribute(ScxmlGraphExtension.ATTR_POS, ScxmlGraphExtension.NS_GRAPH_EXTENSION);
 										if (attr == null)
 										{
-											s.setAttribute(GraphExtension.ATTR_POS, GraphExtension.NS_GRAPH_EXTENSION, bs);
+											s.setAttribute(ScxmlGraphExtension.ATTR_POS, ScxmlGraphExtension.NS_GRAPH_EXTENSION, bs);
 										}
 										else
 										{
@@ -287,7 +228,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 									}
 								}
 
-								GraphExtension.PosAndBounds startNodeBounds = startBounds.get(id);
+								PosAndBounds startNodeBounds = update._startBounds.get(id);
 
 								if (startNodeBounds != null || !(states.isEmpty() && parallels.isEmpty()))
 								{
@@ -295,15 +236,15 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 									// A submachine. We need to set the start-state bounds
 									if (startNodeBounds == null)
 									{
-										startNodeBounds = startBounds.get(s.getAttributeValue(ScxmlTags.ATTR_NAME, ScxmlTags.NS_SCXML));
+										startNodeBounds = update._startBounds.get(s.getAttributeValue(ScxmlTags.ATTR_NAME, ScxmlTags.NS_SCXML));
 									}
 									if (startNodeBounds != null)
 									{
 										String bs = startNodeBounds.toXML(precisionFactor);
-										XmlAttribute attrStart = s.getAttribute(GraphExtension.ATTR_START_POS, GraphExtension.NS_GRAPH_EXTENSION);
+										XmlAttribute attrStart = s.getAttribute(ScxmlGraphExtension.ATTR_START_POS, ScxmlGraphExtension.NS_GRAPH_EXTENSION);
 										if (attrStart == null)
 										{
-											s.setAttribute(GraphExtension.ATTR_START_POS, GraphExtension.NS_GRAPH_EXTENSION, bs);
+											s.setAttribute(ScxmlGraphExtension.ATTR_START_POS, ScxmlGraphExtension.NS_GRAPH_EXTENSION, bs);
 										}
 										else
 										{
@@ -391,6 +332,8 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 		}
 	}
 
+	static int callIdGen = 0;
+
 	/**
 	 * This method is synchronized because it is possible that this method is called from different worker threads in parallel.
 	 */
@@ -406,12 +349,18 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 					XmlParser parser = new XmlParser();
 					parser.addExtensionParser("*", new LogExtensionParser());
 
-					GraphExtension ge = new GraphExtension();
-					parser.addExtensionParser(GraphExtension.NS_GRAPH_EXTENSION, ge);
+					ScxmlGraphExtension ge = new ScxmlGraphExtension();
+					parser.addExtensionParser(ScxmlGraphExtension.NS_GRAPH_EXTENSION, ge);
+
+					final int callId = ++callIdGen;
+					System.err.println("InvokeLake SetStateMachine " + callId);
 
 					final FiniteStateMachine fsm = parser.parse(_file.toNioPath(), _xmlDocument.getText());
 					ApplicationManager.getApplication()
-									  .invokeLater(() -> _component.setStateMachine(fsm, ge));
+									  .invokeLater(() -> {
+										  System.err.println("Invoke SetStateMachine " + callId);
+										  _component.setStateMachine(fsm, ge);
+									  });
 				}
 				catch (ProcessCanceledException pce)
 				{
@@ -463,45 +412,45 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 
 		_component.getGraphPane()
 				  .addMouseListener(new MouseAdapter()
-		{
-			@Override
-			public void mouseReleased(MouseEvent event)
-			{
-				if (event.isPopupTrigger() && !event.isConsumed())
-				{
-					ActionGroup ag = (ActionGroup) CustomActionsSchema.getInstance()
-																	  .getCorrectedAction("ScXMLPopupMenu");
-					JPopupMenu popupMenu = ActionManager.getInstance()
-														.createActionPopupMenu(ActionPlaces.EDITOR_POPUP, ag)
-														.getComponent();
-					popupMenu.show(_component, event.getX(), event.getY());
-				}
+				  {
+					  @Override
+					  public void mouseReleased(MouseEvent event)
+					  {
+						  if (event.isPopupTrigger() && !event.isConsumed())
+						  {
+							  ActionGroup ag = (ActionGroup) CustomActionsSchema.getInstance()
+																				.getCorrectedAction("ScXMLPopupMenu");
+							  JPopupMenu popupMenu = ActionManager.getInstance()
+																  .createActionPopupMenu(ActionPlaces.EDITOR_POPUP, ag)
+																  .getComponent();
+							  popupMenu.show(_component, event.getX(), event.getY());
+						  }
 
-			}
-		});
+					  }
+				  });
 
 		_component.getGraphPane()
 				  .addInteractionListener(new InteractionAdapter()
-		{
-			@Override
-			public void deselected(Visual visual)
-			{
-				_enableSync = true;
-			}
+				  {
+					  @Override
+					  public void deselected(Visual visual)
+					  {
+						  _enableSync = true;
+					  }
 
-			@Override
-			public void mouseDragging(Visual visual)
-			{
-				// Disable sync to xml file during dragging.
-				_enableSync = (visual == null);
-			}
+					  @Override
+					  public void mouseDragging(Visual visual)
+					  {
+						  // Disable sync to xml file during dragging.
+						  _enableSync = (visual == null);
+					  }
 
-			@Override
-			public void mouseOver(Visual visual)
-			{
-				LOG.warn("MouseOver " + visual);
-			}
-		});
+					  @Override
+					  public void mouseOver(Visual visual)
+					  {
+						  LOG.warn("MouseOver " + visual);
+					  }
+				  });
 
 
 	}

@@ -3,7 +3,6 @@ package com.bw.graph.primitive;
 import com.bw.graph.Alignment;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
-import com.bw.graph.editor.EditorProxy;
 import com.bw.graph.util.Dimension2DFloat;
 import com.bw.graph.util.InsetsFloat;
 import com.bw.graph.visual.Visual;

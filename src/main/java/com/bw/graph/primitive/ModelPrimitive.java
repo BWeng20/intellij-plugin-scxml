@@ -44,7 +44,7 @@ public class ModelPrimitive extends DrawPrimitive
 	public void setFlags(int flags)
 	{
 		super.setFlags(flags);
-		if ( _childModel != null)
+		if (_childModel != null)
 			_childModel.setFlags(flags);
 	}
 
@@ -59,7 +59,7 @@ public class ModelPrimitive extends DrawPrimitive
 	public void clearFlags(int flags)
 	{
 		super.clearFlags(flags);
-		if ( _childModel != null)
+		if (_childModel != null)
 			_childModel.clearFlags(flags);
 	}
 

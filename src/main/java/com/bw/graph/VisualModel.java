@@ -204,14 +204,21 @@ public class VisualModel
 		return _name == null ? "none" : _name;
 	}
 
+	/**
+	 * Checks if flag is set on the model.
+	 *
+	 * @param flags bit-wise combinations of flags.
+	 * @return True if the flag is set.
+	 */
 	public boolean isFlagSet(int flags)
 	{
 		return (_flags & flags) == flags;
 	}
 
 	/**
-	 * Checks if themodel itself or any visual has the visual set.
-	 * @param flags The bit-wise flags to check.
+	 * Checks if the model itself or any visual has the flag set.
+	 *
+	 * @param flags The bit-wise cobination of flags to check.
 	 * @return True if all bits are set in the model or any contained visual.
 	 */
 	public boolean isFlagSetDeep(int flags)
@@ -222,25 +229,26 @@ public class VisualModel
 
 	/**
 	 * Sets the flags in the model and all visuals.
+	 *
 	 * @param flags The bit-wise combination of flags to set.
 	 */
 	public void setFlags(int flags)
 	{
 		_flags |= flags;
-		for ( Visual v : _visuals)
-			v.clearFlags(flags);
+		for (Visual v : _visuals)
+			v.setFlags(flags);
 	}
-
 
 	/**
 	 * Clears the flags in the model and all visuals.
+	 *
 	 * @param flags The bit-wise combination of flags to clear.
 	 */
 	public void clearFlags(int flags)
 	{
 		_flags &= ~flags;
 
-		for ( Visual v : _visuals)
+		for (Visual v : _visuals)
 			v.clearFlags(flags);
 	}
 }

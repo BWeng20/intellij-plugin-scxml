@@ -100,7 +100,7 @@ public class FiniteStateMachine
 			if (stateToRemove._parent != null)
 			{
 				// Walk down the tree of the state to move states and transitions recursively up.
-				List<State> tmp= new ArrayList<>(stateToRemove._states);
+				List<State> tmp = new ArrayList<>(stateToRemove._states);
 				for (State s : tmp)
 					removeState(null, s, keepSubStates, removed);
 

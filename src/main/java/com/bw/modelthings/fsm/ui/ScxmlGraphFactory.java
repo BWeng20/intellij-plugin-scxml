@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  * Factory to create Graph visuals from an FSM model.<br>
  * The class is not thread safe, use different instances in different threads.
  */
-public class GraphFactory
+public class ScxmlGraphFactory
 {
 	/**
 	 * Visual flag for a start-node.
@@ -40,18 +40,18 @@ public class GraphFactory
 	/**
 	 * Logger of this class.
 	 */
-	static final Logger log = Logger.getLogger(GraphFactory.class.getName());
+	static final Logger log = Logger.getLogger(ScxmlGraphFactory.class.getName());
 
 	/**
 	 * State visuals by state name.
 	 */
-	protected java.util.Map<String, GenericPrimitiveVisual> _stateVisuals = new HashMap<>();
+	protected java.util.Map<String, StateVisual> _stateVisuals = new HashMap<>();
 
 
 	/**
 	 * Extensions with layout information
 	 */
-	protected GraphExtension _graphExtension;
+	protected ScxmlGraphExtension _graphExtension;
 
 	/**
 	 * The text field to use as state name editor.
@@ -63,7 +63,7 @@ public class GraphFactory
 	 *
 	 * @param graphExtension graph-extension handler or null.
 	 */
-	public GraphFactory(GraphExtension graphExtension)
+	public ScxmlGraphFactory(ScxmlGraphExtension graphExtension)
 	{
 		this._graphExtension = graphExtension;
 	}
@@ -81,7 +81,7 @@ public class GraphFactory
 	/**
 	 * Creates a visual for a start-node
 	 *
-	 * @param start  The parent state.
+	 * @param parent The parent state.
 	 * @param x      Base X Position
 	 * @param y      Base Y Position
 	 * @param radius Radius of circle.
@@ -99,7 +99,7 @@ public class GraphFactory
 		startNode.clearFlags(VisualFlags.MODIFIED);
 		startNode.setFlags(START_NODE_FLAG);
 
-		GraphExtension.PosAndBounds startBounds = _graphExtension._startBounds.get(parent._docId);
+		PosAndBounds startBounds = _graphExtension._startBounds.get(parent._docId);
 		if (startBounds == null)
 		{
 			startNode.setAbsolutePosition(x, y, null);
@@ -126,7 +126,7 @@ public class GraphFactory
 	{
 		if (source != null && target != null)
 		{
-			GenericPrimitiveVisual sourceVisual = _stateVisuals.get(source._name);
+			StateVisual sourceVisual = _stateVisuals.get(source._name);
 
 			boolean toInnerModel = false;
 			while (target != null && !source._parent._states.contains(target))
@@ -179,23 +179,6 @@ public class GraphFactory
 	}
 
 	/**
-	 * Creates the primitives for a state visual
-	 *
-	 * @param visual            The visual of the state.
-	 * @param x                 Base X Position
-	 * @param y                 Base Y Position
-	 * @param state             State to create the visual for.
-	 * @param g2                Graphics to use for dimension calculations.
-	 * @param stateOuterContext The draw context for the outline.
-	 * @param stateInnerContext The draw context for the inner drawings.
-	 */
-	public void createStatePrimitives(Visual visual, float x, float y, State state, Graphics2D g2, DrawContext stateOuterContext, DrawContext stateInnerContext)
-	{
-		new StateNameProxy(state, _stateNameTextField, stateOuterContext, stateInnerContext)
-				.createStatePrimitives(visual, x, y, g2, _graphExtension._bounds.get(state._docId));
-	}
-
-	/**
 	 * Creates a visual model for a state machine.
 	 *
 	 * @param fsm                The source state machine
@@ -243,7 +226,7 @@ public class GraphFactory
 				{
 					statesByName.put(state._name, state);
 
-					GenericPrimitiveVisual stateVisual = new GenericPrimitiveVisual(state._name, stateInnerStyles);
+					StateVisual stateVisual = new StateVisual(state, _stateNameTextField, stateOutlineStyles, stateInnerStyles);
 					if (state instanceof PseudoRoot pseudoRoot)
 					{
 						stateVisual.setDisplayName(pseudoRoot._fsmName);
@@ -251,7 +234,7 @@ public class GraphFactory
 
 					if (state._parent != null)
 					{
-						VisualModel model = ModelPrimitive.getChildModel(_stateVisuals.get(state._parent._name));
+						VisualModel model = _stateVisuals.get(state._parent._name).getChildModel();
 						model.addVisual(stateVisual);
 					}
 					else
@@ -289,13 +272,13 @@ public class GraphFactory
 			// We have now all information to create draw-primitives in the states-visuals.
 			for (var visualEntry : _stateVisuals.entrySet())
 			{
-				GenericPrimitiveVisual visual = visualEntry.getValue();
+				StateVisual visual = visualEntry.getValue();
 
 				State state = statesByName.get(visualEntry.getKey());
 				if (state._parent != null)
 				{
 					statePosition = statePositions.get(state._parent._name);
-					createStatePrimitives(visual, statePosition.x, statePosition.y, state, g2, stateOutlineStyles, stateInnerStyles);
+					visual.createStatePrimitives(statePosition.x, statePosition.y, g2, _graphExtension._bounds.get(state._docId), null);
 
 					Rectangle2D.Float bounds = visual.getAbsoluteBounds2D(g2);
 					if (bounds != null)

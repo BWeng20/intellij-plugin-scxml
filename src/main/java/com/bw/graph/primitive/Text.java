@@ -86,7 +86,16 @@ public class Text extends DrawPrimitive
 	 */
 	public void setText(String text)
 	{
-		this._text = text == null ? "" : text;
+		_text = text == null ? "" : text;
 	}
 
+	/**
+	 * Gets the shown text.
+	 *
+	 * @return The text.
+	 */
+	public String getText()
+	{
+		return _text;
+	}
 }

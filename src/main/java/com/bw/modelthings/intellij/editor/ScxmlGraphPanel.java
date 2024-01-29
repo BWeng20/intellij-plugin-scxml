@@ -1,19 +1,12 @@
 package com.bw.modelthings.intellij.editor;
 
-import com.bw.graph.DrawContext;
-import com.bw.graph.DrawStyle;
-import com.bw.graph.GraphConfiguration;
-import com.bw.graph.VisualModel;
-import com.bw.graph.editor.GraphPane;
 import com.bw.graph.editor.InteractionAdapter;
 import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.visual.Visual;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
 import com.bw.modelthings.fsm.model.State;
 import com.bw.modelthings.fsm.ui.FsmGraphPanel;
-import com.bw.modelthings.fsm.ui.GraphExtension;
-import com.bw.modelthings.fsm.ui.GraphFactory;
-import com.bw.modelthings.fsm.ui.StateNameProxy;
+import com.bw.modelthings.fsm.ui.ScxmlGraphExtension;
 import com.bw.modelthings.intellij.settings.Configuration;
 import com.bw.modelthings.intellij.settings.PersistenceService;
 import com.intellij.openapi.Disposable;
@@ -28,15 +21,12 @@ import com.intellij.ui.components.breadcrumbs.Breadcrumbs;
 import com.intellij.ui.components.breadcrumbs.Crumb;
 
 import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -330,7 +320,7 @@ public class ScxmlGraphPanel extends FsmGraphPanel implements Disposable
 	 * @param fsm            The FSM to show.
 	 * @param graphExtension The graph-extension or null
 	 */
-	public void setStateMachine(FiniteStateMachine fsm, GraphExtension graphExtension)
+	public void setStateMachine(FiniteStateMachine fsm, ScxmlGraphExtension graphExtension)
 	{
 		super.setStateMachine(fsm, graphExtension);
 		updatedStateBreadcrumbs();
