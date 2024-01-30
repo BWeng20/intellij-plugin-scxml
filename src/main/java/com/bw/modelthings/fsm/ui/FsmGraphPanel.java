@@ -131,7 +131,7 @@ public class FsmGraphPanel extends JPanel
 	{
 		if (v instanceof StateVisual stateVisual)
 		{
-			stateVisual.getState();
+			return stateVisual.getState();
 		}
 		return null;
 	}
@@ -218,9 +218,9 @@ public class FsmGraphPanel extends JPanel
 	 *
 	 * @return The updates. Never null.
 	 */
-	public EditorUpdate getEditorUpdate()
+	public EditorChanges getEditorUpdate()
 	{
-		EditorUpdate update = new EditorUpdate();
+		EditorChanges update = new EditorChanges();
 
 		//////////////////////////////////////////
 		// Collect data from model

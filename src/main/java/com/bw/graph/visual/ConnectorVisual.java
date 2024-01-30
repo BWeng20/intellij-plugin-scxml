@@ -13,7 +13,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Used to visualize connectors in different modes.
+ * Used to visualize connectors in different modes.<br>
+ * Draws a circle at base position.
  */
 public class ConnectorVisual extends Visual implements PathControlPoint
 {
@@ -25,6 +26,8 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	private Point2D.Float _relativePosition = new Point2D.Float(0, 0);
 
 	private Visual _parent;
+
+	private Visual _targetedParentChild;
 
 	/**
 	 * Creates a new Primitive.
@@ -38,7 +41,7 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 		super(null, context);
 		this._parent = parent;
 		this._radius = context._configuration._connectorSize;
-		this._primitive = new Circle(_radius, _radius, _radius, context._configuration, context._style, flags);
+		this._primitive = new Circle(0, 0, _radius, context._configuration, context._style, flags);
 	}
 
 	/**
@@ -49,6 +52,26 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	public void setEdgeVisual(EdgeVisual edgeVisual)
 	{
 		this._edgeVisual = edgeVisual;
+	}
+
+	/**
+	 * Sets the inner child of the target visual that is the real target.
+	 *
+	 * @param parentChild The targeted visual or null
+	 */
+	public void setTargetedParentChild(Visual parentChild)
+	{
+		_targetedParentChild = parentChild;
+	}
+
+	/**
+	 * Gets the inner child of the target visual that is the real target.
+	 *
+	 * @return The targeted visual or null.
+	 */
+	public Visual getTargetedParentChild()
+	{
+		return _targetedParentChild;
 	}
 
 	/**
@@ -77,6 +100,8 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 			pt.x += _relativePosition.x;
 			pt.y += _relativePosition.y;
 
+			_absolutePosition.x = pt.x;
+			_absolutePosition.y = pt.y;
 			_absoluteBounds.x = pt.x;
 			_absoluteBounds.y = pt.y;
 
@@ -122,8 +147,8 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	protected void updateBounds(Graphics2D graphics)
 	{
 		Dimension2DFloat dim = _primitive.getDimension(graphics);
-		_absoluteBounds.x = _absolutePosition.x;
-		_absoluteBounds.y = _absolutePosition.y;
+		_absoluteBounds.x = _absolutePosition.x - _radius;
+		_absoluteBounds.y = _absolutePosition.y - _radius;
 		_absoluteBounds.width = dim._width;
 		_absoluteBounds.height = dim._height;
 	}
@@ -145,8 +170,8 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	public void getControlPosition(Point2D.Float pt)
 	{
 		_parent.getAbsolutePosition(pt);
-		pt.x += _relativePosition.x + _radius;
-		pt.y += _relativePosition.y + _radius;
+		pt.x += _relativePosition.x;
+		pt.y += _relativePosition.y;
 	}
 
 	@Override

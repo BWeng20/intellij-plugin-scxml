@@ -1,5 +1,6 @@
 package com.bw.graph.editor;
 
+import com.bw.graph.VisualModel;
 import com.bw.graph.primitive.DrawPrimitive;
 
 import javax.swing.JComponent;
@@ -24,9 +25,10 @@ public interface EditorProxy
 	 * Also updates the containing visual if needed, e.g. adapts layouts.
 	 *
 	 * @param primitive The primitive to update.
+	 * @param model     The model.
 	 * @param g2        Graphics context for calculations.
 	 */
-	void endEdit(DrawPrimitive primitive, Graphics2D g2);
+	void endEdit(DrawPrimitive primitive, VisualModel model, Graphics2D g2);
 
 	/**
 	 * Aborts edit.

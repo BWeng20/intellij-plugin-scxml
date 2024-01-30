@@ -215,4 +215,21 @@ public class EdgeVisual extends Visual
 		}
 		return false;
 	}
+
+	/**
+	 * Gets connector for visual.
+	 *
+	 * @param v The visual to check for.
+	 * @return The connector or null.
+	 */
+	public ConnectorVisual getConnector(Visual v)
+	{
+		if (v != null)
+		{
+			if (_sourceConnector != null && _sourceConnector.getParent() == v) return _sourceConnector;
+			if (_targetConnector != null && _targetConnector.getParent() == v) return _targetConnector;
+		}
+		return null;
+	}
+
 }

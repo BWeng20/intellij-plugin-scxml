@@ -40,6 +40,17 @@ public abstract class ShapePrimitiveBase extends DrawPrimitive
 		this._fill = false;
 	}
 
+	@Override
+	public Rectangle2D.Float getBounds2D(float basePositionX, float basePositionY, Graphics2D graphics)
+	{
+		final Rectangle2D bounds = _shape.getBounds2D();
+		final var relPos = getRelativePosition();
+		return new Rectangle2D.Float(
+				basePositionX + relPos.x + (float) bounds.getX(),
+				basePositionY + relPos.y + (float) bounds.getY(),
+				(float) bounds.getWidth(), (float) bounds.getHeight());
+	}
+
 	/**
 	 * Draws the shape.
 	 *

@@ -317,7 +317,7 @@ public abstract class Visual
 	 * @param primitive The primitive to measure.
 	 * @return The bounds or null.
 	 */
-	public Rectangle2D.Float getBoundsOfPrimitive(Graphics2D g2, DrawPrimitive primitive)
+	public Rectangle2D.Float getAbsoluteBoundsOfPrimitive(Graphics2D g2, DrawPrimitive primitive)
 	{
 		if (_absoluteBounds.width < 0)
 			updateBounds(g2);

@@ -1,5 +1,7 @@
 package com.bw.graph;
 
+import com.bw.graph.visual.ConnectorVisual;
+import com.bw.graph.visual.EdgeVisual;
 import com.bw.graph.visual.Visual;
 import com.bw.graph.visual.VisualFlags;
 
@@ -8,6 +10,8 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Container for a graph model.
@@ -250,5 +254,32 @@ public class VisualModel
 
 		for (Visual v : _visuals)
 			v.clearFlags(flags);
+	}
+
+	/**
+	 * Gets all connectors that are attached at the visual.
+	 * @param visual The visual to get connectors for.
+	 * @return The list of connectors. May be empty but never null.
+	 */
+	public List<ConnectorVisual> getConnectorsAt(Visual visual)
+	{
+		return _visuals.stream()
+					   .filter(v -> v instanceof EdgeVisual)
+					   .map(v -> ((EdgeVisual) v).getConnector(visual)).filter(Objects::nonNull)
+					   .collect(Collectors.toList());
+	}
+
+
+	/**
+	 * Gets all edges that are attached at the visual.
+	 * @param visual The visual to get connectors for.
+	 * @return The list of connectors. May be empty but never null.
+	 */
+	public List<EdgeVisual> getEdgesAt(Visual visual)
+	{
+		return _visuals.stream()
+					   .filter(v -> v instanceof EdgeVisual edgeVisual && edgeVisual.isConnectedTo(visual))
+					   .map(v -> (EdgeVisual) v)
+					   .collect(Collectors.toList());
 	}
 }

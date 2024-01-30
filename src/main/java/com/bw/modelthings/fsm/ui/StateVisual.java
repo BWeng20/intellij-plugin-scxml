@@ -11,6 +11,8 @@ import com.bw.graph.primitive.Rectangle;
 import com.bw.graph.primitive.Text;
 import com.bw.graph.util.Dimension2DFloat;
 import com.bw.graph.util.InsetsFloat;
+import com.bw.graph.visual.ConnectorVisual;
+import com.bw.graph.visual.EdgeVisual;
 import com.bw.graph.visual.GenericPrimitiveVisual;
 import com.bw.graph.visual.VisualFlags;
 import com.bw.modelthings.fsm.model.State;
@@ -203,7 +205,7 @@ public class StateVisual extends GenericPrimitiveVisual
 		}
 
 		@Override
-		public void endEdit(DrawPrimitive text, Graphics2D g2)
+		public void endEdit(DrawPrimitive text, VisualModel model, Graphics2D g2)
 		{
 			String newName = _textComponent.getText()
 										   .trim();
@@ -215,6 +217,7 @@ public class StateVisual extends GenericPrimitiveVisual
 					Point2D.Float pt = getAbsolutePosition();
 					createStatePrimitives(pt.x, pt.y, g2, null, newName);
 					setPreferredDimension(null);
+					model.getEdgesAt(StateVisual.this).forEach(e -> placeConnector(e, g2));
 				}
 			}
 		}
@@ -222,6 +225,34 @@ public class StateVisual extends GenericPrimitiveVisual
 		@Override
 		public void cancelEdit(DrawPrimitive text)
 		{
+		}
+	}
+
+	/**
+	 * Places a connector visual that is attached to this state visual.
+	 * @param edgeVisual The edge
+	 * @param g2 Graphics context, may be null to use cached dimensions.
+	 */
+	public void placeConnector(EdgeVisual edgeVisual, Graphics2D g2)
+	{
+		Rectangle2D.Float myBounds = getAbsoluteBounds2D(g2);
+		ConnectorVisual sourceConnector = edgeVisual.getSourceConnector();
+		if (sourceConnector != null && sourceConnector.getParent() == this)
+		{
+			sourceConnector.setRelativePosition(myBounds.width, myBounds.height / 2f);
+		}
+		else
+		{
+			ConnectorVisual targetConnector = edgeVisual.getTargetConnector();
+			if (targetConnector != null && targetConnector.getParent() == this)
+			{
+
+				if (targetConnector.getTargetedParentChild() == null)
+					targetConnector.setRelativePosition(0, myBounds.height / 2f);
+				else
+					targetConnector.setRelativePosition(getConfiguration()._innerModelBoxInsets._left,
+							myBounds.height / 2f);
+			}
 		}
 	}
 }

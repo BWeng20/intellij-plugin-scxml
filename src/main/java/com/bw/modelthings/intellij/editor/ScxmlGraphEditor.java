@@ -10,7 +10,7 @@ import com.bw.modelthings.fsm.parser.LogExtensionParser;
 import com.bw.modelthings.fsm.parser.ParserException;
 import com.bw.modelthings.fsm.parser.ScxmlTags;
 import com.bw.modelthings.fsm.parser.XmlParser;
-import com.bw.modelthings.fsm.ui.EditorUpdate;
+import com.bw.modelthings.fsm.ui.EditorChanges;
 import com.bw.modelthings.fsm.ui.PosAndBounds;
 import com.bw.modelthings.fsm.ui.ScxmlGraphExtension;
 import com.intellij.ide.ui.customization.CustomActionsSchema;
@@ -130,7 +130,6 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 		if (!_updateGraphTriggered)
 		{
 			_updateGraphTriggered = true;
-			System.err.println("updateGraphTriggered runReadAction");
 			// Executes in worker thread with read-lock.
 			ApplicationManager.getApplication()
 							  .executeOnPooledThread(() -> ApplicationManager.getApplication()
@@ -165,7 +164,7 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 				_inDocumentSync = true;
 
 				FiniteStateMachine fsm = _component.getStateMachine();
-				EditorUpdate update = _component.getEditorUpdate();
+				EditorChanges update = _component.getEditorUpdate();
 				if (_xmlFile != null && fsm != null && update != null)
 				{
 					// Update psi file
@@ -353,14 +352,10 @@ public class ScxmlGraphEditor extends UserDataHolderBase implements FileEditor
 					parser.addExtensionParser(ScxmlGraphExtension.NS_GRAPH_EXTENSION, ge);
 
 					final int callId = ++callIdGen;
-					System.err.println("InvokeLake SetStateMachine " + callId);
 
 					final FiniteStateMachine fsm = parser.parse(_file.toNioPath(), _xmlDocument.getText());
 					ApplicationManager.getApplication()
-									  .invokeLater(() -> {
-										  System.err.println("Invoke SetStateMachine " + callId);
-										  _component.setStateMachine(fsm, ge);
-									  });
+									  .invokeLater(() -> _component.setStateMachine(fsm, ge));
 				}
 				catch (ProcessCanceledException pce)
 				{

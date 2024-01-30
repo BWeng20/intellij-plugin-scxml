@@ -32,9 +32,9 @@ public class Circle extends ShapePrimitiveBase
 				  GraphConfiguration config,
 				  DrawStyle style, int flags)
 	{
-		super(cx - radius, cy - radius, config, style, flags);
+		super(cx, cy, config, style, flags);
 		this._diameter = 2f * radius;
-		this._shape = new Ellipse2D.Float(0, 0, _diameter, _diameter);
+		this._shape = new Ellipse2D.Float(-radius, -radius, _diameter, _diameter);
 	}
 
 	@Override

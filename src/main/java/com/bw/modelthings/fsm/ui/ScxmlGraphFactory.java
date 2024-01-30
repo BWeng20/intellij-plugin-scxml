@@ -91,10 +91,10 @@ public class ScxmlGraphFactory
 	public Visual createStartVisual(State parent, float x, float y, float radius, DrawContext style)
 	{
 		GenericPrimitiveVisual startNode = new GenericPrimitiveVisual(parent._docId, style);
-		Circle circle = new Circle(radius, radius, radius, style._configuration, style._style, VisualFlags.ALWAYS);
+		Circle circle = new Circle(0, 0, radius, style._configuration, style._style, VisualFlags.ALWAYS);
 		circle.setFill(true);
 		startNode.addDrawingPrimitive(circle);
-		Circle circleActive = new Circle(radius, radius, radius + 5, style._configuration, style._style, VisualFlags.SELECTED);
+		Circle circleActive = new Circle(0, 0, radius + 5, style._configuration, style._style, VisualFlags.SELECTED);
 		startNode.addDrawingPrimitive(circleActive);
 		startNode.clearFlags(VisualFlags.MODIFIED);
 		startNode.setFlags(START_NODE_FLAG);
@@ -127,6 +127,7 @@ public class ScxmlGraphFactory
 		if (source != null && target != null)
 		{
 			StateVisual sourceVisual = _stateVisuals.get(source._name);
+			StateVisual targetedVisual = _stateVisuals.get(target._name);
 
 			boolean toInnerModel = false;
 			while (target != null && !source._parent._states.contains(target))
@@ -136,7 +137,7 @@ public class ScxmlGraphFactory
 			}
 			if (target != null)
 			{
-				return createEdge(id, sourceVisual, _stateVisuals.get(target._name), g2, style, toInnerModel);
+				return createEdge(id, sourceVisual, _stateVisuals.get(target._name), g2, style, toInnerModel ? targetedVisual : null);
 			}
 		}
 		return null;
@@ -146,36 +147,34 @@ public class ScxmlGraphFactory
 	 * Creates an edge between two visuals.
 	 * Only the edge to the state or parent in the same model is created.
 	 *
-	 * @param id           The Identification, can be null.
-	 * @param source       The source-visual
-	 * @param target       The target-visual
-	 * @param g2           Graphics context for calculations.
-	 * @param style        The style to use.
-	 * @param toInnerModel True if the edge target the inner model of the state.
+	 * @param id            The Identification, can be null.
+	 * @param source        The source-visual
+	 * @param target        The target-visual
+	 * @param g2            Graphics context for calculations.
+	 * @param style         The style to use.
+	 * @param targetedChild If not null the inner child of the target visual that is the real target.
 	 * @return The edge visual created.
 	 */
-	public EdgeVisual createEdge(Integer id, Visual source, Visual target, Graphics2D g2, DrawContext style, boolean toInnerModel)
+	public EdgeVisual createEdge(Integer id, Visual source, StateVisual target, Graphics2D g2, DrawContext style, Visual targetedChild)
 	{
+		EdgeVisual edgeVisual;
 		if (source != null && target != null)
 		{
-			Rectangle2D.Float startBounds = source.getAbsoluteBounds2D(g2);
-
 			ConnectorVisual sourceConnector = new ConnectorVisual(source, style, VisualFlags.ALWAYS);
-			Rectangle2D.Float sourceConnectorBounds = sourceConnector.getAbsoluteBounds2D(g2);
-			sourceConnector.setRelativePosition(startBounds.width - (sourceConnectorBounds.width / 2f), (startBounds.height - sourceConnectorBounds.height) / 2f);
-			sourceConnector.clearFlags(VisualFlags.MODIFIED);
-
-			Rectangle2D.Float targetBounds = target.getAbsoluteBounds2D(g2);
 			ConnectorVisual targetConnector = new ConnectorVisual(target, style, VisualFlags.ALWAYS);
-			Rectangle2D.Float targetConnectorBounds = targetConnector.getAbsoluteBounds2D(g2);
-			if (toInnerModel)
-				targetConnector.setRelativePosition(style._configuration._innerModelBoxInsets._left - targetConnectorBounds.width + (targetConnectorBounds.width / 2f), (targetBounds.height - targetConnectorBounds.height) / 2f);
-			else
-				targetConnector.setRelativePosition(-targetConnectorBounds.width + (targetConnectorBounds.width / 2f), (targetBounds.height - targetConnectorBounds.height) / 2f);
+			targetConnector.setTargetedParentChild(targetedChild);
 
-			return new EdgeVisual(id, sourceConnector, targetConnector, style);
+			edgeVisual = new EdgeVisual(id, sourceConnector, targetConnector, style);
+
+			if (source instanceof StateVisual stateVisual)
+				stateVisual.placeConnector(edgeVisual, g2);
+			// Otherwise a "start" source with relative 0,0 position.
+
+			target.placeConnector(edgeVisual, g2);
 		}
-		return null;
+		else
+			edgeVisual = null;
+		return edgeVisual;
 	}
 
 	/**
@@ -314,7 +313,7 @@ public class ScxmlGraphFactory
 				{
 					Visual startVisual = createStartVisual(state, fh / 2, fh, fh / 2, startStyles);
 
-					Visual stateVisual = _stateVisuals.get(state._name);
+					StateVisual stateVisual = _stateVisuals.get(state._name);
 					VisualModel innerModel = ModelPrimitive.getChildModel(stateVisual);
 					innerModel.addVisual(startVisual);
 
@@ -336,12 +335,13 @@ public class ScxmlGraphFactory
 					for (State initialState : initialStates)
 					{
 						boolean toInnerModel = false;
+						Visual targetedVisual = _stateVisuals.get(initialState._name);
 						while (initialState != null && !state._states.contains(initialState))
 						{
 							initialState = initialState._parent;
 							toInnerModel = true;
 						}
-						Visual targetVisual = null;
+						StateVisual targetVisual = null;
 						if (initialState != null)
 						{
 							targetVisual = _stateVisuals.get(initialState._name);
@@ -350,7 +350,8 @@ public class ScxmlGraphFactory
 							log.warning(String.format("Target state %s of initial transition not found", initialState._name));
 						else
 						{
-							innerModel.addVisual(createEdge(id, startVisual, targetVisual, g2, edgeStyles, toInnerModel));
+							innerModel.addVisual(createEdge(id, startVisual, targetVisual, g2, edgeStyles,
+									toInnerModel ? targetedVisual : null));
 						}
 					}
 				}

@@ -172,7 +172,7 @@ public class GraphPane extends JComponent
 					ModelPrimitive modelPrimitive = clicked.getPrimitiveOf(ModelPrimitive.class);
 					if (modelPrimitive != null)
 					{
-						Rectangle2D.Float subModelBox = clicked.getBoundsOfPrimitive(null, modelPrimitive);
+						Rectangle2D.Float subModelBox = clicked.getAbsoluteBoundsOfPrimitive(null, modelPrimitive);
 						if (subModelBox != null && subModelBox.contains(x, y))
 						{
 							_parents.add(clicked);
@@ -634,7 +634,7 @@ public class GraphPane extends JComponent
 		g2.setColor(Color.BLUE);
 		g2.setXORMode(Color.RED);
 
-		Rectangle2D.Float rt = v.getBoundsOfPrimitive(g2, primitive);
+		Rectangle2D.Float rt = v.getAbsoluteBoundsOfPrimitive(g2, primitive);
 		if (rt != null)
 		{
 			rt.x -= 2;
@@ -804,7 +804,7 @@ public class GraphPane extends JComponent
 					removePrimitiveEditor();
 				}
 				_selectedPrimitiveEditor = _selectedPrimitiveEditorProxy.getEditor(_selectedPrimitive);
-				Rectangle2D.Float rt = v.getBoundsOfPrimitive(g2, _selectedPrimitive);
+				Rectangle2D.Float rt = v.getAbsoluteBoundsOfPrimitive(g2, _selectedPrimitive);
 
 				final float scale = _configuration._scale;
 				rt.x += _offsetX;
@@ -873,7 +873,7 @@ public class GraphPane extends JComponent
 	/**
 	 * End and commits the active editor.
 	 *
-	 * @see EditorProxy#endEdit(DrawPrimitive, Graphics2D)
+	 * @see EditorProxy#endEdit(DrawPrimitive, VisualModel, Graphics2D)
 	 */
 	protected void endEdit()
 	{
@@ -884,7 +884,7 @@ public class GraphPane extends JComponent
 				Graphics2D g2 = (Graphics2D) getGraphics();
 				g2.translate(_offsetX, _offsetY);
 				g2.scale(_configuration._scale, _configuration._scale);
-				_selectedPrimitiveEditorProxy.endEdit(_selectedPrimitive, g2);
+				_selectedPrimitiveEditorProxy.endEdit(_selectedPrimitive, _model, g2);
 			}
 			_selectedPrimitive = null;
 			removePrimitiveEditor();

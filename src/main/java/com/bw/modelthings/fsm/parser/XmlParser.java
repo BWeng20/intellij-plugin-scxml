@@ -713,10 +713,9 @@ public class XmlParser implements ScxmlTags
 		State state;
 		if (TAG_SCXML.equals(node.getLocalName()))
 		{
-			PseudoRoot pseudoRoot = new PseudoRoot();
+			PseudoRoot pseudoRoot = new PseudoRoot(_fsm);
 			pseudoRoot._name = sname;
 			_fsm._states.put(sname, pseudoRoot);
-			pseudoRoot._fsmName = getOptionalAttribute(node, ATTR_NAME);
 			state = pseudoRoot;
 		}
 		else

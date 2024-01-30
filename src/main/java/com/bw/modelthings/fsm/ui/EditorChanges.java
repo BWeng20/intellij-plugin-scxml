@@ -4,14 +4,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Holds a current state from editor.
+ * Holds a current changes in editor.
  */
-public class EditorUpdate
+public class EditorChanges
 {
 	/**
 	 * Creates a new empty instance.
 	 */
-	public EditorUpdate()
+	public EditorChanges()
 	{
 
 	}
