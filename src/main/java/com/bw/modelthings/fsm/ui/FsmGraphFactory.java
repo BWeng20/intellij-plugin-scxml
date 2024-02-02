@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  * Factory to create Graph visuals from an FSM model.<br>
  * The class is not thread safe, use different instances in different threads.
  */
-public class ScxmlGraphFactory
+public class FsmGraphFactory
 {
 	/**
 	 * Visual flag for a start-node.
@@ -40,7 +40,7 @@ public class ScxmlGraphFactory
 	/**
 	 * Logger of this class.
 	 */
-	static final Logger log = Logger.getLogger(ScxmlGraphFactory.class.getName());
+	static final Logger log = Logger.getLogger(FsmGraphFactory.class.getName());
 
 	/**
 	 * State visuals by state name.
@@ -63,7 +63,7 @@ public class ScxmlGraphFactory
 	 *
 	 * @param graphExtension graph-extension handler or null.
 	 */
-	public ScxmlGraphFactory(ScxmlGraphExtension graphExtension)
+	public FsmGraphFactory(ScxmlGraphExtension graphExtension)
 	{
 		this._graphExtension = graphExtension;
 	}
@@ -165,12 +165,6 @@ public class ScxmlGraphFactory
 			targetConnector.setTargetedParentChild(targetedChild);
 
 			edgeVisual = new EdgeVisual(id, sourceConnector, targetConnector, style);
-
-			if (source instanceof StateVisual stateVisual)
-				stateVisual.placeConnector(edgeVisual, g2);
-			// Otherwise a "start" source with relative 0,0 position.
-
-			target.placeConnector(edgeVisual, g2);
 		}
 		else
 			edgeVisual = null;
@@ -300,9 +294,13 @@ public class ScxmlGraphFactory
 			{
 				for (State target : t._target)
 				{
-					ModelPrimitive.getChildModel(_stateVisuals.get(t._source._parent._name))
-								  .addVisual(
-										  createEdge(t._docId, t._source, target, g2, edgeStyles));
+					EdgeVisual edgeVisual = createEdge(t._docId, t._source, target, g2, edgeStyles);
+					getModelForState(t._source).addVisual(edgeVisual);
+
+					ConnectorVisual sourceConnector = edgeVisual.getSourceConnector();
+					getModelForVisual((StateVisual) sourceConnector.getParent()).getVisuals().add(sourceConnector);
+					ConnectorVisual targetConnector = edgeVisual.getTargetConnector();
+					getModelForVisual((StateVisual) targetConnector.getParent()).getVisuals().add(targetConnector);
 				}
 			}
 
@@ -356,9 +354,32 @@ public class ScxmlGraphFactory
 					}
 				}
 			}
+
+			// Place all connectors
+			// "Start" connectors are placed at default relative position and doesn't need
+			// to be updated.
+			for (StateVisual stateVisual : _stateVisuals.values())
+			{
+				VisualModel model;
+				if (stateVisual._state._parent == null)
+					model = rootModel;
+				else
+					model = _stateVisuals.get(stateVisual._state._parent._name).getChildModel();
+				stateVisual.placeConnectors(model.getEdgesAt(stateVisual), g2);
+			}
 		}
 		rootModel.clearFlags(VisualFlags.MODIFIED);
 		return rootModel;
+	}
+
+	private VisualModel getModelForVisual(StateVisual visual)
+	{
+		return ModelPrimitive.getChildModel(_stateVisuals.get(visual._state._parent._name));
+	}
+
+	private VisualModel getModelForState(State state)
+	{
+		return ModelPrimitive.getChildModel(_stateVisuals.get(state._parent._name));
 	}
 
 }

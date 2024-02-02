@@ -49,7 +49,7 @@ public class GraphPane extends JComponent
 	/**
 	 * Graph configuration
 	 */
-	private GraphConfiguration _configuration = new GraphConfiguration();
+	private GraphConfiguration _configuration;
 
 	/**
 	 * Listeners.
@@ -126,6 +126,12 @@ public class GraphPane extends JComponent
 	private Visual _draggingVisual;
 
 	/**
+	 * The visual that is currently clicked.
+	 */
+	private Visual _clickedVisual;
+
+
+	/**
 	 * The last coordinate of a drag-event.
 	 */
 	private final Point _lastDragPoint = new Point(0, 0);
@@ -189,8 +195,10 @@ public class GraphPane extends JComponent
 		@Override
 		public void mousePressed(MouseEvent e)
 		{
-			_draggingVisual = getVisualAt(_lastDragPoint.x = e.getX(), _lastDragPoint.y = e.getY());
-			setSelectedVisual(_draggingVisual);
+			_clickedVisual = getVisualAt(_lastDragPoint.x = e.getX(), _lastDragPoint.y = e.getY());
+			if (_clickedVisual != null)
+				System.err.println("Pressed on " + _clickedVisual.getClass().getName() + " " + _clickedVisual);
+			setSelectedVisual(_clickedVisual);
 			SwingUtilities.convertPointToScreen(_lastDragPoint, GraphPane.this);
 		}
 
@@ -198,7 +206,12 @@ public class GraphPane extends JComponent
 		public void mouseReleased(MouseEvent e)
 		{
 			boolean fireDragged = _draggingVisual != null;
-			_draggingVisual = null;
+			if (fireDragged)
+			{
+				_draggingVisual.endDrag();
+				_draggingVisual = null;
+			}
+			_clickedVisual = null;
 			_lastDragPoint.x = _lastDragPoint.y = 0;
 			if (fireDragged)
 				fireMouseDragging(null);
@@ -288,6 +301,16 @@ public class GraphPane extends JComponent
 			// Work on global coordinates as the component we are dragging
 			// on will change its location.
 			Point mp = e.getPoint();
+
+			final float scale = _configuration._scale;
+
+			if (_draggingVisual == null && _clickedVisual != null)
+			{
+				_draggingVisual = _clickedVisual;
+				_draggingVisual.startDrag((mp.x - _offsetX) / scale, (mp.y - _offsetY) / scale);
+				fireMouseDragging(_draggingVisual);
+			}
+
 			SwingUtilities.convertPointToScreen(mp, GraphPane.this);
 
 			final int xd = mp.x - _lastDragPoint.x;
@@ -295,8 +318,7 @@ public class GraphPane extends JComponent
 
 			if (_draggingVisual != null)
 			{
-				_draggingVisual.moveBy(xd / _configuration._scale, yd / _configuration._scale);
-				fireMouseDragging(_draggingVisual);
+				_draggingVisual.dragBy(xd / scale, yd / scale);
 				revalidate();
 				repaint();
 			}
@@ -321,9 +343,12 @@ public class GraphPane extends JComponent
 
 	/**
 	 * Creates a new graph pane.
+	 *
+	 * @param configuration The configuration.
 	 */
-	public GraphPane()
+	public GraphPane(GraphConfiguration configuration)
 	{
+		_configuration = configuration;
 		setLayout(null);
 		setModel(new VisualModel("none"));
 		addMouseListener(_mouseHandler);
@@ -559,9 +584,11 @@ public class GraphPane extends JComponent
 		List<Visual> visuals = _model.getVisuals();
 		if (_selectedVisual != null && visuals.indexOf(_selectedVisual) != (visuals.size() - 1))
 		{
-			_model.moveVisualToTop(_selectedVisual);
-			// Repaint will be triggered my model listener
-			triggerRepaint = false;
+			if (_model.moveVisualToTop(_selectedVisual))
+			{
+				// Repaint will be triggered my model listener
+				triggerRepaint = false;
+			}
 		}
 
 		if (oldSelected != null && oldSelected != _selectedVisual)

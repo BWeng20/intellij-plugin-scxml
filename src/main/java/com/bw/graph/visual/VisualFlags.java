@@ -24,4 +24,10 @@ public interface VisualFlags
 	 * Flag to declare a primitive editable.
 	 */
 	int EDITABLE = 8;
+
+	/**
+	 * Flag to declare a primitive draggable.
+	 * Has effect only if also {@link #EDITABLE} is set.
+	 */
+	int DRAGGABLE = 16;
 }

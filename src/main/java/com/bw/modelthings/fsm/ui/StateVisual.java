@@ -20,8 +20,11 @@ import com.bw.modelthings.fsm.model.State;
 import javax.swing.JComponent;
 import javax.swing.text.JTextComponent;
 import java.awt.Graphics2D;
+import java.awt.Shape;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -29,6 +32,11 @@ import java.util.Objects;
  */
 public class StateVisual extends GenericPrimitiveVisual
 {
+	/**
+	 * Minimal width of states in pixel.
+	 */
+	public float _stateMinimalWidth = 50;
+
 	/**
 	 * The FSM state of this visual.
 	 */
@@ -45,6 +53,8 @@ public class StateVisual extends GenericPrimitiveVisual
 	private DrawContext _stateInnerContext;
 
 	private StateNameProxy _nameProxy;
+
+	private Rectangle _connectorFrame;
 
 	/**
 	 * Create a state .
@@ -99,7 +109,7 @@ public class StateVisual extends GenericPrimitiveVisual
 			Rectangle2D stringBounds = _stateInnerContext._style._fontMetrics.getStringBounds(displayName, g2);
 
 			float height = 5 * fh;
-			float width = (float) Math.max(stringBounds.getWidth() + 10, _stateInnerContext._configuration._stateMinimalWidth);
+			float width = (float) Math.max(stringBounds.getWidth() + 10, ((FsmGraphConfiguration) _stateInnerContext._configuration)._stateMinimalWidth);
 
 			if (modelPrimitive != null)
 			{
@@ -118,12 +128,12 @@ public class StateVisual extends GenericPrimitiveVisual
 		}
 		setAbsolutePosition(bounds.position, bounds.bounds);
 
-		Rectangle frame = new Rectangle(
+		_connectorFrame = new Rectangle(
 				0, 0, bounds.bounds.width, bounds.bounds.height, _stateOuterContext._configuration._stateCornerArcSize, _stateOuterContext._configuration,
 				_stateOuterContext._style, VisualFlags.ALWAYS);
 
-		frame.setFill(true);
-		addDrawingPrimitive(frame);
+		_connectorFrame.setFill(true);
+		addDrawingPrimitive(_connectorFrame);
 
 		Line separator = new Line(0, fh * 1.5f, bounds.bounds.width, fh * 1.5f
 				, _stateInnerContext._configuration, _stateInnerContext._style, VisualFlags.ALWAYS);
@@ -204,6 +214,13 @@ public class StateVisual extends GenericPrimitiveVisual
 			return _textComponent;
 		}
 
+		/**
+		 * Commits the edited text, updates the text-primitive and the Layout of the StateVisual.
+		 *
+		 * @param text  The primitive to update.
+		 * @param model The model.
+		 * @param g2    Graphics context for calculations.
+		 */
 		@Override
 		public void endEdit(DrawPrimitive text, VisualModel model, Graphics2D g2)
 		{
@@ -217,7 +234,7 @@ public class StateVisual extends GenericPrimitiveVisual
 					Point2D.Float pt = getAbsolutePosition();
 					createStatePrimitives(pt.x, pt.y, g2, null, newName);
 					setPreferredDimension(null);
-					model.getEdgesAt(StateVisual.this).forEach(e -> placeConnector(e, g2));
+					placeConnectors(model.getEdgesAt(StateVisual.this), g2);
 				}
 			}
 		}
@@ -229,30 +246,65 @@ public class StateVisual extends GenericPrimitiveVisual
 	}
 
 	/**
-	 * Places a connector visual that is attached to this state visual.
-	 * @param edgeVisual The edge
-	 * @param g2 Graphics context, may be null to use cached dimensions.
+	 * Places the connectors that are attached to this state visual.
+	 *
+	 * @param edgeVisuals The edges
+	 * @param g2          Graphics context, may be null to use cached dimensions.
 	 */
-	public void placeConnector(EdgeVisual edgeVisual, Graphics2D g2)
+	public void placeConnectors(List<EdgeVisual> edgeVisuals, Graphics2D g2)
 	{
-		Rectangle2D.Float myBounds = getAbsoluteBounds2D(g2);
-		ConnectorVisual sourceConnector = edgeVisual.getSourceConnector();
-		if (sourceConnector != null && sourceConnector.getParent() == this)
-		{
-			sourceConnector.setRelativePosition(myBounds.width, myBounds.height / 2f);
-		}
-		else
-		{
-			ConnectorVisual targetConnector = edgeVisual.getTargetConnector();
-			if (targetConnector != null && targetConnector.getParent() == this)
-			{
+		edgeVisuals.sort((e1, e2) -> {
+			float y1 = (e1.getSourceVisual() == StateVisual.this ?
+						e1.getTargetVisual() : e1.getSourceVisual()).getAbsolutePosition().y;
+			float y2 = (e2.getSourceVisual() == StateVisual.this ?
+						e2.getTargetVisual() : e2.getSourceVisual()).getAbsolutePosition().y;
+			return ((y1 - y2) < 0 ? -1 : 0);
+		});
 
-				if (targetConnector.getTargetedParentChild() == null)
-					targetConnector.setRelativePosition(0, myBounds.height / 2f);
-				else
-					targetConnector.setRelativePosition(getConfiguration()._innerModelBoxInsets._left,
-							myBounds.height / 2f);
+		ArrayList<ConnectorVisual> asSource = new ArrayList<>();
+		ArrayList<ConnectorVisual> asTarget = new ArrayList<>();
+		for (EdgeVisual edgeVisual : edgeVisuals)
+		{
+			ConnectorVisual sourceConnector = edgeVisual.getSourceConnector();
+			if (sourceConnector != null && sourceConnector.getParent() == this)
+			{
+				asSource.add(sourceConnector);
+			}
+			else
+			{
+				ConnectorVisual targetConnector = edgeVisual.getTargetConnector();
+				if (targetConnector != null && targetConnector.getParent() == this)
+				{
+					asTarget.add(targetConnector);
+				}
 			}
 		}
+
+		// Distribute connectors
+		Rectangle2D.Float myBounds = getAbsoluteBounds2D(g2);
+
+		float yd = myBounds.height / asSource.size();
+		float y = yd / 2f;
+		for (ConnectorVisual sourceConnector : asSource)
+		{
+			sourceConnector.setRelativePosition(myBounds.width, y);
+			y += yd;
+		}
+		yd = myBounds.height / asTarget.size();
+		y = yd / 2f;
+		for (ConnectorVisual targetConnector : asTarget)
+		{
+			if (targetConnector.getTargetedParentChild() == null)
+				targetConnector.setRelativePosition(0, y);
+			else
+				targetConnector.setRelativePosition(getConfiguration()._innerModelBoxInsets._left, y);
+			y += yd;
+		}
+	}
+
+	@Override
+	public Shape getConnectorShape()
+	{
+		return _connectorFrame.getShape();
 	}
 }

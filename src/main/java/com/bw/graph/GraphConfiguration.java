@@ -29,22 +29,22 @@ public class GraphConfiguration
 	public float _stateCornerArcSize = 20;
 
 	/**
-	 * Maximum distance to select an edge.
+	 * Maximum distance to a visual.
 	 */
-	public float _selectEdgeMaxDistance = 10;
+	public float _selectMaxDistance = 5;
 
 	/**
-	 * Minimal width of states in pixel.
+	 * Maximal quadratic distance that a visual "snaps" into position during dragging.
 	 */
-	public float _stateMinimalWidth = 50;
+	public float _snapMaxSquaredDistance = 10 * 10;
 
 	/**
-	 * The minimal inner model box dimension inside the parent visual.
+	 * The minimal dimension of s sub-model-box inside the parent visual.
 	 */
 	public Dimension2DFloat _innerModelBoxMinDimension = new Dimension2DFloat(200, 200);
 
 	/**
-	 * Insets of the inner model box inside the parent visual.
+	 * Insets of the sub-model-box inside the parent visual.
 	 */
 	public InsetsFloat _innerModelBoxInsets = new InsetsFloat(20, 10, 10, 10);
 

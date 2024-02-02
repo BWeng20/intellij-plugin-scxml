@@ -14,12 +14,12 @@ public interface Geometry
 	/**
 	 * Get the closest point on the border of a shape.
 	 *
-	 * @param rp       The reverence point to get the closest point for.
+	 * @param rp       The reverence point to get the closest point for. Will contain the found closet point in return
 	 * @param shape    The shape to search on.
 	 * @param flatness The "flatness" of iteration, see {@link Shape#getPathIterator(AffineTransform, double)}.
-	 * @return The closest point. Never null.
+	 * @return The closest quadratic distance. To get Euclidean distance use square-root of returned value.
 	 */
-	static Point2D.Float getClosestPointOnShape(Point2D.Float rp, Shape shape, float flatness)
+	static float getClosestPointOnShape(Point2D.Float rp, Shape shape, float flatness)
 	{
 		//@TODO: find some smarter solution.
 
@@ -68,7 +68,9 @@ public interface Geometry
 				bestp.y = r.y;
 			}
 		}
-		return bestp;
+		rp.x = bestp.x;
+		rp.y = bestp.y;
+		return (float) bestd;
 	}
 
 	/**

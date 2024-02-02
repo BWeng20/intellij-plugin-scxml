@@ -2,11 +2,11 @@ package com.bw.modelthings.fsm.ui;
 
 import com.bw.graph.DrawContext;
 import com.bw.graph.DrawStyle;
-import com.bw.graph.GraphConfiguration;
 import com.bw.graph.VisualModel;
 import com.bw.graph.editor.GraphPane;
 import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.visual.Visual;
+import com.bw.graph.visual.VisualFlags;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
 import com.bw.modelthings.fsm.model.State;
 
@@ -35,9 +35,14 @@ public class FsmGraphPanel extends JPanel
 	protected Visual _root;
 
 	/**
+	 * The fsm specific graph configuration.
+	 */
+	protected FsmGraphConfiguration _graphConfiguration = new FsmGraphConfiguration();
+
+	/**
 	 * The generic graph pane.
 	 */
-	protected GraphPane _pane = new GraphPane();
+	protected GraphPane _pane = new GraphPane(_graphConfiguration);
 
 	/**
 	 * The FSM.
@@ -169,9 +174,9 @@ public class FsmGraphPanel extends JPanel
 	 *
 	 * @return The graph configuration.
 	 */
-	public GraphConfiguration getGraphConfiguration()
+	public FsmGraphConfiguration getGraphConfiguration()
 	{
-		return _pane.getGraphConfiguration();
+		return _graphConfiguration;
 	}
 
 	/**
@@ -264,6 +269,7 @@ public class FsmGraphPanel extends JPanel
 				}
 			}
 		}
+		model.clearFlags(VisualFlags.MODIFIED);
 		return update;
 	}
 
@@ -277,7 +283,7 @@ public class FsmGraphPanel extends JPanel
 	{
 		return model.getVisuals()
 					.stream()
-					.filter(v -> v.isFlagSet(ScxmlGraphFactory.START_NODE_FLAG))
+					.filter(v -> v.isFlagSet(FsmGraphFactory.START_NODE_FLAG))
 					.findFirst()
 					.orElse(null);
 	}
@@ -291,7 +297,7 @@ public class FsmGraphPanel extends JPanel
 	 */
 	public void setStateMachine(FiniteStateMachine fsm, ScxmlGraphExtension graphExtension)
 	{
-		ScxmlGraphFactory factory = new ScxmlGraphFactory(graphExtension);
+		FsmGraphFactory factory = new FsmGraphFactory(graphExtension);
 		factory.setStateNameEditorComponent(_stateNameEditorComponent);
 
 		_pane.setModel(null);

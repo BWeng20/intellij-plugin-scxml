@@ -3,6 +3,7 @@ package com.bw.graph;
 import com.bw.graph.visual.ConnectorVisual;
 import com.bw.graph.visual.EdgeVisual;
 import com.bw.graph.visual.Visual;
+import com.bw.graph.visual.VisualContainer;
 import com.bw.graph.visual.VisualFlags;
 
 import java.awt.Graphics2D;
@@ -80,17 +81,49 @@ public class VisualModel
 	 * Moved the visual to top of z-order.
 	 *
 	 * @param visual The visual to move.
+	 * @return True if z-order was changed.
 	 */
-	public void moveVisualToTop(Visual visual)
+	public boolean moveVisualToTop(Visual visual)
 	{
-		if (_visuals.get(_visuals.size() - 1) != visual)
+		boolean zOrderChanged = false;
+		if (visual instanceof VisualContainer visualContainer)
+		{
+			List<Visual> subVisuals = visualContainer.getVisuals();
+			subVisuals.add(0, visual);
+
+			int index = subVisuals.size();
+			int mainIndex = _visuals.size();
+			while ((--mainIndex) >= 0 && (--index) >= 0)
+			{
+				if (subVisuals.get(index) != _visuals.get(mainIndex))
+				{
+					zOrderChanged = true;
+					break;
+				}
+			}
+			if (zOrderChanged)
+			{
+				for (Visual v : subVisuals)
+				{
+					if (_visuals.remove(v))
+					{
+						_visuals.add(v);
+					}
+				}
+				fireModelChange();
+			}
+
+		}
+		else if (_visuals.get(_visuals.size() - 1) != visual)
 		{
 			if (_visuals.remove(visual))
 			{
 				_visuals.add(visual);
+				zOrderChanged = true;
 				fireModelChange();
 			}
 		}
+		return zOrderChanged;
 	}
 
 	/**
@@ -258,6 +291,7 @@ public class VisualModel
 
 	/**
 	 * Gets all connectors that are attached at the visual.
+	 *
 	 * @param visual The visual to get connectors for.
 	 * @return The list of connectors. May be empty but never null.
 	 */
@@ -272,6 +306,7 @@ public class VisualModel
 
 	/**
 	 * Gets all edges that are attached at the visual.
+	 *
 	 * @param visual The visual to get connectors for.
 	 * @return The list of connectors. May be empty but never null.
 	 */

@@ -7,6 +7,7 @@ import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.List;
  * Used to visualize edges in different modes.<br>
  * A path have a line (along the path), one connector at each end, and a number of control-points.
  */
-public class EdgeVisual extends Visual
+public class EdgeVisual extends Visual implements VisualContainer
 {
 	/**
 	 * The source connector at the source visual where the edge starts.
@@ -62,7 +63,7 @@ public class EdgeVisual extends Visual
 	}
 
 	/**
-	 * Draws for given context.
+	 * Draws the edge. Edges itself are not relative to parent visuals.
 	 *
 	 * @param g2 The graphics context
 	 */
@@ -74,13 +75,16 @@ public class EdgeVisual extends Visual
 			_path.draw(g2);
 			_targetConnector.draw(g2);
 		}
-		_sourceConnector.draw(g2);
+		if (_sourceConnector != null)
+		{
+			_sourceConnector.draw(g2);
+		}
 	}
 
 	@Override
 	protected void drawRelative(Graphics2D g2)
 	{
-
+		// Nothing to do, edge is drawn in "draw" above as not relative.
 	}
 
 	@Override
@@ -143,7 +147,7 @@ public class EdgeVisual extends Visual
 	 */
 	public boolean containsPoint(float x, float y)
 	{
-		return _path.getDistanceTo(new Point2D.Float(x, y)) < _context._configuration._selectEdgeMaxDistance;
+		return _path.getDistanceTo(x, y) < _context._configuration._selectMaxDistance;
 	}
 
 
@@ -155,7 +159,7 @@ public class EdgeVisual extends Visual
 
 
 	@Override
-	public void moveBy(float x, float y)
+	public void dragBy(float x, float y)
 	{
 	}
 
@@ -232,4 +236,20 @@ public class EdgeVisual extends Visual
 		return null;
 	}
 
+	/**
+	 * Gets the connector and path-control visuals.
+	 *
+	 * @return The collection of associated visuals.
+	 */
+	@Override
+	public List<Visual> getVisuals()
+	{
+		List<Visual> v = new ArrayList<>(2 + _controlVisual.size());
+		if (_targetConnector != null)
+			v.add(_targetConnector);
+		if (_sourceConnector != null)
+			v.add(_sourceConnector);
+		v.addAll(_controlVisual);
+		return v;
+	}
 }

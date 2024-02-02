@@ -9,6 +9,7 @@ import com.bw.graph.util.Dimension2DFloat;
 import com.bw.svg.SVGWriter;
 
 import java.awt.Graphics2D;
+import java.awt.Shape;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.List;
@@ -130,7 +131,14 @@ public abstract class Visual
 	 */
 	public boolean containsPoint(float x, float y)
 	{
-		return _absoluteBounds.contains(x, y);
+		if (_absoluteBounds.width < 0)
+			updateBounds(null);
+
+		float maxDiff = getConfiguration()._selectMaxDistance;
+		return ((x + maxDiff) >= _absoluteBounds.x &&
+				(y + maxDiff) >= _absoluteBounds.y &&
+				(x - maxDiff) < _absoluteBounds.x + _absoluteBounds.width &&
+				(y - maxDiff) < _absoluteBounds.y + _absoluteBounds.height);
 	}
 
 	/**
@@ -141,12 +149,31 @@ public abstract class Visual
 	protected abstract void updateBounds(Graphics2D graphics);
 
 	/**
-	 * Moves the visual by some delta.
+	 * Starts drag. Base implementations does nothing.
+	 *
+	 * @param x Absolute X ordinate where dragging started.
+	 * @param y Absolute Y ordinate where dragging started.
+	 */
+	public void startDrag(float x, float y)
+	{
+	}
+
+	/**
+	 * Ends drag. Base implementations does nothing.
+	 */
+	public void endDrag()
+	{
+	}
+
+
+	/**
+	 * Drags the visual by some delta.
+	 * Base implementation moves the position by the given delta.
 	 *
 	 * @param x The X-Delta to move.
 	 * @param y The Y-Delta to move.
 	 */
-	public void moveBy(float x, float y)
+	public void dragBy(float x, float y)
 	{
 		if (x != 0 || y != 0)
 		{
@@ -576,7 +603,17 @@ public abstract class Visual
 	public String getDisplayName()
 	{
 		return _displayName == null ? String.valueOf(getId()) : _displayName;
+	}
 
+	/**
+	 * Get the shape connectors are placed on.
+	 * The shape coordinates must be specified visual relative.
+	 *
+	 * @return The shape or null.
+	 */
+	public Shape getConnectorShape()
+	{
+		return null;
 	}
 
 }

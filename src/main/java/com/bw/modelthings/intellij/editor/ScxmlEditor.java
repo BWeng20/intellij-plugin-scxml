@@ -5,6 +5,7 @@ import com.bw.modelthings.intellij.settings.ChangeConfigurationNotifier;
 import com.bw.modelthings.intellij.settings.Configuration;
 import com.bw.modelthings.intellij.settings.EditorLayout;
 import com.bw.modelthings.intellij.settings.PersistenceService;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorState;
 import com.intellij.openapi.fileEditor.TextEditor;
@@ -33,6 +34,10 @@ import java.beans.PropertyChangeListener;
  */
 public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 {
+
+	private static final Logger LOG = Logger.getInstance(ScxmlEditor.class);
+
+
 	/**
 	 * Message bus for change notification.
 	 */
@@ -67,6 +72,11 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 	 * The layout of XML and Graph editor.
 	 */
 	EditorLayout _editorLayout = EditorLayout.Tabs;
+
+	/**
+	 * Synchronizer to sync XML and Graph.
+	 */
+	Synchronizer _synchronizer;
 
 	@Override
 	@NotNull
@@ -124,9 +134,8 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 	@Override
 	public void setState(@NotNull FileEditorState state)
 	{
-		if (state instanceof ScxmlEditorState)
+		if (state instanceof ScxmlEditorState compositeState)
 		{
-			final ScxmlEditorState compositeState = (ScxmlEditorState) state;
 			if (compositeState._xmlEditorState != null)
 			{
 				// xmlTextEditor.setState(compositeState.xmlEditorState);
@@ -168,9 +177,12 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 	@Override
 	public void dispose()
 	{
+		Disposer.dispose(_synchronizer);
 		Disposer.dispose(_xmlTextEditor);
 		Disposer.dispose(_scxmlEditor);
 		Disposer.dispose(_mbCon);
+
+
 	}
 
 	/**
@@ -182,13 +194,11 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 	{
 		_scxmlEditor = new ScxmlGraphEditor(_file, PsiManager.getInstance(project)
 															 .findFile(_file));
-
 		_xmlTextEditor = (TextEditor) TextEditorProvider.getInstance()
 														.createEditor(project, _file);
-
 		_component = new JPanel(new BorderLayout());
-
 		applyLayout();
+		_synchronizer = new Synchronizer(_file, _theProject, _scxmlEditor, _xmlTextEditor);
 	}
 
 	/**
@@ -258,4 +268,5 @@ public class ScxmlEditor extends UserDataHolderBase implements FileEditor
 			}
 		}
 	}
+
 }

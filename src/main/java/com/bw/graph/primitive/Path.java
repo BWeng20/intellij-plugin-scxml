@@ -256,7 +256,23 @@ public class Path extends DrawPrimitive
 	{
 		if (pt != null && _path2D != null && _coordinates.length > 1)
 		{
-			return (float) pt.distance(Geometry.getClosestPointOnShape(pt, _path2D, 1));
+			return Geometry.getClosestPointOnShape(pt, _path2D, 1);
+		}
+		return Float.MAX_VALUE;
+	}
+
+	/**
+	 * Gets distance of a point to this path.
+	 *
+	 * @param ptx The reference x ordinate.
+	 * @param pty The reference y ordinate.
+	 * @return the distance.
+	 */
+	public float getDistanceTo(float ptx, float pty)
+	{
+		if (_path2D != null && _coordinates.length > 1)
+		{
+			return Geometry.getClosestPointOnShape(new Point2D.Float(ptx, pty), _path2D, 1);
 		}
 		return Float.MAX_VALUE;
 	}

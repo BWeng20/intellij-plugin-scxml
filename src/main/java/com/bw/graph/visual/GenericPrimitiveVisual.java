@@ -394,12 +394,9 @@ public class GenericPrimitiveVisual extends Visual
 	@Override
 	public void setFlags(int flags)
 	{
-		if ((flags | this._flags) != this._flags)
-		{
-			super.setFlags(flags);
-			for (DrawPrimitive primitive : _primitives)
-				primitive.setFlags(flags);
-		}
+		super.setFlags(flags);
+		for (DrawPrimitive primitive : _primitives)
+			primitive.setFlags(flags);
 	}
 
 
