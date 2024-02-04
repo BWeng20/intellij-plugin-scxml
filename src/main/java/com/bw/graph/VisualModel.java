@@ -261,7 +261,8 @@ public class VisualModel
 	public boolean isFlagSetDeep(int flags)
 	{
 		return (_flags & flags) == flags ||
-				_visuals.stream().anyMatch(visual -> visual.isFlagSet(flags));
+				_visuals.stream()
+						.anyMatch(visual -> visual.isFlagSet(flags));
 	}
 
 	/**
@@ -299,7 +300,8 @@ public class VisualModel
 	{
 		return _visuals.stream()
 					   .filter(v -> v instanceof EdgeVisual)
-					   .map(v -> ((EdgeVisual) v).getConnector(visual)).filter(Objects::nonNull)
+					   .map(v -> ((EdgeVisual) v).getConnector(visual))
+					   .filter(Objects::nonNull)
 					   .collect(Collectors.toList());
 	}
 

@@ -3,12 +3,10 @@ package com.bw.modelthings.fsm.ui;
 import com.bw.graph.Alignment;
 import com.bw.graph.DrawContext;
 import com.bw.graph.VisualModel;
-import com.bw.graph.primitive.Circle;
 import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.util.InsetsFloat;
 import com.bw.graph.visual.ConnectorVisual;
 import com.bw.graph.visual.EdgeVisual;
-import com.bw.graph.visual.GenericPrimitiveVisual;
 import com.bw.graph.visual.Visual;
 import com.bw.graph.visual.VisualFlags;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
@@ -32,10 +30,6 @@ import java.util.logging.Logger;
  */
 public class FsmGraphFactory
 {
-	/**
-	 * Visual flag for a start-node.
-	 */
-	public final static int START_NODE_FLAG = 128;
 
 	/**
 	 * Logger of this class.
@@ -88,26 +82,10 @@ public class FsmGraphFactory
 	 * @param style  The style to use.
 	 * @return The visual
 	 */
-	public Visual createStartVisual(State parent, float x, float y, float radius, DrawContext style)
+	public Visual createStartVisual(StateVisual parent, float x, float y, float radius, DrawContext style)
 	{
-		GenericPrimitiveVisual startNode = new GenericPrimitiveVisual(parent._docId, style);
-		Circle circle = new Circle(0, 0, radius, style._configuration, style._style, VisualFlags.ALWAYS);
-		circle.setFill(true);
-		startNode.addDrawingPrimitive(circle);
-		Circle circleActive = new Circle(0, 0, radius + 5, style._configuration, style._style, VisualFlags.SELECTED);
-		startNode.addDrawingPrimitive(circleActive);
-		startNode.clearFlags(VisualFlags.MODIFIED);
-		startNode.setFlags(START_NODE_FLAG);
-
-		PosAndBounds startBounds = _graphExtension._startBounds.get(parent._docId);
-		if (startBounds == null)
-		{
-			startNode.setAbsolutePosition(x, y, null);
-		}
-		else
-		{
-			startNode.setAbsolutePosition(startBounds.position, startBounds.bounds);
-		}
+		StartVisual startNode = new StartVisual(parent, style);
+		startNode.createPrimitives(x, y, radius, _graphExtension._startBounds.get(parent._state._docId), style);
 		return startNode;
 	}
 
@@ -227,7 +205,8 @@ public class FsmGraphFactory
 
 					if (state._parent != null)
 					{
-						VisualModel model = _stateVisuals.get(state._parent._name).getChildModel();
+						VisualModel model = _stateVisuals.get(state._parent._name)
+														 .getChildModel();
 						model.addVisual(stateVisual);
 					}
 					else
@@ -298,9 +277,11 @@ public class FsmGraphFactory
 					getModelForState(t._source).addVisual(edgeVisual);
 
 					ConnectorVisual sourceConnector = edgeVisual.getSourceConnector();
-					getModelForVisual((StateVisual) sourceConnector.getParent()).getVisuals().add(sourceConnector);
+					getModelForVisual((StateVisual) sourceConnector.getParent()).getVisuals()
+																				.add(sourceConnector);
 					ConnectorVisual targetConnector = edgeVisual.getTargetConnector();
-					getModelForVisual((StateVisual) targetConnector.getParent()).getVisuals().add(targetConnector);
+					getModelForVisual((StateVisual) targetConnector.getParent()).getVisuals()
+																				.add(targetConnector);
 				}
 			}
 
@@ -309,9 +290,9 @@ public class FsmGraphFactory
 			{
 				if (!state._states.isEmpty())
 				{
-					Visual startVisual = createStartVisual(state, fh / 2, fh, fh / 2, startStyles);
-
 					StateVisual stateVisual = _stateVisuals.get(state._name);
+					Visual startVisual = createStartVisual(stateVisual, fh / 2, fh, fh / 2, startStyles);
+
 					VisualModel innerModel = ModelPrimitive.getChildModel(stateVisual);
 					innerModel.addVisual(startVisual);
 
@@ -364,7 +345,8 @@ public class FsmGraphFactory
 				if (stateVisual._state._parent == null)
 					model = rootModel;
 				else
-					model = _stateVisuals.get(stateVisual._state._parent._name).getChildModel();
+					model = _stateVisuals.get(stateVisual._state._parent._name)
+										 .getChildModel();
 				stateVisual.placeConnectors(model.getEdgesAt(stateVisual), g2);
 			}
 		}

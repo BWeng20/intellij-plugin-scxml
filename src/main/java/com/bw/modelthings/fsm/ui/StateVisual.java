@@ -4,6 +4,7 @@ import com.bw.graph.Alignment;
 import com.bw.graph.DrawContext;
 import com.bw.graph.VisualModel;
 import com.bw.graph.editor.EditorProxy;
+import com.bw.graph.editor.action.EditAction;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.primitive.Line;
 import com.bw.graph.primitive.ModelPrimitive;
@@ -16,6 +17,7 @@ import com.bw.graph.visual.EdgeVisual;
 import com.bw.graph.visual.GenericPrimitiveVisual;
 import com.bw.graph.visual.VisualFlags;
 import com.bw.modelthings.fsm.model.State;
+import com.bw.modelthings.fsm.ui.actions.RenameStateAction;
 
 import javax.swing.JComponent;
 import javax.swing.text.JTextComponent;
@@ -157,7 +159,7 @@ public class StateVisual extends GenericPrimitiveVisual
 	public String toString()
 	{
 		return _state._name == null ? "Id:" + _state._docId
-									: _state._name;
+				: _state._name;
 	}
 
 	/**
@@ -222,21 +224,25 @@ public class StateVisual extends GenericPrimitiveVisual
 		 * @param g2    Graphics context for calculations.
 		 */
 		@Override
-		public void endEdit(DrawPrimitive text, VisualModel model, Graphics2D g2)
+		public EditAction endEdit(DrawPrimitive text, VisualModel model, Graphics2D g2)
 		{
 			String newName = _textComponent.getText()
 										   .trim();
 			if (text instanceof Text textPrimitive)
 			{
-				if (!Objects.equals(newName, textPrimitive.getText()))
+				String oldName = textPrimitive.getText();
+				if (!Objects.equals(newName, oldName))
 				{
 					setFlags(VisualFlags.MODIFIED);
 					Point2D.Float pt = getAbsolutePosition();
 					createStatePrimitives(pt.x, pt.y, g2, null, newName);
 					setPreferredDimension(null);
 					placeConnectors(model.getEdgesAt(StateVisual.this), g2);
+
+					return new RenameStateAction(oldName, newName);
 				}
 			}
+			return null;
 		}
 
 		@Override
@@ -253,11 +259,12 @@ public class StateVisual extends GenericPrimitiveVisual
 	 */
 	public void placeConnectors(List<EdgeVisual> edgeVisuals, Graphics2D g2)
 	{
-		edgeVisuals.sort((e1, e2) -> {
+		edgeVisuals.sort((e1, e2) ->
+		{
 			float y1 = (e1.getSourceVisual() == StateVisual.this ?
-						e1.getTargetVisual() : e1.getSourceVisual()).getAbsolutePosition().y;
+					e1.getTargetVisual() : e1.getSourceVisual()).getAbsolutePosition().y;
 			float y2 = (e2.getSourceVisual() == StateVisual.this ?
-						e2.getTargetVisual() : e2.getSourceVisual()).getAbsolutePosition().y;
+					e2.getTargetVisual() : e2.getSourceVisual()).getAbsolutePosition().y;
 			return ((y1 - y2) < 0 ? -1 : 0);
 		});
 

@@ -155,6 +155,7 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	@Override
 	public void startDrag(float x, float y)
 	{
+		super.startDrag(x, y);
 		_dragPosition.x = x;
 		_dragPosition.y = y;
 		System.err.println(this + ": Start Drag at " + _dragPosition.x + "," + _dragPosition.y);

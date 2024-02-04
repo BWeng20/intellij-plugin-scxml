@@ -3,6 +3,7 @@ package com.bw.graph.editor;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.VisualModel;
+import com.bw.graph.editor.action.EditAction;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.visual.Visual;
@@ -36,8 +37,10 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.geom.Rectangle2D;
 import java.io.StringWriter;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -50,6 +53,12 @@ public class GraphPane extends JComponent
 	 * Graph configuration
 	 */
 	private GraphConfiguration _configuration;
+
+	/**
+	 * Stack of current editor-actions.
+	 */
+	private Deque<EditAction> _actionStack = new ArrayDeque<>(10);
+
 
 	/**
 	 * Listeners.
@@ -197,7 +206,8 @@ public class GraphPane extends JComponent
 		{
 			_clickedVisual = getVisualAt(_lastDragPoint.x = e.getX(), _lastDragPoint.y = e.getY());
 			if (_clickedVisual != null)
-				System.err.println("Pressed on " + _clickedVisual.getClass().getName() + " " + _clickedVisual);
+				System.err.println("Pressed on " + _clickedVisual.getClass()
+																 .getName() + " " + _clickedVisual);
 			setSelectedVisual(_clickedVisual);
 			SwingUtilities.convertPointToScreen(_lastDragPoint, GraphPane.this);
 		}
@@ -208,7 +218,9 @@ public class GraphPane extends JComponent
 			boolean fireDragged = _draggingVisual != null;
 			if (fireDragged)
 			{
-				_draggingVisual.endDrag();
+				EditAction action = _draggingVisual.endDrag();
+				if (action != null)
+					_actionStack.push(action);
 				_draggingVisual = null;
 			}
 			_clickedVisual = null;
@@ -911,7 +923,9 @@ public class GraphPane extends JComponent
 				Graphics2D g2 = (Graphics2D) getGraphics();
 				g2.translate(_offsetX, _offsetY);
 				g2.scale(_configuration._scale, _configuration._scale);
-				_selectedPrimitiveEditorProxy.endEdit(_selectedPrimitive, _model, g2);
+				EditAction action = _selectedPrimitiveEditorProxy.endEdit(_selectedPrimitive, _model, g2);
+				if (action != null)
+					_actionStack.push(action);
 			}
 			_selectedPrimitive = null;
 			removePrimitiveEditor();
@@ -930,5 +944,26 @@ public class GraphPane extends JComponent
 			remove(_selectedPrimitiveEditor);
 			_selectedPrimitiveEditor = null;
 		}
+	}
+
+	/**
+	 * Get the outstanding editor actions.
+	 *
+	 * @return The list of actions, possibly empty but never null.
+	 * @see #commitActions()
+	 */
+	public Deque<EditAction> getEditActions()
+	{
+		return _actionStack;
+	}
+
+	/**
+	 * Commits the current edit actions.<br>
+	 * Clear action stack and resets the modified flags.
+	 */
+	public void commitActions()
+	{
+		_actionStack.clear();
+		getModel().clearFlags(VisualFlags.MODIFIED);
 	}
 }

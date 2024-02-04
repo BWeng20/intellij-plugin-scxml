@@ -122,10 +122,22 @@ public class Synchronizer implements Disposable
 				{
 					if (_enableSync && !_updateXmlTriggered)
 					{
-						LOG.warn("Model modified, sync with file");
 						_updateXmlTriggered = true;
-						ApplicationManager.getApplication()
-										  .invokeLater(() -> WriteCommandAction.runWriteCommandAction(_theProject, this::runXmlUpdate));
+
+						List<EditorChanges> changes = _scxmlEditor._component.getEditorUpdate();
+						LOG.warn("Model modified, sync " + changes.size() + " changes");
+						for (EditorChanges c : changes)
+						{
+							ApplicationManager.getApplication()
+											  .invokeLater(() ->
+											  {
+												  WriteCommandAction.writeCommandAction(_theProject, PsiManager.getInstance(_theProject)
+																											   .findFile(_file))
+																	.withName(c._commandName)
+																	.withGlobalUndo()
+																	.run(() -> runXmlUpdate(c));
+											  });
+						}
 					}
 					else
 					{
@@ -153,7 +165,8 @@ public class Synchronizer implements Disposable
 								   }
 							   });
 
-		Document doc = _xmlTextEditor.getEditor().getDocument();
+		Document doc = _xmlTextEditor.getEditor()
+									 .getDocument();
 		if (doc != null)
 			doc.addDocumentListener(_documentListener);
 		triggerGraphUpdate();
@@ -164,7 +177,8 @@ public class Synchronizer implements Disposable
 	{
 		if (_xmlTextEditor != null && _xmlTextEditor.getEditor() != null)
 		{
-			Document doc = _xmlTextEditor.getEditor().getDocument();
+			Document doc = _xmlTextEditor.getEditor()
+										 .getDocument();
 			if (doc != null)
 				doc.removeDocumentListener(_documentListener);
 		}
@@ -224,7 +238,9 @@ public class Synchronizer implements Disposable
 					ScxmlGraphExtension ge = new ScxmlGraphExtension();
 					parser.addExtensionParser(ScxmlGraphExtension.NS_GRAPH_EXTENSION, ge);
 
-					final FiniteStateMachine fsm = parser.parse(_file.toNioPath(), _xmlTextEditor.getEditor().getDocument().getText());
+					final FiniteStateMachine fsm = parser.parse(_file.toNioPath(), _xmlTextEditor.getEditor()
+																								 .getDocument()
+																								 .getText());
 					ApplicationManager.getApplication()
 									  .invokeLater(() -> _scxmlEditor._component.setStateMachine(fsm, ge));
 				}
@@ -245,7 +261,7 @@ public class Synchronizer implements Disposable
 	/**
 	 * This method is synchronized because it is possible that this method is called from different worker threads in parallel.
 	 */
-	private synchronized void runXmlUpdate()
+	private synchronized void runXmlUpdate(EditorChanges update)
 	{
 		// @TODO: move calculation of graphextensions to worker thread, then use the result here in write action.
 		if (_updateXmlTriggered)
@@ -255,17 +271,19 @@ public class Synchronizer implements Disposable
 				_inDocumentSync = true;
 
 				FiniteStateMachine fsm = _scxmlEditor._component.getStateMachine();
-				EditorChanges update = _scxmlEditor._component.getEditorUpdate();
 
 				if (fsm != null && update != null)
 				{
 					// Update psi file
 					try
 					{
-						PsiDocumentManager.getInstance(_theProject).doPostponedOperationsAndUnblockDocument(_xmlTextEditor.getEditor().getDocument());
+						PsiDocumentManager.getInstance(_theProject)
+										  .doPostponedOperationsAndUnblockDocument(_xmlTextEditor.getEditor()
+																								 .getDocument());
 
 						final float precisionFactor = _scxmlEditor._component.getGraphConfiguration()._precisionFactor;
-						PsiFile psi = PsiManager.getInstance(_theProject).findFile(_file);
+						PsiFile psi = PsiManager.getInstance(_theProject)
+												.findFile(_file);
 						XmlDocument doc = psi == null ? null : ((XmlFile) psi).getDocument();
 						if (doc != null)
 						{

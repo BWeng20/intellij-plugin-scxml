@@ -4,9 +4,9 @@ import com.bw.graph.DrawContext;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.VisualModel;
 import com.bw.graph.editor.GraphPane;
+import com.bw.graph.editor.action.EditAction;
 import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.visual.Visual;
-import com.bw.graph.visual.VisualFlags;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
 import com.bw.modelthings.fsm.model.State;
 
@@ -17,6 +17,7 @@ import javax.swing.text.JTextComponent;
 import java.awt.BorderLayout;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 
 /**
@@ -223,54 +224,17 @@ public class FsmGraphPanel extends JPanel
 	 *
 	 * @return The updates. Never null.
 	 */
-	public EditorChanges getEditorUpdate()
+	public List<EditorChanges> getEditorUpdate()
 	{
-		EditorChanges update = new EditorChanges();
+		Deque<EditAction> editActions = _pane.getEditActions();
+		List<EditorChanges> updates = new ArrayList<>();
 
-		//////////////////////////////////////////
-		// Collect data from model
-
-		VisualModel model = _pane.getModel();
-
-		List<Visual> visuals = new ArrayList<>(model.getVisuals());
-		Visual sv = getStartVisual(model);
-		if (sv != null)
-			update._startBounds.put(
-					"xxx", new PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
-
-		while (!visuals.isEmpty())
+		for (EditAction e : editActions)
 		{
-			Visual v = visuals.remove(visuals.size() - 1);
-			if (v instanceof StateVisual stateVisual)
-			{
-				String name = stateVisual.getCurrentName();
-
-				if (name != null)
-				{
-					update._bounds.put(name, new PosAndBounds(v.getAbsolutePosition(), v.getAbsoluteBounds2D(null)));
-
-					String originalName = stateVisual.getState()._name;
-					if (!name.equals(originalName))
-					{
-						update._statesRenamed.put(originalName, name);
-					}
-
-					VisualModel childModel = stateVisual.getChildModel();
-					if (childModel != null)
-					{
-						visuals.addAll(childModel.getVisuals());
-						sv = getStartVisual(childModel);
-						if (sv != null)
-						{
-							update._startBounds.put(stateVisual._state._name,
-									new PosAndBounds(sv.getAbsolutePosition(), sv.getAbsoluteBounds2D(null)));
-						}
-					}
-				}
-			}
+			updates.add(new EditorChanges(e));
 		}
-		model.clearFlags(VisualFlags.MODIFIED);
-		return update;
+		_pane.commitActions();
+		return updates;
 	}
 
 	/**
@@ -283,7 +247,7 @@ public class FsmGraphPanel extends JPanel
 	{
 		return model.getVisuals()
 					.stream()
-					.filter(v -> v.isFlagSet(FsmGraphFactory.START_NODE_FLAG))
+					.filter(v -> v.isFlagSet(FsmVisualFlags.START_NODE_FLAG))
 					.findFirst()
 					.orElse(null);
 	}

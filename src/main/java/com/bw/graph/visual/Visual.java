@@ -4,6 +4,8 @@ import com.bw.graph.DrawContext;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.editor.EditorProxy;
+import com.bw.graph.editor.action.EditAction;
+import com.bw.graph.editor.action.MoveAction;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.util.Dimension2DFloat;
 import com.bw.svg.SVGWriter;
@@ -47,6 +49,11 @@ public abstract class Visual
 	 * Absolute base position of the visual.
 	 */
 	protected Point2D.Float _absolutePosition = new Point2D.Float(0, 0);
+
+	/**
+	 * Drag start position.
+	 */
+	protected Point2D.Float _startDragAbsolutePosition = new Point2D.Float(0, 0);
 
 	/**
 	 * The absolute bounds of the visual.<br>
@@ -149,20 +156,32 @@ public abstract class Visual
 	protected abstract void updateBounds(Graphics2D graphics);
 
 	/**
-	 * Starts drag. Base implementations does nothing.
+	 * Starts drag. Base implementations handles undo action.
 	 *
 	 * @param x Absolute X ordinate where dragging started.
 	 * @param y Absolute Y ordinate where dragging started.
 	 */
 	public void startDrag(float x, float y)
 	{
+		_startDragAbsolutePosition.x = _absolutePosition.x;
+		_startDragAbsolutePosition.y = _absolutePosition.y;
 	}
 
 	/**
-	 * Ends drag. Base implementations does nothing.
+	 * Ends drag. Base implementations handles undo action.
+	 *
+	 * @return Edit Action of null.
 	 */
-	public void endDrag()
+	public EditAction endDrag()
 	{
+		if (_startDragAbsolutePosition.x != _absolutePosition.x ||
+				_startDragAbsolutePosition.y != _absolutePosition.y)
+		{
+
+			return new MoveAction(this, _startDragAbsolutePosition, _absolutePosition);
+		}
+
+		return null;
 	}
 
 
@@ -615,5 +634,4 @@ public abstract class Visual
 	{
 		return null;
 	}
-
 }
