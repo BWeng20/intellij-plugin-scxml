@@ -91,4 +91,34 @@ public class PosAndBounds
 		}
 		return null;
 	}
+
+	/**
+	 * Parse a XML position string.
+	 *
+	 * @param position The position string.
+	 * @return The point or null if the string was not correct.
+	 */
+	public static Point2D.Float parsePosition(String position)
+	{
+		if (position != null)
+		{
+			String[] coordinate = SPLIT_REG_EXP.split(position, 0);
+			if (coordinate.length == 2)
+			{
+				try
+				{
+					return new Point2D.Float(
+							Float.parseFloat(coordinate[0]),
+							Float.parseFloat(coordinate[1])
+					);
+				}
+				catch (NumberFormatException e)
+				{
+					ScxmlGraphExtension.log.log(Level.WARNING, "position could not be parsed", e);
+				}
+			}
+		}
+		return null;
+	}
+
 }
