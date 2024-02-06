@@ -4,6 +4,8 @@ import com.bw.svg.SVGWriter;
 
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
@@ -120,5 +122,39 @@ public class PosAndBounds
 		}
 		return null;
 	}
+
+	/**
+	 * Parse a XML position list string.
+	 *
+	 * @param posList The position list string.
+	 * @return The list of points.
+	 */
+
+	public static List<Point2D.Float> parsePositionList(String posList)
+	{
+		if (posList != null)
+		{
+			String[] coordinate = SPLIT_REG_EXP.split(posList, 0);
+			List<Point2D.Float> list = new ArrayList<>(coordinate.length / 2);
+			try
+			{
+				int i = 0;
+				while (coordinate.length > i + 1)
+				{
+					list.add(new Point2D.Float(
+							Float.parseFloat(coordinate[i]),
+							Float.parseFloat(coordinate[i + 1])));
+					i += 2;
+				}
+			}
+			catch (NumberFormatException e)
+			{
+				ScxmlGraphExtension.log.log(Level.WARNING, "position list could not be parsed", e);
+			}
+			return list;
+		}
+		return null;
+	}
+
 
 }

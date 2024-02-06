@@ -610,6 +610,11 @@ public interface ScxmlTags
 	String ATTR_EXPR = "expr";
 
 	/**
+	 * Predefined XML namespace
+	 */
+	String NS_XML = "http://www.w3.org/XML/1998/namespace";
+
+	/**
 	 * Namespace used for include directive.
 	 */
 	String NS_XINCLUDE = "http://www.w3.org/2001/XInclude";
@@ -623,6 +628,7 @@ public interface ScxmlTags
 	 * Regular Expression to split State Specifications.
 	 */
 	Pattern NameListSplitRegExp = Pattern.compile("(?U)\\s");
+
 
 	/**
 	 * Splits a white-space-separated list.

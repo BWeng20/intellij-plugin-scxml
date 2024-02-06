@@ -19,6 +19,29 @@ public class PathControlVisual extends Visual implements PathControlPoint
 	private DrawPrimitive _primitive;
 	private float _radius = 3;
 
+	private EdgeVisual _edgeVisual;
+
+	/**
+	 * Sets the edge.
+	 *
+	 * @param edgeVisual The connected edge.
+	 */
+	public void setEdgeVisual(EdgeVisual edgeVisual)
+	{
+		this._edgeVisual = edgeVisual;
+	}
+
+	/**
+	 * Gets the edge.
+	 *
+	 * @return The connected edge or null.
+	 */
+	public EdgeVisual getEdgeVisual()
+	{
+		return _edgeVisual;
+	}
+
+
 	/**
 	 * Creates a new Primitive.
 	 *
@@ -84,3 +107,4 @@ public class PathControlVisual extends Visual implements PathControlPoint
 		return Collections.singletonList(_primitive);
 	}
 }
+

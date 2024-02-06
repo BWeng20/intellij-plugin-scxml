@@ -159,7 +159,7 @@ public class StateVisual extends GenericPrimitiveVisual
 	public String toString()
 	{
 		return _state._name == null ? "Id:" + _state._docId
-				: _state._name;
+									: _state._name;
 	}
 
 	/**
@@ -262,9 +262,9 @@ public class StateVisual extends GenericPrimitiveVisual
 		edgeVisuals.sort((e1, e2) ->
 		{
 			float y1 = (e1.getSourceVisual() == StateVisual.this ?
-					e1.getTargetVisual() : e1.getSourceVisual()).getAbsolutePosition().y;
+						e1.getTargetVisual() : e1.getSourceVisual()).getAbsolutePosition().y;
 			float y2 = (e2.getSourceVisual() == StateVisual.this ?
-					e2.getTargetVisual() : e2.getSourceVisual()).getAbsolutePosition().y;
+						e2.getTargetVisual() : e2.getSourceVisual()).getAbsolutePosition().y;
 			return ((y1 - y2) < 0 ? -1 : 0);
 		});
 

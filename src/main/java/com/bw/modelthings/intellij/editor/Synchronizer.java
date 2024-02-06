@@ -12,6 +12,8 @@ import com.bw.modelthings.fsm.parser.XmlParser;
 import com.bw.modelthings.fsm.ui.EditorChanges;
 import com.bw.modelthings.fsm.ui.PosAndBounds;
 import com.bw.modelthings.fsm.ui.ScxmlGraphExtension;
+import com.bw.modelthings.fsm.ui.TransitionDescription;
+import com.bw.svg.SVGWriter;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
@@ -257,6 +259,7 @@ public class Synchronizer implements Disposable
 		}
 	}
 
+	static int _transitionCounter = 0;
 
 	/**
 	 * This method is synchronized because it is possible that this method is called from different worker threads in parallel.
@@ -310,6 +313,39 @@ public class Synchronizer implements Disposable
 									}
 
 									String id = s.getAttributeValue(ScxmlTags.ATTR_ID);
+
+									List<XmlTag> transitions = Arrays.asList(s.findSubTags(ScxmlTags.TAG_TRANSITION, ScxmlTags.NS_SCXML));
+									for (XmlTag transition : transitions)
+									{
+										XmlAttribute xmlId = transition.getAttribute(ScxmlTags.ATTR_ID, ScxmlTags.NS_XML);
+										if (xmlId == null)
+										{
+											transition.setAttribute(ScxmlTags.ATTR_ID, ScxmlTags.NS_XML, "tr" + (++_transitionCounter));
+										}
+										else
+										{
+											String targets = transition.getAttributeValue(ScxmlTags.ATTR_TARGET);
+											if (targets != null)
+											{
+												String xmlIdS = xmlId.getValue();
+												TransitionDescription td = update.getTransitionDescriptor(xmlIdS);
+
+												if (td != null)
+												{
+													if (td._relativeSourceConnector != null)
+														transition.setAttribute(ScxmlGraphExtension.ATTR_SOURCE_POS,
+																SVGWriter.toPoint(td._relativeSourceConnector, precisionFactor));
+													if (td._relativeTargetConnector != null)
+														transition.setAttribute(ScxmlGraphExtension.ATTR_TARGET_POS,
+																SVGWriter.toPoint(td._relativeTargetConnector, precisionFactor));
+													if (td._pathControlPoints != null && !td._pathControlPoints.isEmpty())
+														transition.setAttribute(ScxmlGraphExtension.ATTR_PC_POS,
+																SVGWriter.toPointList(td._pathControlPoints, precisionFactor));
+												}
+											}
+										}
+									}
+
 
 									List<XmlTag> states = Arrays.asList(s.findSubTags(ScxmlTags.TAG_STATE, ScxmlTags.NS_SCXML));
 									List<XmlTag> parallels = Arrays.asList(s.findSubTags(ScxmlTags.TAG_PARALLEL, ScxmlTags.NS_SCXML));

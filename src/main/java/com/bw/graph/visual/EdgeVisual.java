@@ -236,6 +236,11 @@ public class EdgeVisual extends Visual implements VisualContainer
 		return null;
 	}
 
+	public List<PathControlVisual> getControlPoints()
+	{
+		return _controlVisual;
+	}
+
 	/**
 	 * Gets the connector and path-control visuals.
 	 *

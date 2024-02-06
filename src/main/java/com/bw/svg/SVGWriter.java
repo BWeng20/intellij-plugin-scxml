@@ -10,6 +10,7 @@ import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.Writer;
+import java.util.Collection;
 
 /**
  * Printer to build SVG.
@@ -333,5 +334,25 @@ public class SVGWriter extends XmlWriter
 	{
 		return floatToString(pt.x, precisionFactor) + " " +
 				floatToString(pt.y, precisionFactor);
+	}
+
+	/**
+	 * Create a point list string from the points.
+	 *
+	 * @param pts             The points.
+	 * @param precisionFactor The precision factor.
+	 * @return The point string
+	 * @see #floatToString(float, float)
+	 */
+	public static String toPointList(Collection<Point2D.Float> pts, float precisionFactor)
+	{
+		StringBuilder sb = new StringBuilder(pts.size() * 8);
+		for (Point2D.Float pt : pts)
+		{
+			if (!sb.isEmpty())
+				sb.append(' ');
+			sb.append(floatToString(pt.x, precisionFactor)).append(' ').append(floatToString(pt.y, precisionFactor));
+		}
+		return sb.toString();
 	}
 }

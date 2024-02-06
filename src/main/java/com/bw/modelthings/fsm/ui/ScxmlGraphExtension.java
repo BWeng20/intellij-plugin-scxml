@@ -9,6 +9,7 @@ import org.w3c.dom.Node;
 
 import java.awt.geom.Point2D;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -56,15 +57,32 @@ public class ScxmlGraphExtension implements ExtensionParser
 	 */
 	public static final String ATTR_TARGET_POS = "target-pos";
 
+	public static final String ATTR_PC_POS = "path-control-pos";
+
 	/**
 	 * Collected bounds. Key = docId, Value = the bounds.
 	 */
 	protected Map<Integer, PosAndBounds> _bounds = new HashMap<>();
 
 
-	protected Map<Integer, Point2D.Float> _transitionSourcePositions = new HashMap<>();
-	protected Map<Integer, Point2D.Float> _transitionTargetPositions = new HashMap<>();
+	private Map<Integer, TransitionDescription> transitionDescriptionMap = new HashMap<>();
 
+	/**
+	 * Get the descriptor for a transition by the edge-visual.
+	 *
+	 * @param transitionDocId The transition doc-id.
+	 * @return The descriptor, never null.
+	 */
+	public TransitionDescription getTransitionDescriptor(Integer transitionDocId)
+	{
+		TransitionDescription transitionDescription = transitionDescriptionMap.get(transitionDocId);
+		if (transitionDescription == null)
+		{
+			transitionDescription = new TransitionDescription();
+			transitionDescriptionMap.put(transitionDocId, transitionDescription);
+		}
+		return transitionDescription;
+	}
 
 	/**
 	 * Collected start-node bounds. Key = docId (of parent state/scxml element), Value = the bounds.
@@ -101,6 +119,17 @@ public class ScxmlGraphExtension implements ExtensionParser
 		return PosAndBounds.parsePosition(pos);
 	}
 
+	/**
+	 * Parse a list of position values.
+	 *
+	 * @param posList The value.
+	 * @return The parsed position list.
+	 */
+	protected List<Point2D.Float> parsePositionList(String posList)
+	{
+		return PosAndBounds.parsePositionList(posList);
+	}
+
 	@Override
 	public void processAttribute(FsmElement item, Node attributeNode)
 	{
@@ -124,13 +153,19 @@ public class ScxmlGraphExtension implements ExtensionParser
 				{
 					Point2D.Float position = parsePosition(attributeNode.getNodeValue());
 					if (position != null)
-						_transitionSourcePositions.put(((Transition) item)._docId, position);
+						getTransitionDescriptor(((Transition) item)._docId)._relativeSourceConnector = position;
 				}
 				case ATTR_TARGET_POS ->
 				{
 					Point2D.Float position = parsePosition(attributeNode.getNodeValue());
 					if (position != null)
-						_transitionTargetPositions.put(((Transition) item)._docId, position);
+						getTransitionDescriptor(((Transition) item)._docId)._relativeTargetConnector = position;
+				}
+				case ATTR_PC_POS ->
+				{
+					List<Point2D.Float> positions = parsePositionList(attributeNode.getNodeValue());
+					if (positions != null)
+						getTransitionDescriptor(((Transition) item)._docId)._pathControlPoints.addAll(positions);
 				}
 			}
 		}

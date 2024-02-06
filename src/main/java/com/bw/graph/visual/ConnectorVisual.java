@@ -1,6 +1,8 @@
 package com.bw.graph.visual;
 
 import com.bw.graph.DrawContext;
+import com.bw.graph.editor.action.EditAction;
+import com.bw.graph.editor.action.MoveAction;
 import com.bw.graph.primitive.Circle;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.primitive.PathControlPoint;
@@ -30,6 +32,8 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 
 	private Point2D.Float _dragPosition = new Point2D.Float(0, 0);
 
+	private Point2D.Float _startDragRelativePosition = new Point2D.Float(0, 0);
+
 	private Visual _parent;
 
 	private Visual _targetedParentChild;
@@ -58,6 +62,17 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	{
 		this._edgeVisual = edgeVisual;
 	}
+
+	/**
+	 * Gets the edge.
+	 *
+	 * @return The connected edge or null.
+	 */
+	public EdgeVisual getEdgeVisual()
+	{
+		return _edgeVisual;
+	}
+
 
 	/**
 	 * Sets the inner child of the target visual that is the real target.
@@ -158,7 +173,21 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 		super.startDrag(x, y);
 		_dragPosition.x = x;
 		_dragPosition.y = y;
-		System.err.println(this + ": Start Drag at " + _dragPosition.x + "," + _dragPosition.y);
+		_startDragRelativePosition.x = _relativePosition.x;
+		_startDragRelativePosition.y = _relativePosition.y;
+	}
+
+	@Override
+	public EditAction endDrag()
+	{
+		if (_startDragRelativePosition.x != _relativePosition.x ||
+				_startDragRelativePosition.y != _relativePosition.y)
+		{
+
+			return new MoveAction(this, _startDragRelativePosition, _relativePosition, true);
+		}
+
+		return null;
 	}
 
 	/**
@@ -177,20 +206,16 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 			Shape connectorShape = _parent.getConnectorShape();
 			if (connectorShape != null)
 			{
-				System.err.println(this + ": DragBy " + x + "," + y);
-
 				_dragPosition.x += x;
 				_dragPosition.y += y;
 
 				Point2D.Float absParent = _parent.getAbsolutePosition();
 
 				Point2D.Float pt = new Point2D.Float(_dragPosition.x - absParent.x, _dragPosition.y - absParent.y);
-				System.err.println("Get closest to " + pt);
 				float distance = Geometry.getClosestPointOnShape(pt, connectorShape, 1);
 				if (getConfiguration()._snapMaxSquaredDistance > distance)
 				{
 					// pt is the calculated closed point on the shape in local parent coordinates
-					System.err.println("Closest " + pt);
 					_absolutePosition.x += pt.x - _relativePosition.x;
 					_absolutePosition.y += pt.y - _relativePosition.y;
 					_relativePosition.x = pt.x;

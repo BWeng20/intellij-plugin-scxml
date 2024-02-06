@@ -100,7 +100,7 @@ public class FsmGraphFactory
 	 * @param style  The style to use.
 	 * @return The edge visual created.
 	 */
-	public EdgeVisual createEdge(Integer id, State source, State target, Graphics2D g2, DrawContext style)
+	public EdgeVisual createEdge(String id, State source, State target, Graphics2D g2, DrawContext style)
 	{
 		if (source != null && target != null)
 		{
@@ -133,7 +133,7 @@ public class FsmGraphFactory
 	 * @param targetedChild If not null the inner child of the target visual that is the real target.
 	 * @return The edge visual created.
 	 */
-	public EdgeVisual createEdge(Integer id, Visual source, StateVisual target, Graphics2D g2, DrawContext style, Visual targetedChild)
+	public EdgeVisual createEdge(String id, Visual source, StateVisual target, Graphics2D g2, DrawContext style, Visual targetedChild)
 	{
 		EdgeVisual edgeVisual;
 		if (source != null && target != null)
@@ -273,7 +273,7 @@ public class FsmGraphFactory
 			{
 				for (State target : t._target)
 				{
-					EdgeVisual edgeVisual = createEdge(t._docId, t._source, target, g2, edgeStyles);
+					EdgeVisual edgeVisual = createEdge(t._xmlId, t._source, target, g2, edgeStyles);
 					getModelForState(t._source).addVisual(edgeVisual);
 
 					ConnectorVisual sourceConnector = edgeVisual.getSourceConnector();
@@ -298,12 +298,12 @@ public class FsmGraphFactory
 
 					List<State> initialStates = new ArrayList<>();
 
-					Integer id;
+					String id;
 					// Add initial transitions.
 					if (state._initial != null)
 					{
 						initialStates.addAll(state._initial._target);
-						id = state._initial._docId;
+						id = state._initial._xmlId;
 					}
 					else
 					{

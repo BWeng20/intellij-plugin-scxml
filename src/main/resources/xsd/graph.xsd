@@ -42,6 +42,15 @@
 		</xsd:annotation>
 	</xsd:attribute>
 
+	<xsd:attribute name="path-control-pos" type="PosListType">
+		<xsd:annotation>
+			<xsd:documentation>
+				Allows to define the positions of path control points.
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:attribute>
+
+
 	<xsd:simpleType name="PosAndBoundsType">
 		<xsd:annotation>
 			<xsd:documentation>
@@ -67,6 +76,17 @@
 		</xsd:restriction>
 	</xsd:simpleType>
 
+	<xsd:simpleType name="PosListType">
+		<xsd:annotation>
+			<xsd:documentation>
+				Allows to define a position.
+				The value must consist of two floating point values, separated by spaces.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="((\s*[+-]?(([0-9]+[.]?[0-9]*)|([0-9]*[.]?[0-9]+)))*)\s*"/>
+		</xsd:restriction>
+	</xsd:simpleType>
 
 
 </xsd:schema>

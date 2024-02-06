@@ -26,6 +26,11 @@ public class Transition implements FsmElement
 	public int _docId;
 
 	/**
+	 * Valu eof attribute "xml:id"
+	 */
+	public String _xmlId;
+
+	/**
 	 * <strong>W3C says:</strong><br>
 	 * A list of designators of events that trigger this transition. See 3.13 Selecting and Executing Transitions for details on how transitions are selected and executed.
 	 * See E Schema for the definition of the datatype.
