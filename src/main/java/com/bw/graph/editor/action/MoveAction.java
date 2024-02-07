@@ -24,6 +24,9 @@ public class MoveAction implements EditAction
 	 */
 	public Visual _what;
 
+	/**
+	 * If true both positions are relative, not absolute.
+	 */
 	public boolean _relative;
 
 	/**
@@ -51,6 +54,6 @@ public class MoveAction implements EditAction
 		_from = new Point2D.Float(from.x, from.y);
 		_to = new Point2D.Float(to.x, to.y);
 		_what = visual;
-		relative = _relative;
+		_relative = relative;
 	}
 }

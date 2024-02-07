@@ -9,8 +9,6 @@ import java.util.List;
  */
 public class TransitionDescription
 {
-	public String _nameList;
-
 	/**
 	 * Relative location of target connector.
 	 */

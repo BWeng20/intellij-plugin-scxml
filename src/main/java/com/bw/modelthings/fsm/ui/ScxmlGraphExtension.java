@@ -57,15 +57,18 @@ public class ScxmlGraphExtension implements ExtensionParser
 	 */
 	public static final String ATTR_TARGET_POS = "target-pos";
 
+	/**
+	 * Attribute for edge-control-points.
+	 */
 	public static final String ATTR_PC_POS = "path-control-pos";
 
 	/**
 	 * Collected bounds. Key = docId, Value = the bounds.
 	 */
-	protected Map<Integer, PosAndBounds> _bounds = new HashMap<>();
+	protected final Map<Integer, PosAndBounds> _bounds = new HashMap<>();
 
 
-	private Map<Integer, TransitionDescription> transitionDescriptionMap = new HashMap<>();
+	private final Map<Integer, TransitionDescription> transitionDescriptionMap = new HashMap<>();
 
 	/**
 	 * Get the descriptor for a transition by the edge-visual.

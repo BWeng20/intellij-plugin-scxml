@@ -37,8 +37,10 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.Timer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Synchronize the two sub-editors.
@@ -132,13 +134,11 @@ public class Synchronizer implements Disposable
 						{
 							ApplicationManager.getApplication()
 											  .invokeLater(() ->
-											  {
 												  WriteCommandAction.writeCommandAction(_theProject, PsiManager.getInstance(_theProject)
 																											   .findFile(_file))
 																	.withName(c._commandName)
 																	.withGlobalUndo()
-																	.run(() -> runXmlUpdate(c));
-											  });
+																	.run(() -> runXmlUpdate(c)));
 						}
 					}
 					else
@@ -169,8 +169,7 @@ public class Synchronizer implements Disposable
 
 		Document doc = _xmlTextEditor.getEditor()
 									 .getDocument();
-		if (doc != null)
-			doc.addDocumentListener(_documentListener);
+		doc.addDocumentListener(_documentListener);
 		triggerGraphUpdate();
 	}
 
@@ -259,8 +258,6 @@ public class Synchronizer implements Disposable
 		}
 	}
 
-	static int _transitionCounter = 0;
-
 	/**
 	 * This method is synchronized because it is possible that this method is called from different worker threads in parallel.
 	 */
@@ -293,6 +290,7 @@ public class Synchronizer implements Disposable
 							XmlTag root = doc.getRootTag();
 							if (root != null)
 							{
+								List<XmlTag> allTransitions = new ArrayList<>(100);
 								List<XmlTag> allStates = new ArrayList<>(100);
 								allStates.add(root);
 
@@ -314,39 +312,7 @@ public class Synchronizer implements Disposable
 
 									String id = s.getAttributeValue(ScxmlTags.ATTR_ID);
 
-									List<XmlTag> transitions = Arrays.asList(s.findSubTags(ScxmlTags.TAG_TRANSITION, ScxmlTags.NS_SCXML));
-									for (XmlTag transition : transitions)
-									{
-										XmlAttribute xmlId = transition.getAttribute(ScxmlTags.ATTR_ID, ScxmlTags.NS_XML);
-										if (xmlId == null)
-										{
-											transition.setAttribute(ScxmlTags.ATTR_ID, ScxmlTags.NS_XML, "tr" + (++_transitionCounter));
-										}
-										else
-										{
-											String targets = transition.getAttributeValue(ScxmlTags.ATTR_TARGET);
-											if (targets != null)
-											{
-												String xmlIdS = xmlId.getValue();
-												TransitionDescription td = update.getTransitionDescriptor(xmlIdS);
-
-												if (td != null)
-												{
-													if (td._relativeSourceConnector != null)
-														transition.setAttribute(ScxmlGraphExtension.ATTR_SOURCE_POS,
-																SVGWriter.toPoint(td._relativeSourceConnector, precisionFactor));
-													if (td._relativeTargetConnector != null)
-														transition.setAttribute(ScxmlGraphExtension.ATTR_TARGET_POS,
-																SVGWriter.toPoint(td._relativeTargetConnector, precisionFactor));
-													if (td._pathControlPoints != null && !td._pathControlPoints.isEmpty())
-														transition.setAttribute(ScxmlGraphExtension.ATTR_PC_POS,
-																SVGWriter.toPointList(td._pathControlPoints, precisionFactor));
-												}
-											}
-										}
-									}
-
-
+									allTransitions.addAll( Arrays.asList(s.findSubTags(ScxmlTags.TAG_TRANSITION, ScxmlTags.NS_SCXML)) );
 									List<XmlTag> states = Arrays.asList(s.findSubTags(ScxmlTags.TAG_STATE, ScxmlTags.NS_SCXML));
 									List<XmlTag> parallels = Arrays.asList(s.findSubTags(ScxmlTags.TAG_PARALLEL, ScxmlTags.NS_SCXML));
 
@@ -398,6 +364,48 @@ public class Synchronizer implements Disposable
 												{
 													attrStart.setValue(bs);
 												}
+											}
+										}
+									}
+								}
+
+								// Collect all ids to be sure not to create duplicates.
+								for (XmlTag transition : allTransitions)
+								{
+									XmlAttribute xmlId = transition.getAttribute(ScxmlTags.ATTR_ID, ScxmlTags.NS_XML);
+									if (xmlId != null)
+									{
+										_transitionIds.add(xmlId.getValue());
+									}
+								}
+
+								// Update Transitions.
+								for (XmlTag transition : allTransitions)
+								{
+									XmlAttribute xmlId = transition.getAttribute(ScxmlTags.ATTR_ID, ScxmlTags.NS_XML);
+									if (xmlId == null)
+									{
+										transition.setAttribute(ScxmlTags.ATTR_ID, ScxmlTags.NS_XML, getNextTransitionId());
+									}
+									else
+									{
+										final String xmlIdS = xmlId.getValue();
+										String targets = transition.getAttributeValue(ScxmlTags.ATTR_TARGET);
+										if (targets != null)
+										{
+											TransitionDescription td = update.getTransitionDescriptor(xmlIdS);
+
+											if (td != null)
+											{
+												if (td._relativeSourceConnector != null)
+													transition.setAttribute(ScxmlGraphExtension.ATTR_SOURCE_POS,
+															SVGWriter.toPoint(td._relativeSourceConnector, precisionFactor));
+												if (td._relativeTargetConnector != null)
+													transition.setAttribute(ScxmlGraphExtension.ATTR_TARGET_POS,
+															SVGWriter.toPoint(td._relativeTargetConnector, precisionFactor));
+												if (td._pathControlPoints != null && !td._pathControlPoints.isEmpty())
+													transition.setAttribute(ScxmlGraphExtension.ATTR_PC_POS,
+															SVGWriter.toPointList(td._pathControlPoints, precisionFactor));
 											}
 										}
 									}
@@ -471,5 +479,22 @@ public class Synchronizer implements Disposable
 			if (changed)
 				attr.setValue(_tempName.toString());
 		}
+	}
+
+	private final Set<String> _transitionIds = new HashSet<>();
+	private int _transitionCounter = 0;
+
+	/**
+	 * Gets the next free id for a transition.
+	 * @return The next id.
+	 */
+	private String getNextTransitionId() {
+		String id;
+		do
+		{
+			id = "t" + (++_transitionCounter);
+		} while ( _transitionIds.contains(id));
+		_transitionIds.add(id);
+		return id;
 	}
 }

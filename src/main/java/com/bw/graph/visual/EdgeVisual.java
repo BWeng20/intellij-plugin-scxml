@@ -185,7 +185,7 @@ public class EdgeVisual extends Visual implements VisualContainer
 
 
 	/**
-	 * Gets the source visual. Same as {@link #getSourceVisual()} ()} and {@link ConnectorVisual#getParent()}
+	 * Gets the source visual.
 	 *
 	 * @return The source visual or null.
 	 */
@@ -236,6 +236,10 @@ public class EdgeVisual extends Visual implements VisualContainer
 		return null;
 	}
 
+	/**
+	 * Gets the control points of the edge.
+	 * @return The list of control points, possibly empty, but never null.
+	 */
 	public List<PathControlVisual> getControlPoints()
 	{
 		return _controlVisual;

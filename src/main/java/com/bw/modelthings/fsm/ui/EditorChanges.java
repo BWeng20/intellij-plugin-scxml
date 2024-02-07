@@ -15,11 +15,11 @@ import java.util.Map;
  */
 public class EditorChanges
 {
-
-	private Map<String, TransitionDescription> _transitionDescriptionMap = new HashMap<>();
+	private final Map<String, TransitionDescription> _transitionDescriptionMap = new HashMap<>();
 
 	/**
 	 * Get the descriptor for a transition by the edge-visual.
+	 * The EdgeVisual should have a String-Id (docId or xml:id).
 	 *
 	 * @param edgeVisual The edge visual.
 	 * @return The descriptor, never null.
@@ -34,13 +34,13 @@ public class EditorChanges
 			_transitionDescriptionMap.put(id, transitionDescription);
 			transitionDescription = new TransitionDescription();
 
-			_transitionDescriptionMap.put((String) edgeVisual.getId(), transitionDescription);
+			_transitionDescriptionMap.put(id, transitionDescription);
 		}
 		return transitionDescription;
 	}
 
 	/**
-	 * Get the descriptor for a transition by the id.
+	 * Get the descriptor for a transition by the Edge id.
 	 *
 	 * @param id The id.
 	 * @return The descriptor or null.
@@ -79,7 +79,7 @@ public class EditorChanges
 			}
 			else if (moveAction._what instanceof ConnectorVisual connectorVisual)
 			{
-				if (connectorVisual.getParent() instanceof StateVisual stateVisual)
+				if (connectorVisual.getParent() instanceof StateVisual)
 				{
 					_commandName = "Move";
 					EdgeVisual edgeVisual = connectorVisual.getEdgeVisual();
