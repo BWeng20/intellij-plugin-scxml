@@ -19,14 +19,14 @@ public class PathControlVisual extends Visual implements PathControlPoint
 	private DrawPrimitive _primitive;
 	private float _radius = 3;
 
-	private EdgeVisual _edgeVisual;
+	private SingleTargetEdgeVisual _edgeVisual;
 
 	/**
 	 * Sets the edge.
 	 *
 	 * @param edgeVisual The connected edge.
 	 */
-	public void setEdgeVisual(EdgeVisual edgeVisual)
+	public void setEdgeVisual(SingleTargetEdgeVisual edgeVisual)
 	{
 		this._edgeVisual = edgeVisual;
 	}
@@ -36,7 +36,7 @@ public class PathControlVisual extends Visual implements PathControlPoint
 	 *
 	 * @return The connected edge or null.
 	 */
-	public EdgeVisual getEdgeVisual()
+	public SingleTargetEdgeVisual getEdgeVisual()
 	{
 		return _edgeVisual;
 	}

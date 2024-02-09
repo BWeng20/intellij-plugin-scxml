@@ -26,7 +26,7 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 
 	private DrawPrimitive _primitive;
 	private float _radius;
-	private EdgeVisual _edgeVisual;
+	private SingleTargetEdgeVisual _edgeVisual;
 
 	private Point2D.Float _relativePosition = new Point2D.Float(0, 0);
 
@@ -58,7 +58,7 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	 *
 	 * @param edgeVisual The connected edge.
 	 */
-	public void setEdgeVisual(EdgeVisual edgeVisual)
+	public void setEdgeVisual(SingleTargetEdgeVisual edgeVisual)
 	{
 		this._edgeVisual = edgeVisual;
 	}
@@ -68,7 +68,7 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	 *
 	 * @return The connected edge or null.
 	 */
-	public EdgeVisual getEdgeVisual()
+	public SingleTargetEdgeVisual getEdgeVisual()
 	{
 		return _edgeVisual;
 	}

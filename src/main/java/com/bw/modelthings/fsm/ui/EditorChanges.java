@@ -3,7 +3,7 @@ package com.bw.modelthings.fsm.ui;
 import com.bw.graph.editor.action.EditAction;
 import com.bw.graph.editor.action.MoveAction;
 import com.bw.graph.visual.ConnectorVisual;
-import com.bw.graph.visual.EdgeVisual;
+import com.bw.graph.visual.SingleTargetEdgeVisual;
 import com.bw.graph.visual.PathControlVisual;
 import com.bw.modelthings.fsm.ui.actions.RenameStateAction;
 
@@ -24,7 +24,7 @@ public class EditorChanges
 	 * @param edgeVisual The edge visual.
 	 * @return The descriptor, never null.
 	 */
-	public TransitionDescription getTransitionDescriptor(EdgeVisual edgeVisual)
+	public TransitionDescription getTransitionDescriptor(SingleTargetEdgeVisual edgeVisual)
 	{
 
 		String id = (String) edgeVisual.getId();
@@ -82,9 +82,9 @@ public class EditorChanges
 				if (connectorVisual.getParent() instanceof StateVisual)
 				{
 					_commandName = "Move";
-					EdgeVisual edgeVisual = connectorVisual.getEdgeVisual();
+					SingleTargetEdgeVisual edgeVisual = connectorVisual.getEdgeVisual();
 					TransitionDescription td = getTransitionDescriptor(edgeVisual);
-					if (edgeVisual.getTargetConnector() == connectorVisual)
+					if (edgeVisual.getTargetConnectors().contains(connectorVisual))
 					{
 						td._relativeTargetConnector = moveAction._to;
 					}
@@ -96,7 +96,7 @@ public class EditorChanges
 			}
 			else if (moveAction._what instanceof PathControlVisual pathControlVisual)
 			{
-				EdgeVisual edgeVisual = pathControlVisual.getEdgeVisual();
+				SingleTargetEdgeVisual edgeVisual = pathControlVisual.getEdgeVisual();
 				TransitionDescription td = getTransitionDescriptor(edgeVisual);
 				_commandName = "Move";
 				td._pathControlPoints.clear();

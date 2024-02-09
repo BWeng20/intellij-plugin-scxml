@@ -15,6 +15,7 @@ import com.bw.graph.util.InsetsFloat;
 import com.bw.graph.visual.ConnectorVisual;
 import com.bw.graph.visual.EdgeVisual;
 import com.bw.graph.visual.GenericPrimitiveVisual;
+import com.bw.graph.visual.MultiTargetEdgeVisual;
 import com.bw.graph.visual.VisualFlags;
 import com.bw.modelthings.fsm.model.State;
 import com.bw.modelthings.fsm.ui.actions.RenameStateAction;
@@ -28,6 +29,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Visual to represent a FSM State.
@@ -251,6 +253,14 @@ public class StateVisual extends GenericPrimitiveVisual
 		}
 	}
 
+	private float getOtherVisualAbsoluteY(EdgeVisual ev) {
+		if ( ev.getSourceVisual() == StateVisual.this ) {
+			return (float)ev.getTargetVisuals().stream().collect(Collectors.summarizingDouble(cv -> cv.getAbsolutePosition().y)).getAverage();
+		} else {
+			return ev.getSourceVisual().getAbsolutePosition().y;
+		}
+	}
+
 	/**
 	 * Places the connectors that are attached to this state visual.
 	 *
@@ -261,10 +271,8 @@ public class StateVisual extends GenericPrimitiveVisual
 	{
 		edgeVisuals.sort((e1, e2) ->
 		{
-			float y1 = (e1.getSourceVisual() == StateVisual.this ?
-						e1.getTargetVisual() : e1.getSourceVisual()).getAbsolutePosition().y;
-			float y2 = (e2.getSourceVisual() == StateVisual.this ?
-						e2.getTargetVisual() : e2.getSourceVisual()).getAbsolutePosition().y;
+			float y1 = getOtherVisualAbsoluteY(e1);
+			float y2 = getOtherVisualAbsoluteY(e2);
 			return ((y1 - y2) < 0 ? -1 : 0);
 		});
 
@@ -279,10 +287,12 @@ public class StateVisual extends GenericPrimitiveVisual
 			}
 			else
 			{
-				ConnectorVisual targetConnector = edgeVisual.getTargetConnector();
-				if (targetConnector != null && targetConnector.getParent() == this)
+				for ( ConnectorVisual targetConnector : edgeVisual.getTargetConnectors())
 				{
-					asTarget.add(targetConnector);
+					if (targetConnector.getParent() == this)
+					{
+						asTarget.add(targetConnector);
+					}
 				}
 			}
 		}

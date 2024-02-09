@@ -6,7 +6,7 @@ import com.bw.graph.VisualModel;
 import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.util.InsetsFloat;
 import com.bw.graph.visual.ConnectorVisual;
-import com.bw.graph.visual.EdgeVisual;
+import com.bw.graph.visual.MultiTargetEdgeVisual;
 import com.bw.graph.visual.Visual;
 import com.bw.graph.visual.VisualFlags;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
@@ -18,6 +18,7 @@ import javax.swing.text.JTextComponent;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -100,7 +101,7 @@ public class FsmGraphFactory
 	 * @param style  The style to use.
 	 * @return The edge visual created.
 	 */
-	public EdgeVisual createEdge(String id, State source, State target, Graphics2D g2, DrawContext style)
+	public MultiTargetEdgeVisual createEdge(String id, State source, State target, Graphics2D g2, DrawContext style)
 	{
 		if (source != null && target != null)
 		{
@@ -133,16 +134,16 @@ public class FsmGraphFactory
 	 * @param targetedChild If not null the inner child of the target visual that is the real target.
 	 * @return The edge visual created.
 	 */
-	public EdgeVisual createEdge(String id, Visual source, StateVisual target, Graphics2D g2, DrawContext style, Visual targetedChild)
+	public MultiTargetEdgeVisual createEdge(String id, Visual source, StateVisual target, Graphics2D g2, DrawContext style, Visual targetedChild)
 	{
-		EdgeVisual edgeVisual;
+		MultiTargetEdgeVisual edgeVisual;
 		if (source != null && target != null)
 		{
 			ConnectorVisual sourceConnector = new ConnectorVisual(source, style, VisualFlags.ALWAYS);
 			ConnectorVisual targetConnector = new ConnectorVisual(target, style, VisualFlags.ALWAYS);
 			targetConnector.setTargetedParentChild(targetedChild);
 
-			edgeVisual = new EdgeVisual(id, sourceConnector, targetConnector, style);
+			edgeVisual = new MultiTargetEdgeVisual(id, sourceConnector, Collections.singleton(targetConnector), style);
 		}
 		else
 			edgeVisual = null;
@@ -273,15 +274,16 @@ public class FsmGraphFactory
 			{
 				for (State target : t._target)
 				{
-					EdgeVisual edgeVisual = createEdge(t._xmlId, t._source, target, g2, edgeStyles);
+					MultiTargetEdgeVisual edgeVisual = createEdge(t._xmlId, t._source, target, g2, edgeStyles);
 					getModelForState(t._source).addVisual(edgeVisual);
 
 					ConnectorVisual sourceConnector = edgeVisual.getSourceConnector();
 					getModelForVisual((StateVisual) sourceConnector.getParent()).getVisuals()
 																				.add(sourceConnector);
-					ConnectorVisual targetConnector = edgeVisual.getTargetConnector();
-					getModelForVisual((StateVisual) targetConnector.getParent()).getVisuals()
-																				.add(targetConnector);
+					List<ConnectorVisual> targetConnectors = edgeVisual.getTargetConnectors();
+					targetConnectors.forEach( targetConnector ->
+						getModelForVisual((StateVisual) targetConnector.getParent()).getVisuals()
+																				.add(targetConnector));
 				}
 			}
 

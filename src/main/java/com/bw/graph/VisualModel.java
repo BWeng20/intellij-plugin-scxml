@@ -2,6 +2,8 @@ package com.bw.graph;
 
 import com.bw.graph.visual.ConnectorVisual;
 import com.bw.graph.visual.EdgeVisual;
+import com.bw.graph.visual.SingleTargetEdgeVisual;
+import com.bw.graph.visual.MultiTargetEdgeVisual;
 import com.bw.graph.visual.Visual;
 import com.bw.graph.visual.VisualContainer;
 import com.bw.graph.visual.VisualFlags;
@@ -316,7 +318,7 @@ public class VisualModel
 	{
 		return _visuals.stream()
 					   .filter(v -> v instanceof EdgeVisual edgeVisual && edgeVisual.isConnectedTo(visual))
-					   .map(v -> (EdgeVisual) v)
+					   .map(v -> (MultiTargetEdgeVisual) v)
 					   .collect(Collectors.toList());
 	}
 }
