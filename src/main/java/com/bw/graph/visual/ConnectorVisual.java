@@ -6,7 +6,6 @@ import com.bw.graph.editor.action.MoveAction;
 import com.bw.graph.primitive.Circle;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.primitive.PathControlPoint;
-import com.bw.graph.util.Dimension2DFloat;
 import com.bw.graph.util.Geometry;
 import com.bw.svg.SVGWriter;
 
@@ -14,6 +13,8 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -23,12 +24,23 @@ import java.util.List;
  */
 public class ConnectorVisual extends Visual implements PathControlPoint
 {
+	/**
+	 * All primitives of this connector.<br>
+	 * Additional primitives may be added by inheritances.
+	 */
+	protected List<DrawPrimitive> _primitives = new ArrayList<>();
 
-	private DrawPrimitive _primitive;
-	private float _radius;
+	/**
+	 * The radius of the connector circle.
+	 */
+	protected float _radius;
+
 	private SingleTargetEdgeVisual _edgeVisual;
 
-	private Point2D.Float _relativePosition = new Point2D.Float(0, 0);
+	/**
+	 * Relative position to parent visual.
+	 */
+	protected Point2D.Float _relativePosition = new Point2D.Float(0, 0);
 
 	private Point2D.Float _dragPosition = new Point2D.Float(0, 0);
 
@@ -50,7 +62,7 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 		super(null, context);
 		this._parent = parent;
 		this._radius = context._configuration._connectorSize;
-		this._primitive = new Circle(0, 0, _radius, context._configuration, context._style, flags);
+		this._primitives.add(new Circle(0, 0, _radius, context._configuration, context._style, flags));
 	}
 
 	/**
@@ -133,7 +145,8 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 			g2.translate(pt.x, pt.y);
 			try
 			{
-				_primitive.draw(g2);
+				for (DrawPrimitive primitive : _primitives)
+					primitive.draw(g2);
 			}
 			finally
 			{
@@ -157,14 +170,16 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	{
 		Point2D.Float pt = new Point2D.Float();
 		getAbsolutePosition(pt);
-		if (_primitive.getBounds2D(pt, null)
-					  .contains(x, y))
+		for (DrawPrimitive primitive : _primitives)
 		{
-			_primitive.setVisual(this);
-			return _primitive;
+			if (primitive.getBounds2D(pt, null)
+						 .contains(x, y))
+			{
+				primitive.setVisual(this);
+				return primitive;
+			}
 		}
-		else
-			return null;
+		return null;
 	}
 
 	@Override
@@ -248,11 +263,20 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	@Override
 	protected void updateBounds(Graphics2D graphics)
 	{
-		Dimension2DFloat dim = _primitive.getDimension(graphics);
-		_absoluteBounds.x = _absolutePosition.x - _radius;
-		_absoluteBounds.y = _absolutePosition.y - _radius;
-		_absoluteBounds.width = dim._width;
-		_absoluteBounds.height = dim._height;
+		Rectangle2D.Float localBounds;
+		if (_primitives.isEmpty())
+		{
+			localBounds = new Rectangle2D.Float(0, 0, 0, 0);
+		}
+		else
+		{
+			localBounds = Geometry.getUnion(
+					_primitives.stream().map(primitive -> primitive.getBounds2D(_absolutePosition, graphics)));
+		}
+		_absoluteBounds.x = localBounds.x;
+		_absoluteBounds.y = localBounds.y;
+		_absoluteBounds.width = localBounds.width;
+		_absoluteBounds.height = localBounds.height;
 	}
 
 	@Override
@@ -265,7 +289,8 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	public void dispose()
 	{
 		super.dispose();
-		_primitive = null;
+		_primitives.forEach(DrawPrimitive::dispose);
+		_primitives.clear();
 	}
 
 	@Override
@@ -279,7 +304,7 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	@Override
 	public List<DrawPrimitive> getPrimitives()
 	{
-		return Collections.singletonList(_primitive);
+		return Collections.unmodifiableList(_primitives);
 	}
 
 	/**
