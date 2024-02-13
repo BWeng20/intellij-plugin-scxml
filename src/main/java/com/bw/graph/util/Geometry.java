@@ -5,6 +5,8 @@ import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.util.stream.Stream;
 
 /**
  * Geometry helper.
@@ -156,10 +158,7 @@ public interface Geometry
 	 */
 	static Point2D.Float getClosestPointOnPolygon(Point2D.Float rp, Point2D.Float[] polygon, Point2D.Float result)
 	{
-		float p1x = 0;
-		float p1y = 0;
-		float p2x = 0;
-		float p2y = 0;
+		float p1x, p1y, p2x, p2y;
 		Point2D.Float r = new Point2D.Float();
 
 		if (result == null)
@@ -207,4 +206,42 @@ public interface Geometry
 	{
 		return (float) Math.atan2(y2 - y1, x2 - x1);
 	}
+
+
+	/**
+	 * Gets the union of all rectangles in the stream.
+	 *
+	 * @param bounds The stream of rectangle. May be empty.
+	 * @return The union, (0,0,0,0) if stream was empty.
+	 */
+	static Rectangle2D.Float getUnion(Stream<Rectangle2D.Float> bounds)
+	{
+
+		Rectangle2D.Float union = new Rectangle2D.Float(Float.MAX_VALUE, Float.MAX_VALUE, 0, 0);
+
+		bounds.forEach(r -> {
+			if (r.width > 0 && r.height > 0)
+			{
+				final float x2 = r.x + r.width;
+				final float y2 = r.y + r.height;
+
+				if (union.x > r.x)
+					union.x = r.x;
+				if (union.y > r.y)
+					union.y = r.y;
+
+				if ((union.x + union.width) < x2)
+					union.width = x2 - union.x;
+				if ((union.y + union.height) < y2)
+					union.height = y2 - union.y;
+			}
+		});
+		if (union.width == 0)
+		{
+			union.x = 0;
+			union.y = 0;
+		}
+		return union;
+	}
+
 }
