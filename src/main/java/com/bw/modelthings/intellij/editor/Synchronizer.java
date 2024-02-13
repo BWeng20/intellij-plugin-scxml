@@ -134,11 +134,11 @@ public class Synchronizer implements Disposable
 						{
 							ApplicationManager.getApplication()
 											  .invokeLater(() ->
-												  WriteCommandAction.writeCommandAction(_theProject, PsiManager.getInstance(_theProject)
-																											   .findFile(_file))
-																	.withName(c._commandName)
-																	.withGlobalUndo()
-																	.run(() -> runXmlUpdate(c)));
+													  WriteCommandAction.writeCommandAction(_theProject, PsiManager.getInstance(_theProject)
+																												   .findFile(_file))
+																		.withName(c._commandName)
+																		.withGlobalUndo()
+																		.run(() -> runXmlUpdate(c)));
 						}
 					}
 					else
@@ -312,7 +312,7 @@ public class Synchronizer implements Disposable
 
 									String id = s.getAttributeValue(ScxmlTags.ATTR_ID);
 
-									allTransitions.addAll( Arrays.asList(s.findSubTags(ScxmlTags.TAG_TRANSITION, ScxmlTags.NS_SCXML)) );
+									allTransitions.addAll(Arrays.asList(s.findSubTags(ScxmlTags.TAG_TRANSITION, ScxmlTags.NS_SCXML)));
 									List<XmlTag> states = Arrays.asList(s.findSubTags(ScxmlTags.TAG_STATE, ScxmlTags.NS_SCXML));
 									List<XmlTag> parallels = Arrays.asList(s.findSubTags(ScxmlTags.TAG_PARALLEL, ScxmlTags.NS_SCXML));
 
@@ -486,14 +486,16 @@ public class Synchronizer implements Disposable
 
 	/**
 	 * Gets the next free id for a transition.
+	 *
 	 * @return The next id.
 	 */
-	private String getNextTransitionId() {
+	private String getNextTransitionId()
+	{
 		String id;
 		do
 		{
 			id = "t" + (++_transitionCounter);
-		} while ( _transitionIds.contains(id));
+		} while (_transitionIds.contains(id));
 		_transitionIds.add(id);
 		return id;
 	}

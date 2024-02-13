@@ -15,35 +15,25 @@ import java.util.List;
  */
 public class MultiTargetEdgeVisual extends EdgeVisual
 {
-
-	protected ConnectorVisual _innerConnector;
-
-	/**
-	 * The Source edge
-	 */
-	protected SingleTargetEdgeVisual _sourceEdgeVisual;
-
 	/**
 	 * The target edges
 	 */
-	protected List<SingleTargetEdgeVisual> _targetEdgeVisuals = new ArrayList<>();
+	protected List<SingleTargetEdgeVisual> _edgeVisuals = new ArrayList<>();
 
 	/**
 	 * Creates a new Edge Visual.
 	 *
 	 * @param id      The Identification, can be null.
 	 * @param source  The start connector.
-	 * @param targets  The end connectors.
+	 * @param targets The end connectors.
 	 * @param context The  context. Must not be null.
 	 */
 	public MultiTargetEdgeVisual(Object id, ConnectorVisual source, Collection<ConnectorVisual> targets,
 								 DrawContext context)
 	{
 		super(id, context);
-		_innerConnector = new ConnectorVisual(this, context, VisualFlags.SELECTED);
-		_sourceEdgeVisual = new SingleTargetEdgeVisual(null, source, _innerConnector, context);
-		for ( ConnectorVisual connectorVisual : targets)
-			_targetEdgeVisuals.add( new SingleTargetEdgeVisual(null, _innerConnector, connectorVisual, context) );
+		for (ConnectorVisual connectorVisual : targets)
+			_edgeVisuals.add(new SingleTargetEdgeVisual(null, source, connectorVisual, context));
 	}
 
 	/**
@@ -54,8 +44,7 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	@Override
 	public void draw(Graphics2D g2)
 	{
-		_sourceEdgeVisual.draw(g2);
-		for ( SingleTargetEdgeVisual edgeVisual : _targetEdgeVisuals)
+		for (SingleTargetEdgeVisual edgeVisual : _edgeVisuals)
 			edgeVisual.draw(g2);
 	}
 
@@ -68,24 +57,21 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	@Override
 	protected void updateBounds(Graphics2D graphics)
 	{
-		_sourceEdgeVisual.updateBounds(graphics);
-		_targetEdgeVisuals.forEach(ev -> ev.updateBounds(graphics));
+		_edgeVisuals.forEach(ev -> ev.updateBounds(graphics));
 		super.updateBounds(graphics);
 	}
 
 	@Override
 	public void toSVG(SVGWriter sw, Graphics2D g2)
 	{
-		_sourceEdgeVisual.toSVG(sw, g2);
-		_targetEdgeVisuals.forEach(ev -> ev.toSVG(sw, g2));
+		_edgeVisuals.forEach(ev -> ev.toSVG(sw, g2));
 	}
 
 	@Override
 	public void dispose()
 	{
-		_sourceEdgeVisual.dispose();
-		_targetEdgeVisuals.forEach(ev -> ev.dispose());
-		_targetEdgeVisuals.clear();
+		_edgeVisuals.forEach(ev -> ev.dispose());
+		_edgeVisuals.clear();
 		super.dispose();
 	}
 
@@ -98,7 +84,7 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	 */
 	public boolean containsPoint(float x, float y)
 	{
-		return _sourceEdgeVisual.containsPoint(x,y) || _targetEdgeVisuals.stream().anyMatch(ev -> ev.containsPoint(x,y));
+		return _edgeVisuals.stream().anyMatch(ev -> ev.containsPoint(x, y));
 	}
 
 	@Override
@@ -110,7 +96,7 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	@Override
 	public ConnectorVisual getSourceConnector()
 	{
-		return _sourceEdgeVisual._sourceConnector;
+		return _edgeVisuals.isEmpty() ? null : _edgeVisuals.get(0)._sourceConnector;
 	}
 
 	/**
@@ -120,8 +106,8 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	 */
 	public List<ConnectorVisual> getTargetConnectors()
 	{
-		List<ConnectorVisual> targets =new ArrayList<>(_targetEdgeVisuals.size());
-		for ( SingleTargetEdgeVisual edgeVisual : _targetEdgeVisuals)
+		List<ConnectorVisual> targets = new ArrayList<>(_edgeVisuals.size());
+		for (SingleTargetEdgeVisual edgeVisual : _edgeVisuals)
 			targets.add(edgeVisual._targetConnector);
 		return targets;
 	}
@@ -133,7 +119,7 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	 */
 	public Visual getSourceVisual()
 	{
-		return _sourceEdgeVisual.getSourceVisual();
+		return _edgeVisuals.isEmpty() ? null : _edgeVisuals.get(0).getSourceVisual();
 	}
 
 	/**
@@ -143,11 +129,11 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	 */
 	public List<Visual> getTargetVisuals()
 	{
-		List<Visual> targets =new ArrayList<>(_targetEdgeVisuals.size());
-		for ( SingleTargetEdgeVisual edgeVisual : _targetEdgeVisuals)
+		List<Visual> targets = new ArrayList<>(_edgeVisuals.size());
+		for (SingleTargetEdgeVisual edgeVisual : _edgeVisuals)
 		{
 			Visual v = edgeVisual._targetConnector.getParent();
-			if ( v != null )
+			if (v != null)
 				targets.add(v);
 		}
 		return targets;
@@ -161,10 +147,9 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	 */
 	public boolean isConnectedTo(Visual v)
 	{
-		if (v != null)
+		if (v != null && !_edgeVisuals.isEmpty())
 		{
-			return _sourceEdgeVisual.getSourceVisual() == v ||
-					_targetEdgeVisuals.stream().anyMatch(s -> s.getTargetVisuals().contains(v));
+			return _edgeVisuals.get(0).getSourceVisual() == v || _edgeVisuals.stream().anyMatch(s -> s.getTargetVisuals().contains(v));
 		}
 		return false;
 	}
@@ -177,28 +162,22 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	 */
 	public ConnectorVisual getConnector(Visual v)
 	{
-		ConnectorVisual connectorVisual;
-		if (v != null)
-		{
-			connectorVisual = _sourceEdgeVisual.getConnector(v);
-			if ( connectorVisual == null ) {
-				connectorVisual = _targetEdgeVisuals.stream()
-													.filter(ev -> ev.getTargetVisuals().contains(v) )
-													.map(ev -> ev._targetConnector)
-													.findAny().orElse(null);
-			}
-		} else
-			connectorVisual = null;
-		return connectorVisual;
+		return _edgeVisuals.stream()
+						   .filter(ev -> ev.getTargetVisuals().contains(v))
+						   .map(ev -> ev._targetConnector)
+						   .findAny().orElse(null);
 	}
 
 	/**
 	 * Gets the control points of the edge.
+	 *
 	 * @return The list of control points, possibly empty, but never null.
 	 */
 	public List<PathControlVisual> getControlPoints()
 	{
-		return _sourceEdgeVisual.getControlPoints();
+		final List<PathControlVisual> l = new ArrayList<>();
+		_edgeVisuals.forEach(v -> l.addAll(v.getControlPoints()));
+		return l;
 	}
 
 	/**
@@ -209,10 +188,35 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	@Override
 	public List<Visual> getVisuals()
 	{
-		List<Visual> v = new ArrayList<>(1 + _targetEdgeVisuals.size());
-		v.add(_sourceEdgeVisual);
-		v.addAll(_targetEdgeVisuals);
-		return v;
+		if (!_edgeVisuals.isEmpty())
+		{
+			List<Visual> v = new ArrayList<>();
+			v.add(_edgeVisuals.get(0)._sourceConnector);
+			_edgeVisuals.forEach(ev -> {
+				if (ev._targetConnector != null)
+					v.add(ev._targetConnector);
+				v.addAll(ev._controlVisual);
+			});
+			return v;
+		}
+		else
+			return Collections.emptyList();
+	}
+
+
+	/**
+	 * Sets Bit Flags.
+	 *
+	 * @param flags Flag bits to add.
+	 */
+	@Override
+	public void setFlags(int flags)
+	{
+		super.setFlags(flags);
+		if ((flags & VisualFlags.SELECTED) != 0)
+		{
+			_edgeVisuals.forEach(v -> v.setFlags(flags));
+		}
 	}
 
 

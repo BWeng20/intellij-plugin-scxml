@@ -9,6 +9,15 @@ import java.util.List;
  */
 public class TransitionDescription
 {
+
+	/**
+	 * Create a new TransitionDescription.
+	 */
+	public TransitionDescription()
+	{
+
+	}
+
 	/**
 	 * Relative location of target connector.
 	 */

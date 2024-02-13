@@ -15,7 +15,6 @@ import com.bw.graph.util.InsetsFloat;
 import com.bw.graph.visual.ConnectorVisual;
 import com.bw.graph.visual.EdgeVisual;
 import com.bw.graph.visual.GenericPrimitiveVisual;
-import com.bw.graph.visual.MultiTargetEdgeVisual;
 import com.bw.graph.visual.VisualFlags;
 import com.bw.modelthings.fsm.model.State;
 import com.bw.modelthings.fsm.ui.actions.RenameStateAction;
@@ -105,7 +104,10 @@ public class StateVisual extends GenericPrimitiveVisual
 		ModelPrimitive modelPrimitive = getPrimitiveOf(ModelPrimitive.class);
 
 		if (displayName == null)
+		{
 			displayName = _state._name;
+		}
+		this._displayName = displayName;
 
 		removeAllDrawingPrimitives();
 		if (bounds == null)
@@ -182,7 +184,8 @@ public class StateVisual extends GenericPrimitiveVisual
 	 */
 	public String getCurrentName()
 	{
-		return getPrimitiveOf(Text.class).getText();
+		Text txt = getPrimitiveOf(Text.class);
+		return txt == null ? _displayName : txt.getText();
 	}
 
 	/**
@@ -253,10 +256,14 @@ public class StateVisual extends GenericPrimitiveVisual
 		}
 	}
 
-	private float getOtherVisualAbsoluteY(EdgeVisual ev) {
-		if ( ev.getSourceVisual() == StateVisual.this ) {
-			return (float)ev.getTargetVisuals().stream().collect(Collectors.summarizingDouble(cv -> cv.getAbsolutePosition().y)).getAverage();
-		} else {
+	private float getOtherVisualAbsoluteY(EdgeVisual ev)
+	{
+		if (ev.getSourceVisual() == StateVisual.this)
+		{
+			return (float) ev.getTargetVisuals().stream().collect(Collectors.summarizingDouble(cv -> cv.getAbsolutePosition().y)).getAverage();
+		}
+		else
+		{
 			return ev.getSourceVisual().getAbsolutePosition().y;
 		}
 	}
@@ -287,7 +294,7 @@ public class StateVisual extends GenericPrimitiveVisual
 			}
 			else
 			{
-				for ( ConnectorVisual targetConnector : edgeVisual.getTargetConnectors())
+				for (ConnectorVisual targetConnector : edgeVisual.getTargetConnectors())
 				{
 					if (targetConnector.getParent() == this)
 					{

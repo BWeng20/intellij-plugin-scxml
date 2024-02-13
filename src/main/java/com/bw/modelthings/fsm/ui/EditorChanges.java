@@ -3,8 +3,8 @@ package com.bw.modelthings.fsm.ui;
 import com.bw.graph.editor.action.EditAction;
 import com.bw.graph.editor.action.MoveAction;
 import com.bw.graph.visual.ConnectorVisual;
-import com.bw.graph.visual.SingleTargetEdgeVisual;
 import com.bw.graph.visual.PathControlVisual;
+import com.bw.graph.visual.SingleTargetEdgeVisual;
 import com.bw.modelthings.fsm.ui.actions.RenameStateAction;
 
 import java.util.HashMap;

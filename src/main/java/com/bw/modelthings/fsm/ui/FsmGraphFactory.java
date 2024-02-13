@@ -17,13 +17,14 @@ import com.bw.modelthings.fsm.model.Transition;
 import javax.swing.text.JTextComponent;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
+import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Factory to create Graph visuals from an FSM model.<br>
@@ -94,29 +95,39 @@ public class FsmGraphFactory
 	 * Creates an edge between two states.
 	 * Only the edge to the state or parent in the same model is created.
 	 *
-	 * @param id     The Identification, can be null.
-	 * @param source The source-state
-	 * @param target The target-stare
-	 * @param g2     Graphics context for calculations.
-	 * @param style  The style to use.
+	 * @param id         The Identification, can be null.
+	 * @param transition The transition represented by this edge.
+	 * @param g2         Graphics context for calculations.
+	 * @param style      The style to use.
 	 * @return The edge visual created.
 	 */
-	public MultiTargetEdgeVisual createEdge(String id, State source, State target, Graphics2D g2, DrawContext style)
+	public MultiTargetEdgeVisual createEdge(String id, Transition transition, Graphics2D g2, DrawContext style)
 	{
-		if (source != null && target != null)
+		if (transition._source != null && transition._target != null && !transition._target.isEmpty())
 		{
-			StateVisual sourceVisual = _stateVisuals.get(source._name);
-			StateVisual targetedVisual = _stateVisuals.get(target._name);
+			StateVisual sourceVisual = _stateVisuals.get(transition._source._name);
 
-			boolean toInnerModel = false;
-			while (target != null && !source._parent._states.contains(target))
+			List<AbstractMap.SimpleEntry<StateVisual, StateVisual>> targets = new ArrayList<>(transition._target.size());
+
+			for (State targetState : transition._target)
 			{
-				target = target._parent;
-				toInnerModel = true;
+				StateVisual targetedVisual = _stateVisuals.get(targetState._name);
+
+				boolean toInnerModel = false;
+				while (targetState != null && !transition._source._parent._states.contains(targetState))
+				{
+					targetState = targetState._parent;
+					toInnerModel = true;
+				}
+				if (targetState != null)
+				{
+					targets.add(new AbstractMap.SimpleEntry<>(_stateVisuals.get(targetState._name),
+							toInnerModel ? targetedVisual : null));
+				}
 			}
-			if (target != null)
+			if (!targets.isEmpty())
 			{
-				return createEdge(id, sourceVisual, _stateVisuals.get(target._name), g2, style, toInnerModel ? targetedVisual : null);
+				return createEdge(id, sourceVisual, transition, targets, g2, style);
 			}
 		}
 		return null;
@@ -126,24 +137,27 @@ public class FsmGraphFactory
 	 * Creates an edge between two visuals.
 	 * Only the edge to the state or parent in the same model is created.
 	 *
-	 * @param id            The Identification, can be null.
-	 * @param source        The source-visual
-	 * @param target        The target-visual
-	 * @param g2            Graphics context for calculations.
-	 * @param style         The style to use.
-	 * @param targetedChild If not null the inner child of the target visual that is the real target.
+	 * @param id         The Identification, can be null.
+	 * @param source     The source-visual
+	 * @param transition The transition represented by this edge.
+	 * @param targets    Pairs of target-visual and (optional) the inner child of the target visual that is the real target.
+	 * @param g2         Graphics context for calculations.
+	 * @param style      The style to use.
 	 * @return The edge visual created.
 	 */
-	public MultiTargetEdgeVisual createEdge(String id, Visual source, StateVisual target, Graphics2D g2, DrawContext style, Visual targetedChild)
+	public MultiTargetEdgeVisual createEdge(String id, Visual source, Transition transition, List<AbstractMap.SimpleEntry<StateVisual, StateVisual>> targets, Graphics2D g2, DrawContext style)
 	{
 		MultiTargetEdgeVisual edgeVisual;
-		if (source != null && target != null)
+		if (source != null && targets != null && !targets.isEmpty())
 		{
-			ConnectorVisual sourceConnector = new ConnectorVisual(source, style, VisualFlags.ALWAYS);
-			ConnectorVisual targetConnector = new ConnectorVisual(target, style, VisualFlags.ALWAYS);
-			targetConnector.setTargetedParentChild(targetedChild);
+			ConnectorVisual sourceConnector = new TransitionSourceControlVisual(source, transition, style, VisualFlags.ALWAYS);
+			List<ConnectorVisual> targetConnectors = targets.stream().map(targetPair -> {
+				ConnectorVisual cv = new ConnectorVisual(targetPair.getKey(), style, VisualFlags.ALWAYS);
+				cv.setTargetedParentChild(targetPair.getValue());
+				return cv;
+			}).collect(Collectors.toList());
 
-			edgeVisual = new MultiTargetEdgeVisual(id, sourceConnector, Collections.singleton(targetConnector), style);
+			edgeVisual = new MultiTargetEdgeVisual(id, sourceConnector, targetConnectors, style);
 		}
 		else
 			edgeVisual = null;
@@ -251,7 +265,8 @@ public class FsmGraphFactory
 				if (state._parent != null)
 				{
 					statePosition = statePositions.get(state._parent._name);
-					visual.createStatePrimitives(statePosition.x, statePosition.y, g2, _graphExtension._bounds.get(state._docId), null);
+					visual.createStatePrimitives(statePosition.x, statePosition.y, g2, _graphExtension._bounds.get(state._docId),
+							null);
 
 					Rectangle2D.Float bounds = visual.getAbsoluteBounds2D(g2);
 					if (bounds != null)
@@ -269,21 +284,22 @@ public class FsmGraphFactory
 				}
 			}
 
+			List<AbstractMap.SimpleEntry<StateVisual, StateVisual>> targetVisuals = new ArrayList<>();
+
 			// Create edges
 			for (Transition t : transitions.values())
 			{
-				for (State target : t._target)
-				{
-					MultiTargetEdgeVisual edgeVisual = createEdge(t._xmlId, t._source, target, g2, edgeStyles);
-					getModelForState(t._source).addVisual(edgeVisual);
+				MultiTargetEdgeVisual edgeVisual = createEdge(t._xmlId, t, g2, edgeStyles);
 
+				if (edgeVisual != null)
+				{
+					getModelForState(t._source).addVisual(edgeVisual);
 					ConnectorVisual sourceConnector = edgeVisual.getSourceConnector();
 					getModelForVisual((StateVisual) sourceConnector.getParent()).getVisuals()
 																				.add(sourceConnector);
-					List<ConnectorVisual> targetConnectors = edgeVisual.getTargetConnectors();
-					targetConnectors.forEach( targetConnector ->
-						getModelForVisual((StateVisual) targetConnector.getParent()).getVisuals()
-																				.add(targetConnector));
+					edgeVisual.getTargetConnectors().forEach(targetConnector ->
+							getModelForVisual((StateVisual) targetConnector.getParent()).getVisuals()
+																						.add(targetConnector));
 				}
 			}
 
@@ -313,10 +329,11 @@ public class FsmGraphFactory
 											   .get(0));
 						id = null;
 					}
+					targetVisuals.clear();
 					for (State initialState : initialStates)
 					{
 						boolean toInnerModel = false;
-						Visual targetedVisual = _stateVisuals.get(initialState._name);
+						StateVisual targetedVisual = _stateVisuals.get(initialState._name);
 						while (initialState != null && !state._states.contains(initialState))
 						{
 							initialState = initialState._parent;
@@ -331,10 +348,10 @@ public class FsmGraphFactory
 							log.warning(String.format("Target state %s of initial transition not found", initialState._name));
 						else
 						{
-							innerModel.addVisual(createEdge(id, startVisual, targetVisual, g2, edgeStyles,
-									toInnerModel ? targetedVisual : null));
+							targetVisuals.add(new AbstractMap.SimpleEntry<>(targetVisual, toInnerModel ? targetedVisual : null));
 						}
 					}
+					innerModel.addVisual(createEdge(id, startVisual, null, targetVisuals, g2, edgeStyles));
 				}
 			}
 

@@ -4,6 +4,7 @@ import com.bw.graph.DrawContext;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.util.Dimension2DFloat;
+import com.bw.graph.util.Geometry;
 import com.bw.graph.util.ImageUtil;
 import com.bw.svg.SVGElement;
 import com.bw.svg.SVGWriter;
@@ -191,43 +192,22 @@ public class GenericPrimitiveVisual extends Visual
 		Dimension2DFloat dim = getPreferredDimension();
 		if (dim == null)
 		{
-			Rectangle2D.Float localBounds = new Rectangle2D.Float(Float.MAX_VALUE, Float.MAX_VALUE, 0, 0);
-
-			if (_primitives.isEmpty())
-			{
-				localBounds.x = 0;
-				localBounds.y = 0;
-			}
-			else
-			{
-				for (DrawPrimitive primitive : _primitives)
-				{
-					Rectangle2D.Float primitiveBounds = primitive.getBounds2D(this._absolutePosition.x, this._absolutePosition.y, graphics);
-					switch (primitive.getAlignment())
-					{
-						case Left:
-							break;
-						case Center:
-						case Right:
-							primitiveBounds.width += primitive.getRelativePosition().x;
-							break;
-						case Hidden:
-							continue;
-					}
-					final float x2 = primitiveBounds.x + primitiveBounds.width;
-					final float y2 = primitiveBounds.y + primitiveBounds.height;
-
-					if (localBounds.x > primitiveBounds.x)
-						localBounds.x = primitiveBounds.x;
-					if (localBounds.y > primitiveBounds.y)
-						localBounds.y = primitiveBounds.y;
-
-					if ((localBounds.x + localBounds.width) < x2)
-						localBounds.width = x2 - localBounds.x;
-					if ((localBounds.y + localBounds.height) < y2)
-						localBounds.height = y2 - localBounds.y;
-				}
-			}
+			Rectangle2D.Float localBounds = Geometry.getUnion(
+					_primitives.stream().map(primitive -> {
+						Rectangle2D.Float primitiveBounds = primitive.getBounds2D(this._absolutePosition.x, this._absolutePosition.y, graphics);
+						switch (primitive.getAlignment())
+						{
+							case Left:
+								break;
+							case Center:
+							case Right:
+								primitiveBounds.width += primitive.getRelativePosition().x;
+								break;
+							case Hidden:
+								primitiveBounds.width = 0;
+						}
+						return primitiveBounds;
+					}));
 			this._absoluteBounds.x = localBounds.x;
 			this._absoluteBounds.y = localBounds.y;
 			this._absoluteBounds.width = localBounds.width;
@@ -395,8 +375,11 @@ public class GenericPrimitiveVisual extends Visual
 	public void setFlags(int flags)
 	{
 		super.setFlags(flags);
-		for (DrawPrimitive primitive : _primitives)
-			primitive.setFlags(flags);
+		// Filter state flags.
+		flags &= ~(VisualFlags.SELECTED | VisualFlags.MODIFIED);
+		if (flags != 0)
+			for (DrawPrimitive primitive : _primitives)
+				primitive.setFlags(flags);
 	}
 
 

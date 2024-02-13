@@ -210,6 +210,7 @@ public class SingleTargetEdgeVisual extends EdgeVisual
 
 	/**
 	 * Gets the control points of the edge.
+	 *
 	 * @return The list of control points, possibly empty, but never null.
 	 */
 	public List<PathControlVisual> getControlPoints()
