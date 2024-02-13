@@ -5,8 +5,17 @@ import com.bw.graph.DrawContext;
 import java.awt.Graphics2D;
 import java.util.List;
 
-public abstract class EdgeVisual  extends Visual implements VisualContainer
+/**
+ * Base of Edge Visuals.
+ */
+public abstract class EdgeVisual extends Visual implements VisualContainer
 {
+	/**
+	 * Initializes the new Edge Visual.
+	 *
+	 * @param id      The id or null.
+	 * @param context The Draw Context to use.
+	 */
 	public EdgeVisual(Object id, DrawContext context)
 	{
 		super(id, context);
@@ -76,4 +85,5 @@ public abstract class EdgeVisual  extends Visual implements VisualContainer
 	 * @return The connector or null.
 	 */
 	public abstract ConnectorVisual getSourceConnector();
+
 }
