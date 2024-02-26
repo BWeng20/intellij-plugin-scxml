@@ -3,7 +3,7 @@ package com.bw.graph.visual;
 import java.util.List;
 
 /**
- * Interface for visual containers.
+ * Interface for elements that encapsulate other visual.
  */
 public interface VisualContainer
 {

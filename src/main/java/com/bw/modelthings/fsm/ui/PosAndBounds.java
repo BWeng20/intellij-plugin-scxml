@@ -135,23 +135,26 @@ public class PosAndBounds
 		if (posList != null)
 		{
 			String[] coordinate = SPLIT_REG_EXP.split(posList, 0);
-			List<Point2D.Float> list = new ArrayList<>(coordinate.length / 2);
-			try
+			if (coordinate.length > 0)
 			{
-				int i = 0;
-				while (coordinate.length > i + 1)
+				List<Point2D.Float> list = new ArrayList<>(coordinate.length / 2);
+				try
 				{
-					list.add(new Point2D.Float(
-							Float.parseFloat(coordinate[i]),
-							Float.parseFloat(coordinate[i + 1])));
-					i += 2;
+					int i = 0;
+					while (coordinate.length > i + 1)
+					{
+						list.add(new Point2D.Float(
+								Float.parseFloat(coordinate[i]),
+								Float.parseFloat(coordinate[i + 1])));
+						i += 2;
+					}
 				}
+				catch (NumberFormatException e)
+				{
+					ScxmlGraphExtension.log.log(Level.WARNING, "position list could not be parsed", e);
+				}
+				return list;
 			}
-			catch (NumberFormatException e)
-			{
-				ScxmlGraphExtension.log.log(Level.WARNING, "position list could not be parsed", e);
-			}
-			return list;
 		}
 		return null;
 	}

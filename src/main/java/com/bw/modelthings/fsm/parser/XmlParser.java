@@ -397,8 +397,11 @@ public class XmlParser implements ScxmlTags
 	{
 		Transition t = parseTransitionWithAttributes(node);
 		t._source = sourceState;
+		processUnhandledAttributes(node, t);
+
 		sourceState._transitions.add(t);
 		debug(String.format("Transition %s", t));
+
 	}
 
 	/**
@@ -414,7 +417,7 @@ public class XmlParser implements ScxmlTags
 
 		t._docId = ++_docIdCounter;
 		t._xmlId = node.getAttributeNS(NS_XML, ATTR_ID);
-		if (t._xmlId == null)
+		if (t._xmlId.isEmpty())
 			t._xmlId = String.valueOf(t._docId);
 
 		parseSymbolList(getOptionalAttribute(node, TAG_EVENT), t._events);

@@ -10,6 +10,8 @@ import java.util.List;
  */
 public abstract class EdgeVisual extends Visual implements VisualContainer
 {
+	private EdgeVisual _parentEdge;
+
 	/**
 	 * Initializes the new Edge Visual.
 	 *
@@ -62,7 +64,6 @@ public abstract class EdgeVisual extends Visual implements VisualContainer
 	 */
 	public abstract List<ConnectorVisual> getTargetConnectors();
 
-
 	/**
 	 * Checks if {@link #getSourceVisual()} or {@link #getTargetVisuals()} is/contains v.
 	 *
@@ -86,4 +87,23 @@ public abstract class EdgeVisual extends Visual implements VisualContainer
 	 */
 	public abstract ConnectorVisual getSourceConnector();
 
+	/**
+	 * Gets the parent edge if this edge is part of a multi-edge.
+	 *
+	 * @return The parent edge or null
+	 */
+	public EdgeVisual getParentEdge()
+	{
+		return _parentEdge;
+	}
+
+	/**
+	 * Sets the parent edge if this edge is part of a multi-edge.
+	 *
+	 * @param edge The parent edge or null
+	 */
+	public void setParentEdge(EdgeVisual edge)
+	{
+		_parentEdge = edge;
+	}
 }

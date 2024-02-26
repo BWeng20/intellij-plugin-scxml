@@ -53,7 +53,7 @@ public class ScxmlGraphExtension implements ExtensionParser
 	public static final String ATTR_SOURCE_POS = "source-pos";
 
 	/**
-	 * Name of attribute used for position of edge-target-connector.
+	 * Name of attribute used for positions of edge-target-connectors.
 	 */
 	public static final String ATTR_TARGET_POS = "target-pos";
 
@@ -152,17 +152,23 @@ public class ScxmlGraphExtension implements ExtensionParser
 					if (r != null)
 						_bounds.put(((State) item)._docId, r);
 				}
+			}
+		}
+		else if (item instanceof Transition)
+		{
+			switch (attributeNode.getLocalName())
+			{
 				case ATTR_SOURCE_POS ->
 				{
 					Point2D.Float position = parsePosition(attributeNode.getNodeValue());
 					if (position != null)
-						getTransitionDescriptor(((Transition) item)._docId)._relativeSourceConnector = position;
+						getTransitionDescriptor(((Transition) item)._docId)._relativeSourceConnectorPosition = position;
 				}
 				case ATTR_TARGET_POS ->
 				{
-					Point2D.Float position = parsePosition(attributeNode.getNodeValue());
-					if (position != null)
-						getTransitionDescriptor(((Transition) item)._docId)._relativeTargetConnector = position;
+					List<Point2D.Float> positions = parsePositionList(attributeNode.getNodeValue());
+					if (positions != null)
+						getTransitionDescriptor(((Transition) item)._docId)._relativeTargetConnectorPosition = positions;
 				}
 				case ATTR_PC_POS ->
 				{

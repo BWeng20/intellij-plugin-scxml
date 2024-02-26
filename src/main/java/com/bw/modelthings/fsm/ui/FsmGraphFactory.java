@@ -16,6 +16,7 @@ import com.bw.modelthings.fsm.model.Transition;
 
 import javax.swing.text.JTextComponent;
 import java.awt.Graphics2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -293,11 +294,34 @@ public class FsmGraphFactory
 
 				if (edgeVisual != null)
 				{
+					TransitionDescription td = _graphExtension.getTransitionDescriptor(t._docId);
+
 					getModelForState(t._source).addVisual(edgeVisual);
 					ConnectorVisual sourceConnector = edgeVisual.getSourceConnector();
+
+					if (td._relativeSourceConnectorPosition != null)
+					{
+						sourceConnector.setRelativePosition(td._relativeSourceConnectorPosition.x, td._relativeSourceConnectorPosition.y);
+					}
+
 					getModelForVisual((StateVisual) sourceConnector.getParent()).getVisuals()
 																				.add(sourceConnector);
-					edgeVisual.getTargetConnectors().forEach(targetConnector ->
+
+					final List<ConnectorVisual> targetConnectorVisuals = edgeVisual.getTargetConnectors();
+
+					if (td._relativeTargetConnectorPosition != null)
+					{
+						int tCN = td._relativeTargetConnectorPosition.size();
+						if (targetConnectorVisuals.size() == tCN)
+						{
+							for (int i = 0; i < tCN; ++i)
+							{
+								Point2D.Float pt = td._relativeTargetConnectorPosition.get(i);
+								targetConnectorVisuals.get(i).setRelativePosition(pt.x, pt.y);
+							}
+						}
+					}
+					targetConnectorVisuals.forEach(targetConnector ->
 							getModelForVisual((StateVisual) targetConnector.getParent()).getVisuals()
 																						.add(targetConnector));
 				}
@@ -345,7 +369,7 @@ public class FsmGraphFactory
 							targetVisual = _stateVisuals.get(initialState._name);
 						}
 						if (targetVisual == null)
-							log.warning(String.format("Target state %s of initial transition not found", initialState._name));
+							log.warning(String.format("Target state %s of initial transition not found", initialState == null ? "null" : initialState._name));
 						else
 						{
 							targetVisuals.add(new AbstractMap.SimpleEntry<>(targetVisual, toInnerModel ? targetedVisual : null));

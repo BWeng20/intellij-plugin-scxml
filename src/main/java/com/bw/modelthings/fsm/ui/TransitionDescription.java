@@ -21,12 +21,12 @@ public class TransitionDescription
 	/**
 	 * Relative location of target connector.
 	 */
-	public Point2D.Float _relativeTargetConnector;
+	public List<Point2D.Float> _relativeTargetConnectorPosition;
 
 	/**
 	 * Relative location of source connector.
 	 */
-	public Point2D.Float _relativeSourceConnector;
+	public Point2D.Float _relativeSourceConnectorPosition;
 
 	/**
 	 * Absolute locations of path control.

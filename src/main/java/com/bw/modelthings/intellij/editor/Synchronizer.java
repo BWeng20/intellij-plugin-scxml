@@ -35,8 +35,10 @@ import com.intellij.psi.xml.XmlTag;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.Timer;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -136,7 +138,7 @@ public class Synchronizer implements Disposable
 											  .invokeLater(() ->
 													  WriteCommandAction.writeCommandAction(_theProject, PsiManager.getInstance(_theProject)
 																												   .findFile(_file))
-																		.withName(c._commandName)
+																		.withName(c._command.name())
 																		.withGlobalUndo()
 																		.run(() -> runXmlUpdate(c)));
 						}
@@ -315,9 +317,11 @@ public class Synchronizer implements Disposable
 									allTransitions.addAll(Arrays.asList(s.findSubTags(ScxmlTags.TAG_TRANSITION, ScxmlTags.NS_SCXML)));
 									List<XmlTag> states = Arrays.asList(s.findSubTags(ScxmlTags.TAG_STATE, ScxmlTags.NS_SCXML));
 									List<XmlTag> parallels = Arrays.asList(s.findSubTags(ScxmlTags.TAG_PARALLEL, ScxmlTags.NS_SCXML));
+									List<XmlTag> finals = Arrays.asList(s.findSubTags(ScxmlTags.TAG_INITIAL, ScxmlTags.NS_SCXML));
 
 									allStates.addAll(states);
 									allStates.addAll(parallels);
+									allStates.addAll(finals);
 
 									if (id != null)
 									{
@@ -342,7 +346,7 @@ public class Synchronizer implements Disposable
 
 									PosAndBounds startNodeBounds = update._startBounds.get(id);
 
-									if (startNodeBounds != null || !(states.isEmpty() && parallels.isEmpty()))
+									if (startNodeBounds != null || !(states.isEmpty() && parallels.isEmpty() && finals.isEmpty()))
 									{
 
 										// A submachine. We need to set the start-state bounds
@@ -390,23 +394,55 @@ public class Synchronizer implements Disposable
 									else
 									{
 										final String xmlIdS = xmlId.getValue();
-										String targets = transition.getAttributeValue(ScxmlTags.ATTR_TARGET);
-										if (targets != null)
-										{
-											TransitionDescription td = update.getTransitionDescriptor(xmlIdS);
+										TransitionDescription td = update.getTransitionDescriptor(xmlIdS);
 
-											if (td != null)
+										if (td != null)
+										{
+											if (td._relativeSourceConnectorPosition != null)
+												transition.setAttribute(ScxmlGraphExtension.ATTR_SOURCE_POS, ScxmlGraphExtension.NS_GRAPH_EXTENSION,
+														SVGWriter.toPoint(td._relativeSourceConnectorPosition, precisionFactor));
+
+											if (td._relativeTargetConnectorPosition != null && !td._relativeTargetConnectorPosition.isEmpty())
 											{
-												if (td._relativeSourceConnector != null)
-													transition.setAttribute(ScxmlGraphExtension.ATTR_SOURCE_POS,
-															SVGWriter.toPoint(td._relativeSourceConnector, precisionFactor));
-												if (td._relativeTargetConnector != null)
-													transition.setAttribute(ScxmlGraphExtension.ATTR_TARGET_POS,
-															SVGWriter.toPoint(td._relativeTargetConnector, precisionFactor));
-												if (td._pathControlPoints != null && !td._pathControlPoints.isEmpty())
-													transition.setAttribute(ScxmlGraphExtension.ATTR_PC_POS,
-															SVGWriter.toPointList(td._pathControlPoints, precisionFactor));
+												final int numTargets = td._relativeTargetConnectorPosition.size();
+
+												XmlAttribute attributeNode = transition.getAttribute(ScxmlGraphExtension.ATTR_TARGET_POS, ScxmlGraphExtension.NS_GRAPH_EXTENSION);
+												List<Point2D.Float> positions = null;
+												if (attributeNode != null)
+													positions = PosAndBounds.parsePositionList(attributeNode.getValue());
+												if (positions == null)
+												{
+													positions = new ArrayList<>(Collections.nCopies(numTargets, null));
+												}
+												else
+												{
+													while (numTargets < positions.size())
+														positions.remove(positions.size() - 1);
+													while (numTargets > positions.size())
+														positions.add(null);
+												}
+
+												int i = 0;
+												for (Point2D.Float rtpos : td._relativeTargetConnectorPosition)
+												{
+													if (rtpos != null)
+													{
+														positions.set(i, rtpos);
+													}
+													++i;
+												}
+
+												String value = SVGWriter.toPointList(positions, precisionFactor);
+												if (attributeNode != null)
+													attributeNode.setValue(value);
+												else
+													transition.setAttribute(ScxmlGraphExtension.ATTR_TARGET_POS, ScxmlGraphExtension.NS_GRAPH_EXTENSION,
+															value);
 											}
+
+											if (td._pathControlPoints != null && !td._pathControlPoints.isEmpty())
+												transition.setAttribute(ScxmlGraphExtension.ATTR_PC_POS,
+														SVGWriter.toPointList(td._pathControlPoints, precisionFactor));
 										}
 									}
 								}

@@ -351,7 +351,12 @@ public class SVGWriter extends XmlWriter
 		{
 			if (!sb.isEmpty())
 				sb.append(' ');
-			sb.append(floatToString(pt.x, precisionFactor)).append(' ').append(floatToString(pt.y, precisionFactor));
+			if (pt != null)
+			{
+				sb.append(floatToString(pt.x, precisionFactor)).append(' ').append(floatToString(pt.y, precisionFactor));
+			}
+			else
+				sb.append("0 0");
 		}
 		return sb.toString();
 	}

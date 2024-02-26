@@ -33,7 +33,11 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	{
 		super(id, context);
 		for (ConnectorVisual connectorVisual : targets)
-			_edgeVisuals.add(new SingleTargetEdgeVisual(null, source, connectorVisual, context));
+		{
+			SingleTargetEdgeVisual singleEdgeVisual = new SingleTargetEdgeVisual(null, source, connectorVisual, context);
+			singleEdgeVisual.setParentEdge(this);
+			_edgeVisuals.add(singleEdgeVisual);
+		}
 	}
 
 	/**

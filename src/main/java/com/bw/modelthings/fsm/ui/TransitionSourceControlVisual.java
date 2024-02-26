@@ -7,8 +7,6 @@ import com.bw.graph.visual.Visual;
 import com.bw.graph.visual.VisualFlags;
 import com.bw.modelthings.fsm.model.Transition;
 
-import java.util.stream.Collectors;
-
 /**
  * Visual to represent an FSM State Transition Source-Connector .
  */
@@ -25,15 +23,17 @@ public class TransitionSourceControlVisual extends ConnectorVisual
 	public TransitionSourceControlVisual(Visual sourceState, Transition transition, DrawContext context, int flags)
 	{
 		super(sourceState, context, flags);
-		String events = transition == null ? "" : transition._events.stream().collect(Collectors.joining(","));
-		if (!events.isEmpty())
+		if (transition != null)
 		{
-			Text eventText = new Text(_radius + 5, _radius / 2, events,
-					context._configuration, context._style, VisualFlags.ALWAYS);
-			eventText.setFlags(VisualFlags.EDITABLE);
-			// eventText.setUserData(_nameProxy);
-			_primitives.add(eventText);
+			String events = String.join(",", transition._events );
+			if (!events.isEmpty())
+			{
+				Text eventText = new Text(_radius + 5, _radius / 2, events,
+						context._configuration, context._style, VisualFlags.ALWAYS);
+				eventText.setFlags(VisualFlags.EDITABLE);
+				// eventText.setUserData(_nameProxy);
+				_primitives.add(eventText);
+			}
 		}
-
 	}
 }

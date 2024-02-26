@@ -74,7 +74,6 @@ public class StateVisual extends GenericPrimitiveVisual
 		this._stateOuterContext = stateOuterContext;
 		this._stateInnerContext = stateInnerContext;
 		this._nameProxy = new StateNameProxy(textComponent);
-
 	}
 
 	/**
@@ -109,13 +108,16 @@ public class StateVisual extends GenericPrimitiveVisual
 		}
 		this._displayName = displayName;
 
+		float d = _state._isFinal ? 5 : 0;
+
 		removeAllDrawingPrimitives();
 		if (bounds == null)
 		{
 			Rectangle2D stringBounds = _stateInnerContext._style._fontMetrics.getStringBounds(displayName, g2);
 
 			float height = 5 * fh;
-			float width = (float) Math.max(stringBounds.getWidth() + 10, ((FsmGraphConfiguration) _stateInnerContext._configuration)._stateMinimalWidth);
+			float width = (float) Math.max(stringBounds.getWidth() + 10,
+					((FsmGraphConfiguration) _stateInnerContext._configuration)._stateMinimalWidth);
 
 			if (modelPrimitive != null)
 			{
@@ -130,7 +132,7 @@ public class StateVisual extends GenericPrimitiveVisual
 				if (width < w) width = w;
 				if (height < h) height = h;
 			}
-			bounds = new PosAndBounds(new Point2D.Float(x, y), new Rectangle2D.Float(x, y, width, height));
+			bounds = new PosAndBounds(new Point2D.Float(x, y), new Rectangle2D.Float(x, y, 2 * d + width, 2 * d + height));
 		}
 		setAbsolutePosition(bounds.position, bounds.bounds);
 
@@ -141,17 +143,30 @@ public class StateVisual extends GenericPrimitiveVisual
 		_connectorFrame.setFill(true);
 		addDrawingPrimitive(_connectorFrame);
 
-		Line separator = new Line(0, fh * 1.5f, bounds.bounds.width, fh * 1.5f
-				, _stateInnerContext._configuration, _stateInnerContext._style, VisualFlags.ALWAYS);
-		addDrawingPrimitive(separator);
+		float px = d;
+		float py = d;
+		float ph = bounds.bounds.height - 2 * d;
 
-		Text label = new Text(0, 0, displayName,
+		if (_state._isFinal)
+		{
+			Rectangle innerFrame = new Rectangle(
+					px, py, bounds.bounds.width - 2 * d, ph,
+					_stateOuterContext._configuration._stateCornerArcSize - d, _stateOuterContext._configuration,
+					_stateOuterContext._style, VisualFlags.ALWAYS);
+			addDrawingPrimitive(innerFrame);
+		}
+
+		Text label = new Text(0, py, displayName,
 				_stateInnerContext._configuration, _stateInnerContext._style, VisualFlags.ALWAYS);
 		label.setFlags(VisualFlags.EDITABLE);
 		label.setAlignment(Alignment.Center);
 		label.setInsets(fh * 0.25f, 0, 0, 0);
 		label.setUserData(_nameProxy);
 		addDrawingPrimitive(label);
+
+		Line separator = new Line(px, py + fh * 1.5f, px + bounds.bounds.width - 2 * d, py + fh * 1.5f
+				, _stateInnerContext._configuration, _stateInnerContext._style, VisualFlags.ALWAYS);
+		addDrawingPrimitive(separator);
 
 		if (modelPrimitive != null)
 			addDrawingPrimitive(modelPrimitive);
@@ -288,7 +303,7 @@ public class StateVisual extends GenericPrimitiveVisual
 		for (EdgeVisual edgeVisual : edgeVisuals)
 		{
 			ConnectorVisual sourceConnector = edgeVisual.getSourceConnector();
-			if (sourceConnector != null && sourceConnector.getParent() == this)
+			if (sourceConnector != null && sourceConnector.getParent() == this && sourceConnector.getRelativePosition() == null)
 			{
 				asSource.add(sourceConnector);
 			}
@@ -296,7 +311,7 @@ public class StateVisual extends GenericPrimitiveVisual
 			{
 				for (ConnectorVisual targetConnector : edgeVisual.getTargetConnectors())
 				{
-					if (targetConnector.getParent() == this)
+					if (targetConnector.getParent() == this && targetConnector.getRelativePosition() == null)
 					{
 						asTarget.add(targetConnector);
 					}

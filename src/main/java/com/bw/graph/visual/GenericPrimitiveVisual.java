@@ -193,21 +193,8 @@ public class GenericPrimitiveVisual extends Visual
 		if (dim == null)
 		{
 			Rectangle2D.Float localBounds = Geometry.getUnion(
-					_primitives.stream().map(primitive -> {
-						Rectangle2D.Float primitiveBounds = primitive.getBounds2D(this._absolutePosition.x, this._absolutePosition.y, graphics);
-						switch (primitive.getAlignment())
-						{
-							case Left:
-								break;
-							case Center:
-							case Right:
-								primitiveBounds.width += primitive.getRelativePosition().x;
-								break;
-							case Hidden:
-								primitiveBounds.width = 0;
-						}
-						return primitiveBounds;
-					}));
+					_primitives.stream().map(primitive -> primitive.getBounds2D(this._absolutePosition.x, this._absolutePosition.y, graphics)));
+
 			this._absoluteBounds.x = localBounds.x;
 			this._absoluteBounds.y = localBounds.y;
 			this._absoluteBounds.width = localBounds.width;
@@ -256,7 +243,6 @@ public class GenericPrimitiveVisual extends Visual
 			primitive.repaint();
 		}
 	}
-
 
 	/**
 	 * Writes the visual as SVG to the writer.
@@ -345,12 +331,6 @@ public class GenericPrimitiveVisual extends Visual
 					break;
 			}
 		}
-	}
-
-	@Override
-	public boolean isModified()
-	{
-		return isFlagSet(VisualFlags.MODIFIED);
 	}
 
 	@Override

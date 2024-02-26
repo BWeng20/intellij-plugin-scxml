@@ -40,7 +40,7 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	/**
 	 * Relative position to parent visual.
 	 */
-	protected Point2D.Float _relativePosition = new Point2D.Float(0, 0);
+	protected Point2D.Float _relativePosition;
 
 	private Point2D.Float _dragPosition = new Point2D.Float(0, 0);
 
@@ -134,8 +134,11 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 
 			Point2D.Float pt = _parent.getAbsolutePosition();
 
-			pt.x += _relativePosition.x;
-			pt.y += _relativePosition.y;
+			if (_relativePosition != null)
+			{
+				pt.x += _relativePosition.x;
+				pt.y += _relativePosition.y;
+			}
 
 			_absolutePosition.x = pt.x;
 			_absolutePosition.y = pt.y;
@@ -188,6 +191,10 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 		super.startDrag(x, y);
 		_dragPosition.x = x;
 		_dragPosition.y = y;
+		if (_relativePosition == null)
+		{
+			_relativePosition = new Point2D.Float(0, 0);
+		}
 		_startDragRelativePosition.x = _relativePosition.x;
 		_startDragRelativePosition.y = _relativePosition.y;
 	}
@@ -297,8 +304,11 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	public void getControlPosition(Point2D.Float pt)
 	{
 		_parent.getAbsolutePosition(pt);
-		pt.x += _relativePosition.x;
-		pt.y += _relativePosition.y;
+		if (_relativePosition != null)
+		{
+			pt.x += _relativePosition.x;
+			pt.y += _relativePosition.y;
+		}
 	}
 
 	@Override
@@ -315,10 +325,26 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	 */
 	public void setRelativePosition(float x, float y)
 	{
-		_relativePosition.x = x;
-		_relativePosition.y = y;
+		if (_relativePosition == null)
+			_relativePosition = new Point2D.Float(x, y);
+		else
+		{
+			_relativePosition.x = x;
+			_relativePosition.y = y;
+		}
 		resetBounds();
 	}
+
+	/**
+	 * Gets the relative position of the connector.
+	 *
+	 * @return The position or null (if not yet set).
+	 */
+	public Point2D.Float getRelativePosition()
+	{
+		return _relativePosition;
+	}
+
 
 	@Override
 	public String toString()

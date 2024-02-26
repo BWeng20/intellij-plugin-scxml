@@ -3,10 +3,13 @@ package com.bw.modelthings.fsm.ui;
 import com.bw.graph.editor.action.EditAction;
 import com.bw.graph.editor.action.MoveAction;
 import com.bw.graph.visual.ConnectorVisual;
+import com.bw.graph.visual.EdgeVisual;
 import com.bw.graph.visual.PathControlVisual;
 import com.bw.graph.visual.SingleTargetEdgeVisual;
 import com.bw.modelthings.fsm.ui.actions.RenameStateAction;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,6 +18,22 @@ import java.util.Map;
  */
 public class EditorChanges
 {
+	/**
+	 * Possible editor commands
+	 */
+	public enum Command
+	{
+		/**
+		 * Some visual was moved.
+		 */
+		Move,
+
+		/**
+		 * Some visual was renamed.
+		 */
+		Rename
+	}
+
 	private final Map<String, TransitionDescription> _transitionDescriptionMap = new HashMap<>();
 
 	/**
@@ -24,15 +43,15 @@ public class EditorChanges
 	 * @param edgeVisual The edge visual.
 	 * @return The descriptor, never null.
 	 */
-	public TransitionDescription getTransitionDescriptor(SingleTargetEdgeVisual edgeVisual)
+	public TransitionDescription getTransitionDescriptor(EdgeVisual edgeVisual)
 	{
-
 		String id = (String) edgeVisual.getId();
 		TransitionDescription transitionDescription = _transitionDescriptionMap.get(id);
 		if (transitionDescription == null)
 		{
 			_transitionDescriptionMap.put(id, transitionDescription);
 			transitionDescription = new TransitionDescription();
+			transitionDescription._relativeTargetConnectorPosition = new ArrayList<>(Collections.nCopies(edgeVisual.getTargetConnectors().size(), null));
 
 			_transitionDescriptionMap.put(id, transitionDescription);
 		}
@@ -47,7 +66,6 @@ public class EditorChanges
 	 */
 	public TransitionDescription getTransitionDescriptor(String id)
 	{
-
 		return _transitionDescriptionMap.get(id);
 	}
 
@@ -62,18 +80,18 @@ public class EditorChanges
 		if (action instanceof RenameStateAction renameStateAction)
 		{
 			_statesRenamed.put(renameStateAction._oldName, renameStateAction._newName);
-			_commandName = "Rename";
+			_command = Command.Rename;
 		}
 		else if (action instanceof MoveAction moveAction)
 		{
 			if (moveAction._what instanceof StateVisual stateVisual)
 			{
-				_commandName = "Move";
+				_command = Command.Move;
 				_bounds.put(stateVisual._state._name, new PosAndBounds(stateVisual.getAbsolutePosition(), stateVisual.getAbsoluteBounds2D(null)));
 			}
 			else if (moveAction._what instanceof StartVisual startVisual)
 			{
-				_commandName = "Move";
+				_command = Command.Move;
 				String name = (startVisual._parent == null) ? "xxx" : startVisual._parent.getCurrentName();
 				_startBounds.put(name, new PosAndBounds(startVisual.getAbsolutePosition(), startVisual.getAbsoluteBounds2D(null)));
 			}
@@ -81,16 +99,20 @@ public class EditorChanges
 			{
 				if (connectorVisual.getParent() instanceof StateVisual)
 				{
-					_commandName = "Move";
-					SingleTargetEdgeVisual edgeVisual = connectorVisual.getEdgeVisual();
+					_command = Command.Move;
+					EdgeVisual edgeVisual = connectorVisual.getEdgeVisual();
+					while (edgeVisual.getParentEdge() != null)
+						edgeVisual = edgeVisual.getParentEdge();
+
 					TransitionDescription td = getTransitionDescriptor(edgeVisual);
-					if (edgeVisual.getTargetConnectors().contains(connectorVisual))
+					int idx = edgeVisual.getTargetConnectors().indexOf(connectorVisual);
+					if (idx >= 0)
 					{
-						td._relativeTargetConnector = moveAction._to;
+						td._relativeTargetConnectorPosition.set(idx, moveAction._to);
 					}
 					else
 					{
-						td._relativeSourceConnector = moveAction._to;
+						td._relativeSourceConnectorPosition = moveAction._to;
 					}
 				}
 			}
@@ -98,7 +120,7 @@ public class EditorChanges
 			{
 				SingleTargetEdgeVisual edgeVisual = pathControlVisual.getEdgeVisual();
 				TransitionDescription td = getTransitionDescriptor(edgeVisual);
-				_commandName = "Move";
+				_command = Command.Move;
 				td._pathControlPoints.clear();
 				for (var cp : edgeVisual.getControlPoints())
 				{
@@ -111,7 +133,7 @@ public class EditorChanges
 	/**
 	 * The command name of the change
 	 */
-	public String _commandName;
+	public Command _command;
 
 	/**
 	 * Map of renamed states.
