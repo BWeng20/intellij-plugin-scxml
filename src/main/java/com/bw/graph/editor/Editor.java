@@ -8,11 +8,19 @@ import javax.swing.JComponent;
 import java.awt.Graphics2D;
 
 /**
- * Editor proxy to edit DrawPrimitives and associated data models.<br>
+ * Editor to in-place edit of DrawPrimitives and associated data models.<br>
  * Supports edits if used as user-data in DrawPrimitives.
  */
-public interface EditorProxy
+public interface Editor
 {
+
+	/**
+	 * Can the editor be used in-place.
+	 *
+	 * @return true if the component shall be shown in-place.
+	 */
+	boolean isInPlace();
+
 	/**
 	 * Gets the editor component.
 	 *

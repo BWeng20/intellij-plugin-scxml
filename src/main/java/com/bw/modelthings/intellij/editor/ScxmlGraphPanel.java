@@ -216,6 +216,8 @@ public class ScxmlGraphPanel extends FsmGraphPanel implements Disposable
 
 		});
 		GraphLafManagerListener.addGraphLafListener(_lafListener);
+
+		_pane.setDialogHandler(new DialogHandler());
 	}
 
 	/**
@@ -259,10 +261,10 @@ public class ScxmlGraphPanel extends FsmGraphPanel implements Disposable
 		_stateOutlineStyle._font = font;
 		_stateOutlineStyle._fontMetrics = fontMetrics;
 
-		_stateInnerStyle._linePaint = _stateOutlineStyle._linePaint;
-		_stateInnerStyle._fillPaint = _stateOutlineStyle._fillPaint;
+		_stateInnerStyle._linePaint = _stateOutlineStyle.getLinePaint();
+		_stateInnerStyle._fillPaint = _stateOutlineStyle.getFillPaint();
 		_stateInnerStyle._lineStroke = new BasicStroke(1);
-		_stateInnerStyle._textPaint = _stateOutlineStyle._textPaint;
+		_stateInnerStyle._textPaint = _stateOutlineStyle.getTextPaint();
 		_stateInnerStyle._background = background;
 		_stateInnerStyle._font = font;
 		_stateInnerStyle._fontMetrics = fontMetrics;

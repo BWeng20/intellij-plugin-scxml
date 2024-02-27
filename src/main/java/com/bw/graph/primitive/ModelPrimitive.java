@@ -93,7 +93,7 @@ public class ModelPrimitive extends DrawPrimitive
 	}
 
 	@Override
-	protected void drawIntern(Graphics2D g2)
+	protected void drawRelative(Graphics2D g2)
 	{
 		if (_childModel != null)
 		{
@@ -107,10 +107,10 @@ public class ModelPrimitive extends DrawPrimitive
 			if (scale > 1f)
 				scale = 1f;
 
-			g2.setPaint(_style._background);
+			g2.setPaint(_style.getBackground());
 			g2.fill(subModelBox);
-			g2.setStroke(_style._lineStroke);
-			g2.setPaint(_style._linePaint);
+			g2.setStroke(_style.getLineStroke());
+			g2.setPaint(_style.getLinePaint());
 			g2.draw(subModelBox);
 
 			AffineTransform orgAft = g2.getTransform();

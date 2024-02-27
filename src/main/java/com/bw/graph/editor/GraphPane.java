@@ -422,14 +422,27 @@ public class GraphPane extends JComponent
 	protected DrawPrimitive _selectedPrimitive;
 
 	/**
-	 * The current active editor.
+	 * The current active editor component.
 	 */
-	protected JComponent _selectedPrimitiveEditor;
+	protected JComponent _selectedEditorComponent;
+
+	/**
+	 * True if the current active editor is shown in-place.
+	 */
+	protected boolean _selectedEditorIsInPlace = false;
+
+
+	/**
+	 * The current active editor dialog (if not in-place).
+	 * Is lazy created and will be reused.
+	 */
+	protected DialogHandler _dialogHandler;
+
 
 	/**
 	 * The proxy of the current active editor.
 	 */
-	protected EditorProxy _selectedPrimitiveEditorProxy;
+	protected Editor _selectedEditor;
 
 
 	@Override
@@ -451,7 +464,7 @@ public class GraphPane extends JComponent
 			g2.scale(_configuration._scale, _configuration._scale);
 
 			_model.draw(g2);
-			if (_selectedPrimitive != null && _selectedPrimitiveEditor == null)
+			if (_selectedPrimitive != null && _selectedEditorComponent == null)
 				drawPrimitiveCursor(g2, _selectedPrimitive);
 
 		}
@@ -644,7 +657,7 @@ public class GraphPane extends JComponent
 				g2.translate(_offsetX, _offsetY);
 				g2.scale(_configuration._scale, _configuration._scale);
 
-				if (_selectedPrimitive != null && _selectedPrimitiveEditor == null)
+				if (_selectedPrimitive != null && _selectedEditorComponent == null)
 				{
 					drawPrimitiveCursor(g2, _selectedPrimitive);
 				}
@@ -820,6 +833,7 @@ public class GraphPane extends JComponent
 		return Collections.unmodifiableList(_parents);
 	}
 
+
 	/**
 	 * Start edit of a primitive. There can be only one active edit.
 	 *
@@ -828,21 +842,27 @@ public class GraphPane extends JComponent
 	protected void startEdit(Graphics2D g2)
 	{
 		cancelEdit();
-		if (_selectedPrimitive != null)
+		Editor editor = _selectedPrimitive == null ? null : _selectedPrimitive.getEditor();
+		if (editor == null)
 		{
-			Object userData = _selectedPrimitive.getUserData();
+			editor = _selectedVisual == null ? null : _selectedVisual.getEditor();
+		}
 
-			if (userData instanceof EditorProxy editorProxy)
+		if (editor != null)
+		{
+			_selectedEditor = editor;
+			Visual v = _selectedPrimitive.getVisual();
+			if (_selectedEditorComponent != null)
 			{
-				_selectedPrimitiveEditorProxy = editorProxy;
-				Visual v = _selectedPrimitive.getVisual();
-				if (_selectedPrimitiveEditor != null)
-				{
-					// This should not happen...
-					System.err.println("Previous Editor still active during new selection, should already by removed.");
-					removePrimitiveEditor();
-				}
-				_selectedPrimitiveEditor = _selectedPrimitiveEditorProxy.getEditor(_selectedPrimitive);
+				// This should not happen...
+				System.err.println("Previous Editor still active during new selection, should already by removed.");
+				removeEditor();
+			}
+			_selectedEditorComponent = _selectedEditor.getEditor(_selectedPrimitive);
+			_selectedEditorIsInPlace = _selectedEditor.isInPlace();
+
+			if (_selectedEditorIsInPlace)
+			{
 				Rectangle2D.Float rt = v.getAbsoluteBoundsOfPrimitive(g2, _selectedPrimitive);
 
 				final float scale = _configuration._scale;
@@ -854,12 +874,11 @@ public class GraphPane extends JComponent
 				rt.height *= scale;
 
 				Font font;
-				FontMetrics fontMetrics;
 				DrawStyle style = _selectedPrimitive.getStyle();
-				if (style._fontMetrics != null)
+				FontMetrics fontMetrics = style.getFontMetrics();
+				if (fontMetrics != null)
 				{
-					font = style._font;
-					fontMetrics = style._fontMetrics;
+					font = style.getFont();
 				}
 				else
 				{
@@ -867,8 +886,8 @@ public class GraphPane extends JComponent
 					fontMetrics = getFontMetrics(font);
 				}
 				font = font.deriveFont((float) (int) (0.5 + font.getSize() * _configuration._scale));
-				_selectedPrimitiveEditor.setFont(font);
-				Dimension d = _selectedPrimitiveEditor.getPreferredSize();
+				_selectedEditorComponent.setFont(font);
+				Dimension d = _selectedEditorComponent.getPreferredSize();
 
 				float minWidth = fontMetrics.charWidth('X') * 20 * _configuration._scale;
 				d.width = (int) (0.5 + Math.max(minWidth, d.width));
@@ -878,31 +897,43 @@ public class GraphPane extends JComponent
 				rt.width = d.width;
 				rt.height = d.height;
 
-				_selectedPrimitiveEditor.setBounds(rt.getBounds());
-				_selectedPrimitiveEditor.addKeyListener(_editorKeyAdapter);
-				_selectedPrimitiveEditor.addFocusListener(_editorFocusAdapter);
-				add(_selectedPrimitiveEditor);
-				_selectedPrimitiveEditor.requestFocus();
+				_selectedEditorComponent.setBounds(rt.getBounds());
+				_selectedEditorComponent.addKeyListener(_editorKeyAdapter);
+				_selectedEditorComponent.addFocusListener(_editorFocusAdapter);
+				add(_selectedEditorComponent);
+				_selectedEditorComponent.requestFocus();
 			}
 			else
-				drawPrimitiveCursor(g2, _selectedPrimitive);
+			{
+				if (_dialogHandler == null)
+				{
+					_dialogHandler = new DefaultDialogHandler();
+				}
+
+				_dialogHandler.openEditor(this, _selectedEditorComponent, this::endEdit, this::cancelEdit);
+			}
+
+		}
+		if (_selectedPrimitive != null)
+		{
+			drawPrimitiveCursor(g2, _selectedPrimitive);
 		}
 	}
 
 	/**
 	 * Cancel any active editor.
 	 *
-	 * @see EditorProxy#cancelEdit(DrawPrimitive)
+	 * @see Editor#cancelEdit(DrawPrimitive)
 	 */
 	protected void cancelEdit()
 	{
-		if (_selectedPrimitiveEditor != null)
+		if (_selectedEditorComponent != null)
 		{
-			removePrimitiveEditor();
-			if (_selectedPrimitiveEditorProxy != null)
+			removeEditor();
+			if (_selectedEditor != null)
 			{
-				_selectedPrimitiveEditorProxy.cancelEdit(_selectedPrimitive);
-				_selectedPrimitiveEditorProxy = null;
+				_selectedEditor.cancelEdit(_selectedPrimitive);
+				_selectedEditor = null;
 			}
 			// Suppress any cursor updates.
 			_selectedPrimitive = null;
@@ -912,38 +943,64 @@ public class GraphPane extends JComponent
 	/**
 	 * End and commits the active editor.
 	 *
-	 * @see EditorProxy#endEdit(DrawPrimitive, VisualModel, Graphics2D)
+	 * @see Editor#endEdit(DrawPrimitive, VisualModel, Graphics2D)
 	 */
 	protected void endEdit()
 	{
-		if (_selectedPrimitiveEditor != null)
+		if (_selectedEditorComponent != null)
 		{
-			if (_selectedPrimitiveEditorProxy != null)
+			if (_selectedEditor != null)
 			{
 				Graphics2D g2 = (Graphics2D) getGraphics();
 				g2.translate(_offsetX, _offsetY);
 				g2.scale(_configuration._scale, _configuration._scale);
-				EditAction action = _selectedPrimitiveEditorProxy.endEdit(_selectedPrimitive, _model, g2);
+				EditAction action = _selectedEditor.endEdit(_selectedPrimitive, _model, g2);
 				if (action != null)
 					_actionStack.push(action);
 			}
 			_selectedPrimitive = null;
-			removePrimitiveEditor();
+			removeEditor();
 		}
 	}
 
 	/**
-	 * Removes the primitive in-place editor.
+	 * Removes the current editor.
 	 */
-	protected void removePrimitiveEditor()
+	protected void removeEditor()
 	{
-		if (_selectedPrimitiveEditor != null)
+		if (_selectedEditorComponent != null)
 		{
-			_selectedPrimitiveEditor.removeKeyListener(_editorKeyAdapter);
-			_selectedPrimitiveEditor.removeFocusListener(_editorFocusAdapter);
-			remove(_selectedPrimitiveEditor);
-			_selectedPrimitiveEditor = null;
+			_selectedEditorComponent.removeKeyListener(_editorKeyAdapter);
+			_selectedEditorComponent.removeFocusListener(_editorFocusAdapter);
+
+			if (_selectedEditorIsInPlace)
+			{
+				remove(_selectedEditorComponent);
+			}
+			else
+			{
+				if (_dialogHandler != null)
+				{
+					_dialogHandler.closeEditor();
+					_dialogHandler = null;
+				}
+			}
+			_selectedEditorComponent = null;
 		}
+	}
+
+	/**
+	 * Sets the dialog handler.
+	 *
+	 * @param dialogHandler The dialog handler, if null, the default handler is restored.
+	 */
+	public void setDialogHandler(DialogHandler dialogHandler)
+	{
+		if (_dialogHandler != null && _dialogHandler != dialogHandler)
+		{
+			cancelEdit();
+		}
+		_dialogHandler = dialogHandler;
 	}
 
 	/**

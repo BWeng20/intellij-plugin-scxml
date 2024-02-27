@@ -8,7 +8,8 @@ import com.bw.graph.visual.VisualFlags;
 import com.bw.modelthings.fsm.model.Transition;
 
 /**
- * Visual to represent an FSM State Transition Source-Connector .
+ * Visual to represent a connector of an FSM Transition on source-side.<br>
+ * Transitions can have multiple targets, but only one source.
  */
 public class TransitionSourceControlVisual extends ConnectorVisual
 {
@@ -25,7 +26,7 @@ public class TransitionSourceControlVisual extends ConnectorVisual
 		super(sourceState, context, flags);
 		if (transition != null)
 		{
-			String events = String.join(",", transition._events );
+			String events = String.join(",", transition._events);
 			if (!events.isEmpty())
 			{
 				Text eventText = new Text(_radius + 5, _radius / 2, events,

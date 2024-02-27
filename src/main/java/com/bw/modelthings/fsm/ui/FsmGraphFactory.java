@@ -93,7 +93,7 @@ public class FsmGraphFactory
 	}
 
 	/**
-	 * Creates an edge between two states.
+	 * Creates an edge for a Transition.
 	 * Only the edge to the state or parent in the same model is created.
 	 *
 	 * @param id         The Identification, can be null.
@@ -190,7 +190,7 @@ public class FsmGraphFactory
 			states.add(fsm._pseudoRoot);
 
 			final float gapY = 5;
-			float fh = stateOutlineStyles._style._fontMetrics.getHeight();
+			float fh = stateOutlineStyles._style.getFontMetrics().getHeight();
 
 			InsetsFloat insets = stateInnerStyles._configuration._innerModelBoxInsets;
 			insets._top = fh * 2.5f;

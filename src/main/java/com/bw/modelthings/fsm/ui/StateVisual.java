@@ -3,7 +3,7 @@ package com.bw.modelthings.fsm.ui;
 import com.bw.graph.Alignment;
 import com.bw.graph.DrawContext;
 import com.bw.graph.VisualModel;
-import com.bw.graph.editor.EditorProxy;
+import com.bw.graph.editor.Editor;
 import com.bw.graph.editor.action.EditAction;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.primitive.Line;
@@ -55,7 +55,7 @@ public class StateVisual extends GenericPrimitiveVisual
 	 */
 	private DrawContext _stateInnerContext;
 
-	private StateNameProxy _nameProxy;
+	private StateNameEditor _nameEditor;
 
 	private Rectangle _connectorFrame;
 
@@ -73,7 +73,7 @@ public class StateVisual extends GenericPrimitiveVisual
 		_state = state;
 		this._stateOuterContext = stateOuterContext;
 		this._stateInnerContext = stateInnerContext;
-		this._nameProxy = new StateNameProxy(textComponent);
+		this._nameEditor = new StateNameEditor(textComponent);
 	}
 
 	/**
@@ -98,7 +98,7 @@ public class StateVisual extends GenericPrimitiveVisual
 	public void createStatePrimitives(float x, float y, Graphics2D g2,
 									  PosAndBounds bounds, String displayName)
 	{
-		float fh = _stateInnerContext._style._fontMetrics.getHeight();
+		float fh = _stateInnerContext._style.getFontMetrics().getHeight();
 
 		ModelPrimitive modelPrimitive = getPrimitiveOf(ModelPrimitive.class);
 
@@ -113,7 +113,7 @@ public class StateVisual extends GenericPrimitiveVisual
 		removeAllDrawingPrimitives();
 		if (bounds == null)
 		{
-			Rectangle2D stringBounds = _stateInnerContext._style._fontMetrics.getStringBounds(displayName, g2);
+			Rectangle2D stringBounds = _stateInnerContext._style.getFontMetrics().getStringBounds(displayName, g2);
 
 			float height = 5 * fh;
 			float width = (float) Math.max(stringBounds.getWidth() + 10,
@@ -161,7 +161,7 @@ public class StateVisual extends GenericPrimitiveVisual
 		label.setFlags(VisualFlags.EDITABLE);
 		label.setAlignment(Alignment.Center);
 		label.setInsets(fh * 0.25f, 0, 0, 0);
-		label.setUserData(_nameProxy);
+		label.setEditor(_nameEditor);
 		addDrawingPrimitive(label);
 
 		Line separator = new Line(px, py + fh * 1.5f, px + bounds.bounds.width - 2 * d, py + fh * 1.5f
@@ -206,7 +206,7 @@ public class StateVisual extends GenericPrimitiveVisual
 	/**
 	 * Proxy to maintain the state name.
 	 */
-	protected class StateNameProxy implements EditorProxy
+	protected class StateNameEditor implements Editor
 	{
 		/**
 		 * The editor component.
@@ -218,7 +218,7 @@ public class StateVisual extends GenericPrimitiveVisual
 		 *
 		 * @param textComponent The text editor component.
 		 */
-		public StateNameProxy(JTextComponent textComponent)
+		public StateNameEditor(JTextComponent textComponent)
 		{
 			this._textComponent = textComponent;
 		}
@@ -268,6 +268,12 @@ public class StateVisual extends GenericPrimitiveVisual
 		@Override
 		public void cancelEdit(DrawPrimitive text)
 		{
+		}
+
+		@Override
+		public boolean isInPlace()
+		{
+			return false;
 		}
 	}
 

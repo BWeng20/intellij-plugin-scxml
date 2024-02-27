@@ -158,15 +158,15 @@ public class Path extends DrawPrimitive
 			}
 		}
 
-		g2.setStroke(_style._lineStroke);
-		g2.setPaint(_style._linePaint);
+		g2.setStroke(_style.getLineStroke());
+		g2.setPaint(_style.getLinePaint());
 		g2.draw(_path2D);
 		if (_arrowEndTranslated != null)
 			g2.fill(_arrowEndTranslated);
 	}
 
 	@Override
-	protected void drawIntern(Graphics2D g2)
+	protected void drawRelative(Graphics2D g2)
 	{
 		// unused
 	}
@@ -214,11 +214,11 @@ public class Path extends DrawPrimitive
 		sw.startElement(SVGElement.g);
 		sw.startElement(SVGElement.path);
 		sw.writeAttribute(SVGAttribute.Fill, (Paint) null);
-		sw.writeAttribute(SVGAttribute.Stroke, _style._linePaint);
+		sw.writeAttribute(SVGAttribute.Stroke, _style.getLinePaint());
 		sw.writeStrokeWidth(_style.getStrokeWidth());
 		sw.writeAttribute(SVGAttribute.D, pathB.toString());
 		sw.endElement();
-		sw.writeShape(_arrowEndTranslated, 1, _style._linePaint, null, 0);
+		sw.writeShape(_arrowEndTranslated, 1, _style.getLinePaint(), null, 0);
 		sw.endElement();
 	}
 

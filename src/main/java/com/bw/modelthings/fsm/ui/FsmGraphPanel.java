@@ -1,7 +1,7 @@
 package com.bw.modelthings.fsm.ui;
 
 import com.bw.graph.DrawContext;
-import com.bw.graph.DrawStyle;
+import com.bw.graph.SimpleDrawStyle;
 import com.bw.graph.VisualModel;
 import com.bw.graph.editor.GraphPane;
 import com.bw.graph.editor.action.EditAction;
@@ -59,19 +59,19 @@ public class FsmGraphPanel extends JPanel
 	 * Style for state outline.
 	 * Needs to be configured by platform-specific inheritance.
 	 */
-	protected DrawStyle _stateOutlineStyle = new DrawStyle();
+	protected SimpleDrawStyle _stateOutlineStyle = new SimpleDrawStyle();
 
 	/**
 	 * Style for inner drawings in the states.
 	 * Needs to be configured by platform-specific inheritance.
 	 */
-	protected DrawStyle _stateInnerStyle = new DrawStyle();
+	protected SimpleDrawStyle _stateInnerStyle = new SimpleDrawStyle();
 
 	/**
 	 * Style for start nodes.
 	 * Needs to be configured by platform-specific inheritance.
 	 */
-	protected DrawStyle _startStyle = new DrawStyle();
+	protected SimpleDrawStyle _startStyle = new SimpleDrawStyle();
 
 	/**
 	 * Context for state outline.

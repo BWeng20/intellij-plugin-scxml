@@ -3,7 +3,7 @@ package com.bw.graph.visual;
 import com.bw.graph.DrawContext;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
-import com.bw.graph.editor.EditorProxy;
+import com.bw.graph.editor.Editor;
 import com.bw.graph.editor.action.EditAction;
 import com.bw.graph.editor.action.MoveAction;
 import com.bw.graph.primitive.DrawPrimitive;
@@ -67,6 +67,11 @@ public abstract class Visual
 	 * The drawing context to use for painting and size calculations.
 	 */
 	protected DrawContext _context;
+
+	/**
+	 * The main editor for this visual.
+	 */
+	protected Editor _editor;
 
 	/**
 	 * True if offscreen buffers needs to be updated.
@@ -348,6 +353,27 @@ public abstract class Visual
 	}
 
 	/**
+	 * Gets the main editor of this visual.
+	 * Primitives in this visual may have separate editors.
+	 *
+	 * @return The editor or null.
+	 */
+	public Editor getEditor()
+	{
+		return _editor;
+	}
+
+	/**
+	 * Sets the main editor of this visual.
+	 *
+	 * @param editor The Editor ot null.
+	 */
+	public void setEditor(Editor editor)
+	{
+		_editor = editor;
+	}
+
+	/**
 	 * Gets the primitive at the absolute position.
 	 *
 	 * @param x The x ordinate.
@@ -582,24 +608,6 @@ public abstract class Visual
 		{
 			if (primitiveClass.isAssignableFrom(primitive.getClass()))
 				return (T) primitive;
-		}
-		return null;
-	}
-
-	/**
-	 * Gets the first primitive proxy with the specified class oder super-class.
-	 *
-	 * @param proxyClass The class to search for.
-	 * @param <T>        The type of the class.
-	 * @return The proxy or null.
-	 */
-	public <T extends EditorProxy> T getProxyOf(Class<T> proxyClass)
-	{
-		for (DrawPrimitive primitive : getPrimitives())
-		{
-			Object proxy = primitive.getUserData();
-			if (proxy != null && proxyClass.isAssignableFrom(proxy.getClass()))
-				return (T) proxy;
 		}
 		return null;
 	}

@@ -57,17 +57,17 @@ public abstract class ShapePrimitiveBase extends DrawPrimitive
 	 * @param g2 The graphics context, translates to target position.
 	 */
 	@Override
-	protected void drawIntern(Graphics2D g2)
+	protected void drawRelative(Graphics2D g2)
 	{
 		if (_shape != null)
 		{
-			if (_fill && _style._fillPaint != null)
+			if (_fill && _style.getFillPaint() != null)
 			{
-				g2.setPaint(_style._fillPaint);
+				g2.setPaint(_style.getFillPaint());
 				g2.fill(_shape);
 			}
-			g2.setPaint(_style._linePaint);
-			g2.setStroke(_style._lineStroke);
+			g2.setPaint(_style.getLinePaint());
+			g2.setStroke(_style.getLineStroke());
 			g2.draw(_shape);
 		}
 	}

@@ -41,10 +41,10 @@ public class Line extends DrawPrimitive
 
 
 	@Override
-	protected void drawIntern(Graphics2D g2)
+	protected void drawRelative(Graphics2D g2)
 	{
-		g2.setPaint(_style._linePaint);
-		g2.setStroke(_style._lineStroke);
+		g2.setPaint(_style.getLinePaint());
+		g2.setStroke(_style.getLineStroke());
 		g2.draw(_shape);
 	}
 
@@ -62,7 +62,7 @@ public class Line extends DrawPrimitive
 		sw.writeAttribute(SVGAttribute.Y1, pos.y);
 		sw.writeAttribute(SVGAttribute.X2, _shape.x2 + pos.x);
 		sw.writeAttribute(SVGAttribute.Y2, _shape.y2 + pos.y);
-		sw.writeAttribute(SVGAttribute.Stroke, _style._linePaint);
+		sw.writeAttribute(SVGAttribute.Stroke, _style.getLinePaint());
 		sw.writeStrokeWidth(_style.getStrokeWidth());
 		sw.endElement();
 	}

@@ -3,6 +3,7 @@ package com.bw.graph.primitive;
 import com.bw.graph.Alignment;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
+import com.bw.graph.editor.Editor;
 import com.bw.graph.util.Dimension2DFloat;
 import com.bw.graph.util.InsetsFloat;
 import com.bw.graph.visual.Visual;
@@ -17,7 +18,7 @@ import java.util.Objects;
 
 /**
  * A draw primitive.<br>
- * Used by Visuals to draw.
+ * Used by Visuals to draw stuff.
  */
 public abstract class DrawPrimitive
 {
@@ -38,9 +39,15 @@ public abstract class DrawPrimitive
 	private Visual _visual;
 
 	/**
-	 *
+	 * The payload object.
 	 */
 	private Object _userData;
+
+	/**
+	 * The editor.
+	 */
+	private Editor _editor;
+
 
 	/**
 	 * The insets of the component.
@@ -110,6 +117,26 @@ public abstract class DrawPrimitive
 	}
 
 	/**
+	 * Sets a Editor object.
+	 *
+	 * @param editor The Editor or null.
+	 */
+	public void setEditor(Editor editor)
+	{
+		this._editor = editor;
+	}
+
+	/**
+	 * Gets the Editor object.
+	 *
+	 * @return The editor or null.
+	 */
+	public Editor getEditor()
+	{
+		return _editor;
+	}
+
+	/**
 	 * Sets a payload object.
 	 *
 	 * @param userData The data object or null.
@@ -129,11 +156,10 @@ public abstract class DrawPrimitive
 		return _userData;
 	}
 
-
 	/**
 	 * Draws for given context.<br>
-	 * This method calls {@link #drawIntern(Graphics2D)}
-	 * with adapted position.
+	 * This method calls {@link #drawRelative(Graphics2D)}
+	 * with adapted origin.
 	 *
 	 * @param g2 The graphics context
 	 */
@@ -146,7 +172,7 @@ public abstract class DrawPrimitive
 		try
 		{
 			g2.translate(_tempPosition.x, _tempPosition.y);
-			drawIntern(g2);
+			drawRelative(g2);
 		}
 		finally
 		{
@@ -155,11 +181,13 @@ public abstract class DrawPrimitive
 	}
 
 	/**
-	 * Draws at given absolute position.
+	 * Draws relative to absolute position.<br>
+	 * If implementations needs to draw in original coordinate space, they should keep this method empty
+	 * and override {@link #draw(Graphics2D)} directly.
 	 *
-	 * @param g2 The graphics context, with (0,0) at final position.
+	 * @param g2 The graphics context, with original at final position.
 	 */
-	protected abstract void drawIntern(Graphics2D g2);
+	protected abstract void drawRelative(Graphics2D g2);
 
 
 	/**
