@@ -14,8 +14,6 @@ import com.bw.svg.SVGWriter;
 import javax.swing.JComponent;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
-import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -197,7 +195,11 @@ public class GraphPane extends JComponent
 						}
 					}
 				}
-				setSelectedPrimitive(editablePrimitive);
+				editPrimitive(editablePrimitive);
+				if (editablePrimitive == null)
+				{
+					editVisual(clicked);
+				}
 			}
 		}
 
@@ -464,8 +466,6 @@ public class GraphPane extends JComponent
 			g2.scale(_configuration._scale, _configuration._scale);
 
 			_model.draw(g2);
-			if (_selectedPrimitive != null && _selectedEditorComponent == null)
-				drawPrimitiveCursor(g2, _selectedPrimitive);
 
 		}
 		finally
@@ -585,7 +585,6 @@ public class GraphPane extends JComponent
 	public void setSelectedVisual(Visual visual)
 	{
 		cancelEdit();
-		setSelectedPrimitive(null);
 
 		boolean triggerRepaint = false;
 
@@ -640,61 +639,38 @@ public class GraphPane extends JComponent
 		return _selectedVisual;
 	}
 
+	/**
+	 * Edits a visual. The visual needs to have an associated editor, otherwise the call will have no effect.
+	 *
+	 * @param visual The visual to edit.
+	 */
+	public void editVisual(Visual visual)
+	{
+		if (_selectedVisual != visual)
+		{
+			setSelectedVisual(visual);
+		}
+		if (_selectedVisual != null)
+		{
+			_selectedPrimitive = null;
+			startEdit();
+		}
+	}
 
 	/**
 	 * Sets the current selected primitive.
 	 *
 	 * @param p The primitive
 	 */
-	public void setSelectedPrimitive(DrawPrimitive p)
+	public void editPrimitive(DrawPrimitive p)
 	{
 		if (p != _selectedPrimitive)
 		{
 			cancelEdit();
-			Graphics2D g2 = (Graphics2D) getGraphics();
-			try
-			{
-				g2.translate(_offsetX, _offsetY);
-				g2.scale(_configuration._scale, _configuration._scale);
-
-				if (_selectedPrimitive != null && _selectedEditorComponent == null)
-				{
-					drawPrimitiveCursor(g2, _selectedPrimitive);
-				}
-				_selectedPrimitive = p;
-				startEdit(g2);
-			}
-			finally
-			{
-				g2.dispose();
-			}
+			_selectedPrimitive = p;
 		}
-
-	}
-
-	/**
-	 * Draw the cursor for the current primitive in XOR mode.
-	 *
-	 * @param g2        Graphics to use.
-	 * @param primitive thr primitive.
-	 */
-	protected void drawPrimitiveCursor(Graphics2D g2, DrawPrimitive primitive)
-	{
-		Visual v = primitive.getVisual();
-
-		g2.setStroke(new BasicStroke(3));
-		g2.setColor(Color.BLUE);
-		g2.setXORMode(Color.RED);
-
-		Rectangle2D.Float rt = v.getAbsoluteBoundsOfPrimitive(g2, primitive);
-		if (rt != null)
-		{
-			rt.x -= 2;
-			rt.y -= 2;
-			rt.width += 4;
-			rt.height += 4;
-			g2.draw(rt);
-		}
+		if (_selectedPrimitive != null)
+			startEdit();
 	}
 
 	/**
@@ -833,69 +809,81 @@ public class GraphPane extends JComponent
 		return Collections.unmodifiableList(_parents);
 	}
 
-
 	/**
-	 * Start edit of a primitive. There can be only one active edit.
-	 *
-	 * @param g2 The graphics context to use.
+	 * Start edit. There can be only one active edit.
 	 */
-	protected void startEdit(Graphics2D g2)
+	protected void startEdit()
 	{
 		cancelEdit();
 		Editor editor = _selectedPrimitive == null ? null : _selectedPrimitive.getEditor();
-		if (editor == null)
+
+		Visual v = _selectedVisual;
+		while (v != null && editor == null)
 		{
-			editor = _selectedVisual == null ? null : _selectedVisual.getEditor();
+			editor = v.getEditor();
+			v = v.getParentVisual();
 		}
 
-		if (editor != null)
+		if (editor != null && _selectedVisual != null)
 		{
 			_selectedEditor = editor;
-			Visual v = _selectedPrimitive.getVisual();
 			if (_selectedEditorComponent != null)
 			{
 				// This should not happen...
 				System.err.println("Previous Editor still active during new selection, should already by removed.");
 				removeEditor();
 			}
-			_selectedEditorComponent = _selectedEditor.getEditor(_selectedPrimitive);
+			_selectedEditorComponent = _selectedEditor.getEditor();
 			_selectedEditorIsInPlace = _selectedEditor.isInPlace();
 
 			if (_selectedEditorIsInPlace)
 			{
-				Rectangle2D.Float rt = v.getAbsoluteBoundsOfPrimitive(g2, _selectedPrimitive);
-
-				final float scale = _configuration._scale;
-				rt.x += _offsetX;
-				rt.y += _offsetY;
-				rt.x *= scale;
-				rt.y *= scale;
-				rt.width *= scale;
-				rt.height *= scale;
-
-				Font font;
-				DrawStyle style = _selectedPrimitive.getStyle();
-				FontMetrics fontMetrics = style.getFontMetrics();
-				if (fontMetrics != null)
+				Graphics2D g2 = (Graphics2D) getGraphics();
+				Rectangle2D.Float rt;
+				try
 				{
-					font = style.getFont();
+					g2.translate(_offsetX, _offsetY);
+					g2.scale(_configuration._scale, _configuration._scale);
+
+					rt = _selectedVisual.getAbsoluteBoundsOfPrimitive(g2, _selectedPrimitive);
+
+					final float scale = _configuration._scale;
+					rt.x += _offsetX;
+					rt.y += _offsetY;
+					rt.x *= scale;
+					rt.y *= scale;
+					rt.width *= scale;
+					rt.height *= scale;
+
+					Font font;
+					DrawStyle style = _selectedPrimitive.getStyle();
+					FontMetrics fontMetrics = style.getFontMetrics();
+					if (fontMetrics != null)
+					{
+						font = style.getFont();
+					}
+					else
+					{
+						font = getFont();
+						fontMetrics = getFontMetrics(font);
+					}
+					font = font.deriveFont((float) (int) (0.5 + font.getSize() * _configuration._scale));
+					_selectedEditorComponent.setFont(font);
+					Dimension d = _selectedEditorComponent.getPreferredSize();
+
+					float minWidth = fontMetrics.charWidth('X') * 20 * _configuration._scale;
+					d.width = (int) (0.5 + Math.max(minWidth, d.width));
+
+					rt.x += (rt.width - d.width) / 2f;
+					rt.y += (rt.height - d.height) / 2f;
+					rt.width = d.width;
+					rt.height = d.height;
+
 				}
-				else
+				finally
 				{
-					font = getFont();
-					fontMetrics = getFontMetrics(font);
+					g2.dispose();
 				}
-				font = font.deriveFont((float) (int) (0.5 + font.getSize() * _configuration._scale));
-				_selectedEditorComponent.setFont(font);
-				Dimension d = _selectedEditorComponent.getPreferredSize();
-
-				float minWidth = fontMetrics.charWidth('X') * 20 * _configuration._scale;
-				d.width = (int) (0.5 + Math.max(minWidth, d.width));
-
-				rt.x += (rt.width - d.width) / 2f;
-				rt.y += (rt.height - d.height) / 2f;
-				rt.width = d.width;
-				rt.height = d.height;
 
 				_selectedEditorComponent.setBounds(rt.getBounds());
 				_selectedEditorComponent.addKeyListener(_editorKeyAdapter);
@@ -914,16 +902,12 @@ public class GraphPane extends JComponent
 			}
 
 		}
-		if (_selectedPrimitive != null)
-		{
-			drawPrimitiveCursor(g2, _selectedPrimitive);
-		}
 	}
 
 	/**
 	 * Cancel any active editor.
 	 *
-	 * @see Editor#cancelEdit(DrawPrimitive)
+	 * @see Editor#cancelEdit()
 	 */
 	protected void cancelEdit()
 	{
@@ -932,10 +916,9 @@ public class GraphPane extends JComponent
 			removeEditor();
 			if (_selectedEditor != null)
 			{
-				_selectedEditor.cancelEdit(_selectedPrimitive);
+				_selectedEditor.cancelEdit();
 				_selectedEditor = null;
 			}
-			// Suppress any cursor updates.
 			_selectedPrimitive = null;
 		}
 	}
@@ -943,7 +926,7 @@ public class GraphPane extends JComponent
 	/**
 	 * End and commits the active editor.
 	 *
-	 * @see Editor#endEdit(DrawPrimitive, VisualModel, Graphics2D)
+	 * @see Editor#endEdit(VisualModel, Graphics2D)
 	 */
 	protected void endEdit()
 	{
@@ -952,14 +935,21 @@ public class GraphPane extends JComponent
 			if (_selectedEditor != null)
 			{
 				Graphics2D g2 = (Graphics2D) getGraphics();
-				g2.translate(_offsetX, _offsetY);
-				g2.scale(_configuration._scale, _configuration._scale);
-				EditAction action = _selectedEditor.endEdit(_selectedPrimitive, _model, g2);
-				if (action != null)
-					_actionStack.push(action);
+				try
+				{
+					EditAction action = _selectedEditor.endEdit(_model, g2);
+					if (action != null)
+						_actionStack.push(action);
+				}
+				finally
+				{
+					g2.dispose();
+				}
 			}
 			_selectedPrimitive = null;
 			removeEditor();
+
+			SwingUtilities.invokeLater(this::repaint);
 		}
 	}
 

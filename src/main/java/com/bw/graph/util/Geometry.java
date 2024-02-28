@@ -6,6 +6,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.Collection;
 import java.util.stream.Stream;
 
 /**
@@ -192,6 +193,18 @@ public interface Geometry
 		return result;
 	}
 
+	/**
+	 * Get the angle in Radians of the line.
+	 *
+	 * @param p1 The first point.
+	 * @param p2 The second point.
+	 * @return The angle.
+	 */
+	static float getAngle(Point2D.Float p1, Point2D.Float p2)
+	{
+		return (float) Math.atan2(p2.y - p1.y, p2.x - p1.x);
+	}
+
 
 	/**
 	 * Get the angle in Radians of the line.
@@ -244,4 +257,62 @@ public interface Geometry
 		return union;
 	}
 
+	/**
+	 * Calculates the average point from a collection of points.
+	 *
+	 * @param data The points.
+	 * @return The calculated average.
+	 */
+	static Point2D.Double averagePoint(Collection<Point2D.Double> data)
+	{
+
+		return averagePoint(data.stream(), data.size());
+	}
+
+	/**
+	 * Calculates the average point from a stream of points.
+	 *
+	 * @param data The stream.
+	 * @param N    The number of items in the steam.
+	 * @return The calculated average.
+	 */
+	static Point2D.Double averagePoint(Stream<Point2D.Double> data, int N)
+	{
+
+		final Point2D.Double avg = new Point2D.Double(0, 0);
+		data.forEach(d -> {
+			avg.x += d.x / N;
+			avg.y += d.y / N;
+		});
+		return avg;
+	}
+
+	/**
+	 * Calculates the average point from a collection of points.
+	 *
+	 * @param data The points.
+	 * @return The calculated average.
+	 */
+	static Point2D.Float averagePointFloat(Collection<Point2D.Float> data)
+	{
+
+		return averagePointFloat(data.stream(), data.size());
+	}
+
+	/**
+	 * Calculates the average point from a stream of points.
+	 *
+	 * @param data The stream.
+	 * @param N    The number of items in the steam.
+	 * @return The calculated average.
+	 */
+	static Point2D.Float averagePointFloat(Stream<Point2D.Float> data, int N)
+	{
+		final Point2D.Float avg = new Point2D.Float(0, 0);
+		data.forEach(d -> {
+			avg.x += d.x / N;
+			avg.y += d.y / N;
+		});
+		return avg;
+	}
 }

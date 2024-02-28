@@ -25,7 +25,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * Factory to create Graph visuals from an FSM model.<br>
@@ -33,6 +32,8 @@ import java.util.stream.Collectors;
  */
 public class FsmGraphFactory
 {
+	private TransitionEditorPane _transitionEditor = new TransitionEditorPane();
+
 
 	/**
 	 * Logger of this class.
@@ -146,24 +147,19 @@ public class FsmGraphFactory
 	 * @param style      The style to use.
 	 * @return The edge visual created.
 	 */
-	public MultiTargetEdgeVisual createEdge(String id, Visual source, Transition transition, List<AbstractMap.SimpleEntry<StateVisual, StateVisual>> targets, Graphics2D g2, DrawContext style)
+	public TransitionVisual createEdge(String id, Visual source, Transition transition, List<AbstractMap.SimpleEntry<StateVisual, StateVisual>> targets, Graphics2D g2, DrawContext style)
 	{
-		MultiTargetEdgeVisual edgeVisual;
+		TransitionVisual edgeVisual;
 		if (source != null && targets != null && !targets.isEmpty())
 		{
-			ConnectorVisual sourceConnector = new TransitionSourceControlVisual(source, transition, style, VisualFlags.ALWAYS);
-			List<ConnectorVisual> targetConnectors = targets.stream().map(targetPair -> {
-				ConnectorVisual cv = new ConnectorVisual(targetPair.getKey(), style, VisualFlags.ALWAYS);
-				cv.setTargetedParentChild(targetPair.getValue());
-				return cv;
-			}).collect(Collectors.toList());
-
-			edgeVisual = new MultiTargetEdgeVisual(id, sourceConnector, targetConnectors, style);
+			edgeVisual = new TransitionVisual(id, source, transition, targets, style, VisualFlags.ALWAYS);
+			edgeVisual.setEditor(new TransitionEditor(_transitionEditor, edgeVisual));
 		}
 		else
 			edgeVisual = null;
 		return edgeVisual;
 	}
+
 
 	/**
 	 * Creates a visual model for a state machine.
@@ -266,8 +262,7 @@ public class FsmGraphFactory
 				if (state._parent != null)
 				{
 					statePosition = statePositions.get(state._parent._name);
-					visual.createStatePrimitives(statePosition.x, statePosition.y, g2, _graphExtension._bounds.get(state._docId),
-							null);
+					visual.createStatePrimitives(statePosition.x, statePosition.y, g2, _graphExtension._bounds.get(state._docId));
 
 					Rectangle2D.Float bounds = visual.getAbsoluteBounds2D(g2);
 					if (bounds != null)
@@ -304,8 +299,8 @@ public class FsmGraphFactory
 						sourceConnector.setRelativePosition(td._relativeSourceConnectorPosition.x, td._relativeSourceConnectorPosition.y);
 					}
 
-					getModelForVisual((StateVisual) sourceConnector.getParent()).getVisuals()
-																				.add(sourceConnector);
+					getModelForVisual((StateVisual) sourceConnector.getParentVisual()).getVisuals()
+																					  .add(sourceConnector);
 
 					final List<ConnectorVisual> targetConnectorVisuals = edgeVisual.getTargetConnectors();
 
@@ -322,8 +317,8 @@ public class FsmGraphFactory
 						}
 					}
 					targetConnectorVisuals.forEach(targetConnector ->
-							getModelForVisual((StateVisual) targetConnector.getParent()).getVisuals()
-																						.add(targetConnector));
+							getModelForVisual((StateVisual) targetConnector.getParentVisual()).getVisuals()
+																							  .add(targetConnector));
 				}
 			}
 

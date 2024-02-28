@@ -1,11 +1,13 @@
 package com.bw.modelthings.fsm.ui;
 
 import com.bw.graph.editor.action.EditAction;
+import com.bw.graph.editor.action.EditActionList;
 import com.bw.graph.editor.action.MoveAction;
 import com.bw.graph.visual.ConnectorVisual;
 import com.bw.graph.visual.EdgeVisual;
 import com.bw.graph.visual.PathControlVisual;
 import com.bw.graph.visual.SingleTargetEdgeVisual;
+import com.bw.modelthings.fsm.ui.actions.EventChangeAction;
 import com.bw.modelthings.fsm.ui.actions.RenameStateAction;
 
 import java.util.ArrayList;
@@ -31,7 +33,12 @@ public class EditorChanges
 		/**
 		 * Some visual was renamed.
 		 */
-		Rename
+		Rename,
+
+		/**
+		 * Events of a transition changed.
+		 */
+		Events
 	}
 
 	private final Map<String, TransitionDescription> _transitionDescriptionMap = new HashMap<>();
@@ -77,6 +84,16 @@ public class EditorChanges
 	 */
 	public EditorChanges(EditAction action)
 	{
+		addAction(action);
+	}
+
+	/**
+	 * Adds an action to the changes.
+	 *
+	 * @param action The action, can be null which will be ignored.
+	 */
+	public void addAction(EditAction action)
+	{
 		if (action instanceof RenameStateAction renameStateAction)
 		{
 			_statesRenamed.put(renameStateAction._oldName, renameStateAction._newName);
@@ -97,7 +114,7 @@ public class EditorChanges
 			}
 			else if (moveAction._what instanceof ConnectorVisual connectorVisual)
 			{
-				if (connectorVisual.getParent() instanceof StateVisual)
+				if (connectorVisual.getParentVisual() instanceof StateVisual)
 				{
 					_command = Command.Move;
 					EdgeVisual edgeVisual = connectorVisual.getEdgeVisual();
@@ -127,6 +144,20 @@ public class EditorChanges
 					td._pathControlPoints.add(cp.getAbsolutePosition());
 				}
 			}
+		}
+		else if (action instanceof EventChangeAction eventAction)
+		{
+
+			TransitionDescription td = getTransitionDescriptor((String) eventAction._what.getId());
+			if (td != null)
+			{
+				td._events = eventAction._events;
+				_command = Command.Events;
+			}
+		}
+		else if (action instanceof EditActionList actionList)
+		{
+			actionList._actions.forEach(this::addAction);
 		}
 	}
 

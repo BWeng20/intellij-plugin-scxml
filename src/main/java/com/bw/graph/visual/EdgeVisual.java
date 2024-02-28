@@ -8,10 +8,8 @@ import java.util.List;
 /**
  * Base of Edge Visuals.
  */
-public abstract class EdgeVisual extends Visual implements VisualContainer
+public abstract class EdgeVisual extends VisualContainer
 {
-	private EdgeVisual _parentEdge;
-
 	/**
 	 * Initializes the new Edge Visual.
 	 *
@@ -51,7 +49,7 @@ public abstract class EdgeVisual extends Visual implements VisualContainer
 	public abstract Visual getSourceVisual();
 
 	/**
-	 * Gets the target visual. Same as {@link #getTargetConnectors()} and {@link ConnectorVisual#getParent()}
+	 * Gets the target visual. Same as {@link #getTargetConnectors()} and {@link ConnectorVisual#getParentVisual()}
 	 *
 	 * @return The list of target visuals. Possibly empty, but never null.
 	 */
@@ -94,7 +92,7 @@ public abstract class EdgeVisual extends Visual implements VisualContainer
 	 */
 	public EdgeVisual getParentEdge()
 	{
-		return _parentEdge;
+		return (EdgeVisual) _parent;
 	}
 
 	/**
@@ -104,6 +102,6 @@ public abstract class EdgeVisual extends Visual implements VisualContainer
 	 */
 	public void setParentEdge(EdgeVisual edge)
 	{
-		_parentEdge = edge;
+		_parent = edge;
 	}
 }

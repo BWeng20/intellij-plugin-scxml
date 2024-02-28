@@ -21,6 +21,22 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	protected List<SingleTargetEdgeVisual> _edgeVisuals = new ArrayList<>();
 
 	/**
+	 * The source connector.
+	 */
+	protected ConnectorVisual _source;
+
+	/**
+	 * Constructur to be used by inheritances.
+	 *
+	 * @param id      The Identification, can be null.
+	 * @param context The  context. Must not be null.
+	 */
+	protected MultiTargetEdgeVisual(Object id, DrawContext context)
+	{
+		super(id, context);
+	}
+
+	/**
 	 * Creates a new Edge Visual.
 	 *
 	 * @param id      The Identification, can be null.
@@ -32,12 +48,21 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 								 DrawContext context)
 	{
 		super(id, context);
-		for (ConnectorVisual connectorVisual : targets)
-		{
-			SingleTargetEdgeVisual singleEdgeVisual = new SingleTargetEdgeVisual(null, source, connectorVisual, context);
-			singleEdgeVisual.setParentEdge(this);
-			_edgeVisuals.add(singleEdgeVisual);
-		}
+		_source = source;
+		targets.forEach(this::addTarget);
+	}
+
+	/**
+	 * Adds a target connector (and creates an edge for it).
+	 *
+	 * @param connectorVisual The connector to add.
+	 */
+	public void addTarget(ConnectorVisual connectorVisual)
+	{
+		SingleTargetEdgeVisual singleEdgeVisual = new SingleTargetEdgeVisual(null, _source, connectorVisual,
+				_context);
+		singleEdgeVisual.setParentEdge(this);
+		_edgeVisuals.add(singleEdgeVisual);
 	}
 
 	/**
@@ -136,7 +161,7 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 		List<Visual> targets = new ArrayList<>(_edgeVisuals.size());
 		for (SingleTargetEdgeVisual edgeVisual : _edgeVisuals)
 		{
-			Visual v = edgeVisual._targetConnector.getParent();
+			Visual v = edgeVisual._targetConnector.getParentVisual();
 			if (v != null)
 				targets.add(v);
 		}
@@ -209,7 +234,8 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 
 
 	/**
-	 * Sets Bit Flags.
+	 * Sets Bit Flags.<br>
+	 * Specific handling for "SELECTED".
 	 *
 	 * @param flags Flag bits to add.
 	 */
@@ -223,5 +249,20 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 		}
 	}
 
+	/**
+	 * Clears Bit Flags.<br>
+	 * Specific handling for "SELECTED".
+	 *
+	 * @param flags Flag bits to clear.
+	 */
+	@Override
+	public void clearFlags(int flags)
+	{
+		super.clearFlags(flags);
+		if ((flags & VisualFlags.SELECTED) != 0)
+		{
+			_edgeVisuals.forEach(v -> v.clearFlags(flags));
+		}
+	}
 
 }

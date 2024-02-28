@@ -5,7 +5,6 @@ import com.bw.graph.DrawContext;
 import com.bw.graph.VisualModel;
 import com.bw.graph.editor.Editor;
 import com.bw.graph.editor.action.EditAction;
-import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.primitive.Line;
 import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.primitive.Rectangle;
@@ -89,31 +88,25 @@ public class StateVisual extends GenericPrimitiveVisual
 	/**
 	 * Creates the primitives.
 	 *
-	 * @param x           Base X Position
-	 * @param y           Base Y Position
-	 * @param g2          Graphics to use for dimension calculations.
-	 * @param bounds      Outer bounds. If null bounds will be calculated.
-	 * @param displayName The name to show. If null the name of the state is used.
+	 * @param x      Base X Position
+	 * @param y      Base Y Position
+	 * @param g2     Graphics to use for dimension calculations.
+	 * @param bounds Outer bounds. If null bounds will be calculated.
 	 */
-	public void createStatePrimitives(float x, float y, Graphics2D g2,
-									  PosAndBounds bounds, String displayName)
+	public void createStatePrimitives(float x, float y, Graphics2D g2, PosAndBounds bounds)
 	{
 		float fh = _stateInnerContext._style.getFontMetrics().getHeight();
 
 		ModelPrimitive modelPrimitive = getPrimitiveOf(ModelPrimitive.class);
 
-		if (displayName == null)
-		{
-			displayName = _state._name;
-		}
-		this._displayName = displayName;
+		this._displayName = _state._name;
 
 		float d = _state._isFinal ? 5 : 0;
 
 		removeAllDrawingPrimitives();
 		if (bounds == null)
 		{
-			Rectangle2D stringBounds = _stateInnerContext._style.getFontMetrics().getStringBounds(displayName, g2);
+			Rectangle2D stringBounds = _stateInnerContext._style.getFontMetrics().getStringBounds(this._displayName, g2);
 
 			float height = 5 * fh;
 			float width = (float) Math.max(stringBounds.getWidth() + 10,
@@ -156,7 +149,7 @@ public class StateVisual extends GenericPrimitiveVisual
 			addDrawingPrimitive(innerFrame);
 		}
 
-		Text label = new Text(0, py, displayName,
+		Text label = new Text(0, py, _displayName,
 				_stateInnerContext._configuration, _stateInnerContext._style, VisualFlags.ALWAYS);
 		label.setFlags(VisualFlags.EDITABLE);
 		label.setAlignment(Alignment.Center);
@@ -230,7 +223,7 @@ public class StateVisual extends GenericPrimitiveVisual
 		}
 
 		@Override
-		public JComponent getEditor(DrawPrimitive text)
+		public JComponent getEditor()
 		{
 			_textComponent.setText(_state._name);
 			return _textComponent;
@@ -239,34 +232,35 @@ public class StateVisual extends GenericPrimitiveVisual
 		/**
 		 * Commits the edited text, updates the text-primitive and the Layout of the StateVisual.
 		 *
-		 * @param text  The primitive to update.
 		 * @param model The model.
 		 * @param g2    Graphics context for calculations.
 		 */
 		@Override
-		public EditAction endEdit(DrawPrimitive text, VisualModel model, Graphics2D g2)
+		public EditAction endEdit(VisualModel model, Graphics2D g2)
 		{
+			EditAction action;
+
 			String newName = _textComponent.getText()
 										   .trim();
-			if (text instanceof Text textPrimitive)
+			if (!Objects.equals(newName, _state._name))
 			{
-				String oldName = textPrimitive.getText();
-				if (!Objects.equals(newName, oldName))
-				{
-					setFlags(VisualFlags.MODIFIED);
-					Point2D.Float pt = getAbsolutePosition();
-					createStatePrimitives(pt.x, pt.y, g2, null, newName);
-					setPreferredDimension(null);
-					placeConnectors(model.getEdgesAt(StateVisual.this), g2);
+				action = new RenameStateAction(_state._name, newName);
 
-					return new RenameStateAction(oldName, newName);
-				}
+				_state._name = newName;
+				setFlags(VisualFlags.MODIFIED);
+				Point2D.Float pt = getAbsolutePosition();
+				createStatePrimitives(pt.x, pt.y, g2, null);
+				setPreferredDimension(null);
+				placeConnectors(model.getEdgesAt(StateVisual.this), g2);
+
 			}
-			return null;
+			else
+				action = null;
+			return action;
 		}
 
 		@Override
-		public void cancelEdit(DrawPrimitive text)
+		public void cancelEdit()
 		{
 		}
 
@@ -309,7 +303,7 @@ public class StateVisual extends GenericPrimitiveVisual
 		for (EdgeVisual edgeVisual : edgeVisuals)
 		{
 			ConnectorVisual sourceConnector = edgeVisual.getSourceConnector();
-			if (sourceConnector != null && sourceConnector.getParent() == this && sourceConnector.getRelativePosition() == null)
+			if (sourceConnector != null && sourceConnector.getParentVisual() == this && sourceConnector.getRelativePosition() == null)
 			{
 				asSource.add(sourceConnector);
 			}
@@ -317,7 +311,7 @@ public class StateVisual extends GenericPrimitiveVisual
 			{
 				for (ConnectorVisual targetConnector : edgeVisual.getTargetConnectors())
 				{
-					if (targetConnector.getParent() == this && targetConnector.getRelativePosition() == null)
+					if (targetConnector.getParentVisual() == this && targetConnector.getRelativePosition() == null)
 					{
 						asTarget.add(targetConnector);
 					}

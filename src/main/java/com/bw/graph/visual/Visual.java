@@ -78,6 +78,10 @@ public abstract class Visual
 	 */
 	protected boolean _offscreenBuffersInvalid = false;
 
+	/**
+	 * In case the visual is bound to some other visual.
+	 */
+	protected Visual _parent;
 
 	/**
 	 * Create a new empty visual.
@@ -91,6 +95,26 @@ public abstract class Visual
 		this._id = id;
 		this._context = context;
 		this._flags = VisualFlags.ALWAYS;
+	}
+
+	/**
+	 * Sets the parent visual.
+	 *
+	 * @param parent The parent or null
+	 */
+	public void setParentVisual(Visual parent)
+	{
+		_parent = parent;
+	}
+
+	/**
+	 * Get parent visual.
+	 *
+	 * @return The parent visual or null.
+	 */
+	public Visual getParentVisual()
+	{
+		return _parent;
 	}
 
 
@@ -440,18 +464,6 @@ public abstract class Visual
 		}
 		pt.y = 0;
 		return pt;
-	}
-
-	/**
-	 * Gets the absolute center position.
-	 *
-	 * @param g2 The graphics context to use for calculations.
-	 * @return the position of the center in absolute coordinates.
-	 */
-	public Point2D.Float getCenterPosition(Graphics2D g2)
-	{
-		Rectangle2D.Float bounds = getAbsoluteBounds2D(g2);
-		return new Point2D.Float((float) bounds.getCenterX(), (float) bounds.getCenterY());
 	}
 
 	/**

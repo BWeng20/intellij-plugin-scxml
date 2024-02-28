@@ -9,7 +9,6 @@ import java.util.List;
  */
 public class TransitionDescription
 {
-
 	/**
 	 * Create a new TransitionDescription.
 	 */
@@ -32,4 +31,11 @@ public class TransitionDescription
 	 * Absolute locations of path control.
 	 */
 	public List<Point2D.Float> _pathControlPoints = new ArrayList<>();
+
+
+	/**
+	 * Events.
+	 */
+	public List<String> _events;
+
 }

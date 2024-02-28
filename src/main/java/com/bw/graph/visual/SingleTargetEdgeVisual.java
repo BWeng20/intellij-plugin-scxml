@@ -161,18 +161,18 @@ public class SingleTargetEdgeVisual extends EdgeVisual
 	@Override
 	public Visual getSourceVisual()
 	{
-		return _sourceConnector == null ? null : _sourceConnector.getParent();
+		return _sourceConnector == null ? null : _sourceConnector.getParentVisual();
 	}
 
 	/**
-	 * Gets the target visual. Same as {@link #getTargetConnectors()} and {@link ConnectorVisual#getParent()}
+	 * Gets the target visual. Same as {@link #getTargetConnectors()} and {@link ConnectorVisual#getParentVisual()}
 	 *
 	 * @return The list of target visuals. Possibly empty, but never null.
 	 */
 	@Override
 	public List<Visual> getTargetVisuals()
 	{
-		return _targetConnector == null ? Collections.emptyList() : Collections.singletonList(_targetConnector.getParent());
+		return _targetConnector == null ? Collections.emptyList() : Collections.singletonList(_targetConnector.getParentVisual());
 	}
 
 	/**
@@ -186,8 +186,8 @@ public class SingleTargetEdgeVisual extends EdgeVisual
 	{
 		if (v != null)
 		{
-			return (_sourceConnector != null && _sourceConnector.getParent() == v) ||
-					(_targetConnector != null && _targetConnector.getParent() == v);
+			return (_sourceConnector != null && _sourceConnector.getParentVisual() == v) ||
+					(_targetConnector != null && _targetConnector.getParentVisual() == v);
 		}
 		return false;
 	}
@@ -202,8 +202,8 @@ public class SingleTargetEdgeVisual extends EdgeVisual
 	{
 		if (v != null)
 		{
-			if (_sourceConnector != null && _sourceConnector.getParent() == v) return _sourceConnector;
-			if (_targetConnector != null && _targetConnector.getParent() == v) return _targetConnector;
+			if (_sourceConnector != null && _sourceConnector.getParentVisual() == v) return _sourceConnector;
+			if (_targetConnector != null && _targetConnector.getParentVisual() == v) return _targetConnector;
 		}
 		return null;
 	}

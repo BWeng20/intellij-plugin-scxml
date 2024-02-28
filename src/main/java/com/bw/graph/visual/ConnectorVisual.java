@@ -46,8 +46,6 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 
 	private Point2D.Float _startDragRelativePosition = new Point2D.Float(0, 0);
 
-	private Visual _parent;
-
 	private Visual _targetedParentChild;
 
 	/**
@@ -104,16 +102,6 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	public Visual getTargetedParentChild()
 	{
 		return _targetedParentChild;
-	}
-
-	/**
-	 * Get parent state.
-	 *
-	 * @return The parent state or null.
-	 */
-	public Visual getParent()
-	{
-		return _parent;
 	}
 
 	/**
