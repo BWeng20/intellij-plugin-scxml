@@ -42,7 +42,7 @@ public class ScxmlNewFileAction extends CreateFileFromTemplateAction
 	{
 		builder
 				.setTitle("SCXML File")
-				.addKind("XML", Icons.SCXML, "SCXML.xml");
+				.addKind("SCXML", Icons.SCXML, "SCXML.scxml");
 	}
 
 	@Override

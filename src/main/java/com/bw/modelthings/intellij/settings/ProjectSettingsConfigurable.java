@@ -39,7 +39,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 	private JBCheckBox _buffered;
 	private JBCheckBox _zoomByMouseWheel;
 
-	private ComboBox _editorLayout;
+	private ComboBox<EditorLayout> _editorLayout;
 
 	@Override
 	public @Nullable JComponent createComponent()
@@ -49,7 +49,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 			_antialiasing = new JBCheckBox(ScXmlSdkBundle.message("settings.antialiasing"));
 			_buffered = new JBCheckBox(ScXmlSdkBundle.message("settings.states.buffered"));
 			_zoomByMouseWheel = new JBCheckBox(ScXmlSdkBundle.message("settings.zoomByCtrlKey"));
-			_editorLayout = new ComboBox(EditorLayout.values());
+			_editorLayout = new ComboBox<>(EditorLayout.values());
 
 
 			_editorComponent = FormBuilder.createFormBuilder()

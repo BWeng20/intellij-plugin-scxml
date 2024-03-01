@@ -3,7 +3,7 @@ package com.bw.modelthings.fsm.model;
 /**
  * <p>Implementation of the data-structures and algorithms described in the W3C scxml proposal.<br>
  * As reference each type and method has the w3c description as documentation.<br>
- * See <a href="https://www.w3.org/TR/scxml/#AlgorithmforSCXMLInterpretation">AlgorithmforSCXMLInterpretation</a>
+ * See <a href="https://www.w3.org/TR/scxml/#AlgorithmforSCXMLInterpretation">Algorithm for SCXMLInterpretation</a>
  * </p>
  * <p>Structs and methods are designed to match the signatures in the W3c-Pseudo-code.</p>
  */

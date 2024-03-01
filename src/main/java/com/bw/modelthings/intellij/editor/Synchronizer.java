@@ -292,6 +292,18 @@ public class Synchronizer implements Disposable
 							XmlTag root = doc.getRootTag();
 							if (root != null)
 							{
+								Map<String, String> ns = root.getLocalNamespaceDeclarations();
+								if (!ns.containsValue(ScxmlGraphExtension.NS_GRAPH_EXTENSION))
+								{
+									String md = "md";
+									int postfixC = 0;
+									while (ns.containsKey(md))
+									{
+										md = "md" + (++postfixC);
+									}
+									root.setAttribute("xmlns:" + md, ScxmlGraphExtension.NS_GRAPH_EXTENSION);
+								}
+
 								List<XmlTag> allTransitions = new ArrayList<>(100);
 								List<XmlTag> allStates = new ArrayList<>(100);
 								allStates.add(root);

@@ -3,6 +3,6 @@
     xmlns="http://www.w3.org/2005/07/scxml"
     xmlns:md="http://berndwengenroth.de/GraphExtension/1.0"
     version="1.0" initial="start">
-    <state id="start" md:bounds="10 10 200 200">
+    <state id="start">
     </state>
 </scxml>

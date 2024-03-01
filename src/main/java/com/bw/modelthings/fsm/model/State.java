@@ -2,6 +2,7 @@ package com.bw.modelthings.fsm.model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 
 /**
  * Holds the representation of a state.
@@ -118,7 +119,7 @@ public class State implements FsmElement
 	{
 		State[] statesArray = new State[_states.size()];
 		statesArray = _states.toArray(statesArray);
-		Arrays.sort(statesArray, (s1, s2) -> s1._docId - s2._docId);
+		Arrays.sort(statesArray, Comparator.comparingInt(s -> s._docId));
 		return Arrays.asList(statesArray);
 	}
 

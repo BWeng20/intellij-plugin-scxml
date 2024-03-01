@@ -30,7 +30,7 @@ public abstract class DrawPrimitive
 	private final Point2D.Float _relativePosition;
 	private final Point2D.Float _tempPosition = new Point2D.Float();
 
-	private int _flags = VisualFlags.ALWAYS;
+	private int _flags;
 
 	/**
 	 * Assigned Visual. Will be set temporary during event handling.
