@@ -14,7 +14,6 @@ import com.bw.modelthings.fsm.model.PseudoRoot;
 import com.bw.modelthings.fsm.model.State;
 import com.bw.modelthings.fsm.model.Transition;
 
-import javax.swing.text.JTextComponent;
 import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -27,18 +26,18 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- * Factory to create Graph visuals from an FSM model.<br>
+ * Builder to create Graph visuals from an FSM model.<br>
  * The class is not thread safe, use different instances in different threads.
  */
-public class FsmGraphFactory
+public class FsmGraphBuilder
 {
-	private TransitionEditorPane _transitionEditor = new TransitionEditorPane();
+	protected EditorUIManager _editorManager;
 
 
 	/**
 	 * Logger of this class.
 	 */
-	static final Logger log = Logger.getLogger(FsmGraphFactory.class.getName());
+	static final Logger log = Logger.getLogger(FsmGraphBuilder.class.getName());
 
 	/**
 	 * State visuals by state name.
@@ -51,29 +50,17 @@ public class FsmGraphFactory
 	 */
 	protected ScxmlGraphExtension _graphExtension;
 
-	/**
-	 * The text field to use as state name editor.
-	 */
-	protected JTextComponent _stateNameTextField;
 
 	/**
-	 * Creates a new factory.
+	 * Creates a new builder.
 	 *
 	 * @param graphExtension graph-extension handler or null.
+	 * @param editorUIManager The manager to deliver platform UI components.
 	 */
-	public FsmGraphFactory(ScxmlGraphExtension graphExtension)
+	public FsmGraphBuilder(ScxmlGraphExtension graphExtension, EditorUIManager editorUIManager)
 	{
 		this._graphExtension = graphExtension;
-	}
-
-	/**
-	 * Sets the text editor component for state names.
-	 *
-	 * @param textEditor The editor component to use.
-	 */
-	public void setStateNameEditorComponent(JTextComponent textEditor)
-	{
-		_stateNameTextField = textEditor;
+		this._editorManager = editorUIManager;
 	}
 
 	/**
@@ -153,7 +140,7 @@ public class FsmGraphFactory
 		if (source != null && targets != null && !targets.isEmpty())
 		{
 			edgeVisual = new TransitionVisual(id, source, transition, targets, style, VisualFlags.ALWAYS);
-			edgeVisual.setEditor(new TransitionEditor(_transitionEditor, edgeVisual));
+			edgeVisual.setEditor(new TransitionEditor(_editorManager.getTransitionEditorUI(), edgeVisual));
 		}
 		else
 			edgeVisual = null;
@@ -209,7 +196,7 @@ public class FsmGraphFactory
 				{
 					statesByName.put(state._name, state);
 
-					StateVisual stateVisual = new StateVisual(state, _stateNameTextField, stateOutlineStyles, stateInnerStyles);
+					StateVisual stateVisual = new StateVisual(state, _editorManager.getStateNameEditorUI(), stateOutlineStyles, stateInnerStyles);
 					if (state instanceof PseudoRoot pseudoRoot)
 					{
 						stateVisual.setDisplayName(pseudoRoot._fsmName);

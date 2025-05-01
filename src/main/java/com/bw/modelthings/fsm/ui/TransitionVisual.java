@@ -25,6 +25,8 @@ public class TransitionVisual extends MultiTargetEdgeVisual
 
 	private boolean _drawContent;
 
+	private Transition _transition;
+
 
 	/**
 	 * Creates a new Transition Visual.
@@ -41,6 +43,7 @@ public class TransitionVisual extends MultiTargetEdgeVisual
 							DrawContext context, int flags)
 	{
 		super(id, context);
+		_transition = transition;
 		setFlags(flags);
 		_source = new ConnectorVisual(sourceState, context, VisualFlags.ALWAYS);
 
@@ -66,6 +69,14 @@ public class TransitionVisual extends MultiTargetEdgeVisual
 
 			_drawContent = (_events != null || _condition != null);
 		}
+	}
+
+	/**
+	 * Gets the model transition.
+	 * @return The transition.
+	 */
+	public Transition getTransition() {
+		return _transition;
 	}
 
 	/**

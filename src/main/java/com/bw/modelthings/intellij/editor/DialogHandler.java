@@ -74,9 +74,6 @@ public class DialogHandler implements com.bw.graph.editor.DialogHandler
 	@Override
 	public void closeEditor()
 	{
-		if (_wrapper.isShowing())
-			_wrapper.close(0);
-
 		_wrapper.dialogPanel.remove(_editorComponent);
 		_wrapper.disposeIfNeeded();
 		_wrapper = null;

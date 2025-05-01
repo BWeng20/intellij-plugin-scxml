@@ -4,13 +4,12 @@ import com.bw.graph.VisualModel;
 import com.bw.graph.editor.Editor;
 import com.bw.graph.editor.action.EditAction;
 
-import javax.swing.JComponent;
 import java.awt.Graphics2D;
 
 /**
  * Editor for Transitions.
  */
-public class TransitionEditor implements Editor
+public class TransitionEditor<C> implements Editor<C>
 {
 	/**
 	 * Initializes a new transition editor.
@@ -18,13 +17,13 @@ public class TransitionEditor implements Editor
 	 * @param pane   The editor pane to use.
 	 * @param visual The visual to edit.
 	 */
-	public TransitionEditor(TransitionEditorPane pane, TransitionVisual visual)
+	public TransitionEditor(TransitionEditorUI<C> pane, TransitionVisual visual)
 	{
 		_pane = pane;
 		_transitionVisual = visual;
 	}
 
-	private final TransitionEditorPane _pane;
+	private final TransitionEditorUI<C> _pane;
 	private final TransitionVisual _transitionVisual;
 
 	@Override
@@ -34,10 +33,10 @@ public class TransitionEditor implements Editor
 	}
 
 	@Override
-	public JComponent getEditor()
+	public C getEditor()
 	{
 		_pane.setTransitionVisual(_transitionVisual);
-		return _pane;
+		return _pane.getComponent();
 	}
 
 	@Override

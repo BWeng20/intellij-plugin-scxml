@@ -120,7 +120,13 @@ public class GenericPrimitiveVisual extends Visual
 					}
 
 					if (graphConfiguration._antialiasing)
+					{
 						g2Buffered.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+					}
+					if (graphConfiguration._fractionalMetrics)
+					{
+						g2Buffered.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+					}
 
 					g2Buffered.scale(scaleX, scaleY);
 

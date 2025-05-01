@@ -3,8 +3,6 @@ package com.bw.modelthings.fsm.ui;
 import com.bw.graph.Alignment;
 import com.bw.graph.DrawContext;
 import com.bw.graph.VisualModel;
-import com.bw.graph.editor.Editor;
-import com.bw.graph.editor.action.EditAction;
 import com.bw.graph.primitive.Line;
 import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.primitive.Rectangle;
@@ -16,17 +14,13 @@ import com.bw.graph.visual.EdgeVisual;
 import com.bw.graph.visual.GenericPrimitiveVisual;
 import com.bw.graph.visual.VisualFlags;
 import com.bw.modelthings.fsm.model.State;
-import com.bw.modelthings.fsm.ui.actions.RenameStateAction;
 
-import javax.swing.JComponent;
-import javax.swing.text.JTextComponent;
 import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -62,17 +56,17 @@ public class StateVisual extends GenericPrimitiveVisual
 	 * Create a state .
 	 *
 	 * @param state             The state.
-	 * @param textComponent     The text component to use for inplace-edit.
+	 * @param stateNameEditorUI     The UI component to use for inplace-edit.
 	 * @param stateOuterContext The Drawing context to use for outline.
 	 * @param stateInnerContext The Drawing context to use for inner drawings.
 	 */
-	public StateVisual(State state, JTextComponent textComponent, DrawContext stateOuterContext, DrawContext stateInnerContext)
+	public StateVisual(State state, StateNameEditorUI stateNameEditorUI, DrawContext stateOuterContext, DrawContext stateInnerContext)
 	{
 		super(state._docId, stateOuterContext);
 		_state = state;
 		this._stateOuterContext = stateOuterContext;
 		this._stateInnerContext = stateInnerContext;
-		this._nameEditor = new StateNameEditor(textComponent);
+		this._nameEditor = new StateNameEditor(this, stateNameEditorUI);
 	}
 
 	/**
@@ -194,81 +188,6 @@ public class StateVisual extends GenericPrimitiveVisual
 	{
 		Text txt = getPrimitiveOf(Text.class);
 		return txt == null ? _displayName : txt.getText();
-	}
-
-	/**
-	 * Proxy to maintain the state name.
-	 */
-	protected class StateNameEditor implements Editor
-	{
-		/**
-		 * The editor component.
-		 */
-		public JTextComponent _textComponent;
-
-		/**
-		 * Create a new state proxy.
-		 *
-		 * @param textComponent The text editor component.
-		 */
-		public StateNameEditor(JTextComponent textComponent)
-		{
-			this._textComponent = textComponent;
-		}
-
-		@Override
-		public String toString()
-		{
-			return _state._name;
-		}
-
-		@Override
-		public JComponent getEditor()
-		{
-			_textComponent.setText(_state._name);
-			return _textComponent;
-		}
-
-		/**
-		 * Commits the edited text, updates the text-primitive and the Layout of the StateVisual.
-		 *
-		 * @param model The model.
-		 * @param g2    Graphics context for calculations.
-		 */
-		@Override
-		public EditAction endEdit(VisualModel model, Graphics2D g2)
-		{
-			EditAction action;
-
-			String newName = _textComponent.getText()
-										   .trim();
-			if (!Objects.equals(newName, _state._name))
-			{
-				action = new RenameStateAction(_state._name, newName);
-
-				_state._name = newName;
-				setFlags(VisualFlags.MODIFIED);
-				Point2D.Float pt = getAbsolutePosition();
-				createStatePrimitives(pt.x, pt.y, g2, null);
-				setPreferredDimension(null);
-				placeConnectors(model.getEdgesAt(StateVisual.this), g2);
-
-			}
-			else
-				action = null;
-			return action;
-		}
-
-		@Override
-		public void cancelEdit()
-		{
-		}
-
-		@Override
-		public boolean isInPlace()
-		{
-			return false;
-		}
 	}
 
 	private float getOtherVisualAbsoluteY(EdgeVisual ev)

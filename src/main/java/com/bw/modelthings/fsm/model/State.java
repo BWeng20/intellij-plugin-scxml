@@ -7,7 +7,7 @@ import java.util.Comparator;
 /**
  * Holds the representation of a state.
  */
-public class State implements FsmElement
+public class State extends FsmElement
 {
 	/**
 	 * Creates a new state.
@@ -16,12 +16,6 @@ public class State implements FsmElement
 	{
 
 	}
-
-	/**
-	 * The unique id, counting in document order.<br>
-	 * "id" is increasing on references to states, not declaration and may not result in correct order.
-	 */
-	public int _docId;
 
 	/**
 	 * The SCXML id.

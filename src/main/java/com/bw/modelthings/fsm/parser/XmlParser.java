@@ -25,6 +25,7 @@ import org.xml.sax.SAXParseException;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -134,7 +135,11 @@ public class XmlParser implements ScxmlTags
 	 */
 	public FiniteStateMachine parse(Path file, String xml) throws ParserException
 	{
-		javax.xml.parsers.DocumentBuilderFactory factory = org.apache.xerces.jaxp.DocumentBuilderFactoryImpl.newInstance();
+
+		javax.xml.parsers.DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		factory.setValidating(false);
+		factory.setIgnoringComments(true);
+		factory.setIgnoringElementContentWhitespace(true);
 		factory.setNamespaceAware(true);
 		factory.setXIncludeAware(true);
 		factory.setIgnoringElementContentWhitespace(true);

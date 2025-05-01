@@ -20,7 +20,7 @@ import java.util.Objects;
  * A draw primitive.<br>
  * Used by Visuals to draw stuff.
  */
-public abstract class DrawPrimitive
+public abstract class DrawPrimitive<C>
 {
 	/**
 	 * Style to use.
@@ -46,7 +46,7 @@ public abstract class DrawPrimitive
 	/**
 	 * The editor.
 	 */
-	private Editor _editor;
+	private Editor<C> _editor;
 
 
 	/**
@@ -121,7 +121,7 @@ public abstract class DrawPrimitive
 	 *
 	 * @param editor The Editor or null.
 	 */
-	public void setEditor(Editor editor)
+	public void setEditor(Editor<C> editor)
 	{
 		this._editor = editor;
 	}
@@ -131,7 +131,7 @@ public abstract class DrawPrimitive
 	 *
 	 * @return The editor or null.
 	 */
-	public Editor getEditor()
+	public Editor<C> getEditor()
 	{
 		return _editor;
 	}

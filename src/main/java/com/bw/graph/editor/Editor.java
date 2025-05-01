@@ -8,9 +8,8 @@ import java.awt.Graphics2D;
 
 /**
  * Editor to in-place edit of DrawPrimitives and associated data models.<br>
- * Supports edits if used as user-data in DrawPrimitives.
  */
-public interface Editor
+public interface Editor<C>
 {
 
 	/**
@@ -25,7 +24,7 @@ public interface Editor
 	 *
 	 * @return The editor component, with preset data.
 	 */
-	JComponent getEditor();
+	C getEditor();
 
 	/**
 	 * Ends and commits edit.
