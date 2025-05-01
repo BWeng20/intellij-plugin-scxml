@@ -9,16 +9,22 @@ import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.visual.Visual;
 import com.bw.modelthings.fsm.model.FiniteStateMachine;
 import com.bw.modelthings.fsm.model.State;
+import com.bw.modelthings.fsm.ui.swing.EditorUISwingManager;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.text.JTextComponent;
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.Paint;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Panel to show the FSM as Graphical State Machine.
@@ -92,6 +98,50 @@ public class FsmGraphPanel extends JPanel
 	 * Context for start node.
 	 */
 	protected DrawContext _startContext = new DrawContext(_pane.getGraphConfiguration(), _startStyle);
+
+	public static final String STYLE_START_LINE = "START_LINE";
+	public static final String STYLE_START_FILL = "START_FILL";
+	public static final String STYLE_STATE_OUTLINE_LINE = "STATE_OUTLINE_LINE";
+	public static final String STYLE_STATE_OUTLINE_FILL = "STATE_OUTLINE_FILL";
+	public static final String STYLE_STATE_OUTLINE_TEXT = "STATE_OUTLINE_TEXT";
+	public static final String STYLE_STATE_OUTLINE_FONT = "STATE_OUTLINE_FONT";
+	public static final String STYLE_STATE_OUTLINE_FONT_METRICS = "STATE_OUTLINE_FONT_METRICS";
+
+	public void setStyle( Map<String, Object> style)
+	{
+		final Paint foreground = getForeground();
+		final Paint background = getBackground();
+
+		_startStyle._linePaint = (Paint)style.getOrDefault(STYLE_START_LINE, foreground );
+		_startStyle._fillPaint = (Paint)style.getOrDefault(STYLE_START_FILL, background );
+
+		_stateOutlineStyle._linePaint = (Paint)style.getOrDefault(STYLE_STATE_OUTLINE_LINE,foreground );
+		_stateOutlineStyle._fillPaint = (Paint)style.getOrDefault(STYLE_STATE_OUTLINE_FILL, background );
+
+		_stateOutlineStyle._lineStroke = new BasicStroke(2);
+		_stateOutlineStyle._textPaint = (Paint)style.getOrDefault(STYLE_STATE_OUTLINE_TEXT, foreground);
+
+
+		Font font = (Font)style.get(STYLE_STATE_OUTLINE_FONT );
+		if ( font == null )
+			font = getFont();
+		FontMetrics fontMetrics = (FontMetrics)style.get(STYLE_STATE_OUTLINE_FONT_METRICS );
+		if ( fontMetrics == null )
+			fontMetrics = getFontMetrics(font);
+
+		_stateOutlineStyle._font = font;
+		_stateOutlineStyle._fontMetrics = fontMetrics;
+
+		_stateInnerStyle._linePaint = _stateOutlineStyle.getLinePaint();
+		_stateInnerStyle._fillPaint = _stateOutlineStyle.getFillPaint();
+		_stateInnerStyle._lineStroke = new BasicStroke(1);
+		_stateInnerStyle._textPaint = _stateOutlineStyle.getTextPaint();
+
+		_stateInnerStyle._background = background;
+		_stateInnerStyle._font = font;
+		_stateInnerStyle._fontMetrics = fontMetrics;
+	}
+
 
 	/**
 	 * Clean up resources.
@@ -261,8 +311,7 @@ public class FsmGraphPanel extends JPanel
 	 */
 	public void setStateMachine(FiniteStateMachine fsm, ScxmlGraphExtension graphExtension)
 	{
-		FsmGraphFactory factory = new FsmGraphFactory(graphExtension);
-		factory.setStateNameEditorComponent(_stateNameEditorComponent);
+		FsmGraphBuilder factory = new FsmGraphBuilder(graphExtension, new EditorUISwingManager());
 
 		_pane.setModel(null);
 		if (_root != null)
