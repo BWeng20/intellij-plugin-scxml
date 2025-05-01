@@ -54,9 +54,14 @@ public class GraphConfiguration
 	public boolean _buffered = false;
 
 	/**
-	 * Graph uses buffers to render elements.
+	 * Sets ANTIALIASING to ON
 	 */
 	public boolean _antialiasing = false;
+
+	/**
+	 * Sets FRACTIONALMETRICS to ON
+	 */
+	public boolean _fractionalMetrics = false;
 
 	/**
 	 * Installs a wheel-listener that zooms by mouse-wheel if Meta/Ctrl-Key is hold.

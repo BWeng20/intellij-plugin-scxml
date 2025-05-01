@@ -444,7 +444,7 @@ public class GraphPane extends JComponent
 	/**
 	 * The proxy of the current active editor.
 	 */
-	protected Editor _selectedEditor;
+	protected Editor<JComponent> _selectedEditor;
 
 
 	@Override
@@ -455,7 +455,13 @@ public class GraphPane extends JComponent
 		g2.translate(_offsetX, _offsetY);
 
 		if (_configuration._antialiasing)
+		{
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		}
+		if (_configuration._fractionalMetrics)
+		{
+			g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+		}
 		try
 		{
 			if (isOpaque())
@@ -815,7 +821,7 @@ public class GraphPane extends JComponent
 	protected void startEdit()
 	{
 		cancelEdit();
-		Editor editor = _selectedPrimitive == null ? null : _selectedPrimitive.getEditor();
+		Editor<JComponent> editor = _selectedPrimitive == null ? null : _selectedPrimitive.getEditor();
 
 		Visual v = _selectedVisual;
 		while (v != null && editor == null)

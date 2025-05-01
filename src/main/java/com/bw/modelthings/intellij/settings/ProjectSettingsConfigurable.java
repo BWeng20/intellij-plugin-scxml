@@ -36,6 +36,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 
 	private JPanel _editorComponent;
 	private JBCheckBox _antialiasing;
+	private JBCheckBox _fractionalMetrics;
 	private JBCheckBox _buffered;
 	private JBCheckBox _zoomByMouseWheel;
 
@@ -47,6 +48,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 		if (_editorComponent == null)
 		{
 			_antialiasing = new JBCheckBox(ScXmlSdkBundle.message("settings.antialiasing"));
+			_fractionalMetrics= new JBCheckBox("Fractional Metrics");
 			_buffered = new JBCheckBox(ScXmlSdkBundle.message("settings.states.buffered"));
 			_zoomByMouseWheel = new JBCheckBox(ScXmlSdkBundle.message("settings.zoomByCtrlKey"));
 			_editorLayout = new ComboBox<>(EditorLayout.values());
@@ -55,6 +57,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 			_editorComponent = FormBuilder.createFormBuilder()
 										  .addLabeledComponent(ScXmlSdkBundle.message("settings.editorLayoutLabel"), _editorLayout, 1)
 										  .addComponent(_antialiasing, 1)
+										  .addComponent(_fractionalMetrics, 1)
 										  .addComponent(_buffered, 1)
 										  .addComponent(_zoomByMouseWheel, 1)
 										  .addComponentFillVertically(new JPanel(), 0)
@@ -72,6 +75,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 			Configuration configuration = service.getState();
 			return configuration._buffered != _buffered.isSelected() ||
 					configuration._antialiasing != _antialiasing.isSelected() ||
+					configuration._fractionalMetrics != _fractionalMetrics.isSelected() ||
 					configuration._zoomByMetaMouseWheelEnabled != _zoomByMouseWheel.isSelected() ||
 					configuration._editorLayout != _editorLayout.getSelectedItem();
 		}
@@ -90,6 +94,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 			Configuration configuration = service.getState();
 			configuration._buffered = _buffered.isSelected();
 			configuration._antialiasing = _antialiasing.isSelected();
+			configuration._fractionalMetrics= _fractionalMetrics.isSelected();
 			configuration._zoomByMetaMouseWheelEnabled = _zoomByMouseWheel.isSelected();
 			configuration._editorLayout = (EditorLayout) _editorLayout.getSelectedItem();
 
@@ -108,6 +113,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 			Configuration configuration = service.getState();
 			_buffered.setSelected(configuration._buffered);
 			_antialiasing.setSelected(configuration._antialiasing);
+			_fractionalMetrics.setSelected(configuration._fractionalMetrics);
 			_zoomByMouseWheel.setSelected(configuration._zoomByMetaMouseWheelEnabled);
 			_editorLayout.setSelectedItem(configuration._editorLayout);
 		}

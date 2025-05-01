@@ -5,7 +5,7 @@ import com.bw.graph.visual.Visual;
 import java.awt.geom.Point2D;
 
 /**
- * State move action.
+ * Visual move action.
  */
 public class MoveAction implements EditAction
 {

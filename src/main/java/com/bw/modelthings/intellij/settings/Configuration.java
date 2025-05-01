@@ -19,6 +19,12 @@ public class Configuration
 	 */
 	public boolean _antialiasing;
 
+
+	/**
+	 * Graph is shown with fractionalMetrics if true.
+	 */
+	public boolean _fractionalMetrics;
+
 	/**
 	 * Graph uses buffers to render elements.
 	 */

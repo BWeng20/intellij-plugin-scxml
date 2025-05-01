@@ -74,11 +74,13 @@ public class ScxmlGraphPanel extends FsmGraphPanel implements Disposable
 			var graphConfig = _pane.getGraphConfiguration();
 			if (graphConfig._buffered != config._buffered ||
 					graphConfig._antialiasing != config._antialiasing ||
+					graphConfig._fractionalMetrics != config._fractionalMetrics ||
 					graphConfig._zoomByMetaMouseWheelEnabled != config._zoomByMetaMouseWheelEnabled
 			)
 			{
 				graphConfig._buffered = config._buffered;
 				graphConfig._antialiasing = config._antialiasing;
+				graphConfig._fractionalMetrics = config._fractionalMetrics;
 				graphConfig._zoomByMetaMouseWheelEnabled = config._zoomByMetaMouseWheelEnabled;
 				SwingUtilities.invokeLater(() ->
 				{
