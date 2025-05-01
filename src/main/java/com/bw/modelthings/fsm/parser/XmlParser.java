@@ -187,6 +187,7 @@ public class XmlParser implements ScxmlTags
 				_fsm._dataModel = getAttributeOrDefault(root, ATTR_DATAMODEL, "Null");
 				_fsm._binding = mapBindingType(getAttributeOrDefault(root, ATTR_BINDING, BindingType.Early.name()));
 				_fsm._pseudoRoot = parseState(root, false, null);
+				_fsm.setMaxDocId(_docIdCounter);
 			}
 			else
 			{
@@ -750,11 +751,7 @@ public class XmlParser implements ScxmlTags
 
 		if (parent != null)
 		{
-			state._parent = parent;
-			if (!parent._states.contains(state))
-			{
-				parent._states.add(state);
-			}
+			parent.addState(state);
 		}
 
 		processUnhandledAttributes(node, state);
@@ -861,6 +858,7 @@ public class XmlParser implements ScxmlTags
 	 * Document-order-Id generator.
 	 */
 	private int _docIdCounter = 0;
+
 
 	/**
 	 * Parse a state-specification, a white-space separated list of stare references.

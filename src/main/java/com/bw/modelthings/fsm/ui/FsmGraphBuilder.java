@@ -20,9 +20,11 @@ import java.awt.geom.Rectangle2D;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -54,7 +56,7 @@ public class FsmGraphBuilder
 	/**
 	 * Creates a new builder.
 	 *
-	 * @param graphExtension graph-extension handler or null.
+	 * @param graphExtension  graph-extension handler or null.
 	 * @param editorUIManager The manager to deliver platform UI components.
 	 */
 	public FsmGraphBuilder(ScxmlGraphExtension graphExtension, EditorUIManager editorUIManager)
@@ -168,203 +170,225 @@ public class FsmGraphBuilder
 		VisualModel rootModel = new VisualModel(fsm == null ? "none" : fsm._name);
 		if (fsm != null && fsm._pseudoRoot != null)
 		{
-			java.util.Queue<State> states = new LinkedList<>();
+			createVisuals(rootModel, fsm._pseudoRoot, g2, startStyles, stateOutlineStyles, stateInnerStyles, edgeStyles);
+		}
+		rootModel.clearFlags(VisualFlags.MODIFIED);
+		return rootModel;
+	}
 
-			states.add(fsm._pseudoRoot);
+	public void createVisuals(VisualModel rootModel,
+							  State root, Graphics2D g2,
+							  DrawContext startStyles,
+							  DrawContext stateOutlineStyles,
+							  DrawContext stateInnerStyles,
+							  DrawContext edgeStyles)
+	{
+		java.util.Queue<State> states = new LinkedList<>();
+		states.add(root);
 
-			final float gapY = 5;
-			float fh = stateOutlineStyles._style.getFontMetrics().getHeight();
+		final float gapY = 5;
+		float fh = stateOutlineStyles._style.getFontMetrics()
+											.getHeight();
 
-			InsetsFloat insets = stateInnerStyles._configuration._innerModelBoxInsets;
-			insets._top = fh * 2.5f;
-			insets._bottom = fh;
-			insets._left = fh;
-			insets._right = fh;
+		InsetsFloat insets = stateInnerStyles._configuration._innerModelBoxInsets;
+		insets._top = fh * 2.5f;
+		insets._bottom = fh;
+		insets._left = fh;
+		insets._right = fh;
 
-			Rectangle2D.Float statePosition = new Rectangle2D.Float(fh, fh, 0, 0);
-			statePosition.x += 2 * fh;
+		Rectangle2D.Float statePosition = new Rectangle2D.Float(fh, fh, 0, 0);
+		statePosition.x += 2 * fh;
 
-			final Map<String, Rectangle2D.Float> statePositions = new HashMap<>();
-			statePositions.put(fsm._pseudoRoot._name, statePosition);
+		final Map<String, Rectangle2D.Float> statePositions = new HashMap<>();
+		statePositions.put(root._name, statePosition);
 
-			final Map<String, State> statesByName = new HashMap<>();
-			java.util.Map<Integer, Transition> transitions = new HashMap<>();
-			while (!states.isEmpty())
+		final Map<String, State> statesByName = new HashMap<>();
+		java.util.Map<Integer, Transition> transitions = new HashMap<>();
+		while (!states.isEmpty())
+		{
+			State state = states.poll();
+			if (!_stateVisuals.containsKey(state._name))
 			{
-				State state = states.poll();
-				if (!_stateVisuals.containsKey(state._name))
+				statesByName.put(state._name, state);
+
+				StateVisual stateVisual = new StateVisual(state, _editorManager.getStateNameEditorUI(), stateOutlineStyles, stateInnerStyles);
+				if (state instanceof PseudoRoot pseudoRoot)
 				{
-					statesByName.put(state._name, state);
-
-					StateVisual stateVisual = new StateVisual(state, _editorManager.getStateNameEditorUI(), stateOutlineStyles, stateInnerStyles);
-					if (state instanceof PseudoRoot pseudoRoot)
-					{
-						stateVisual.setDisplayName(pseudoRoot._fsmName);
-					}
-
-					if (state._parent != null)
-					{
-						VisualModel model = _stateVisuals.get(state._parent._name)
-														 .getChildModel();
-						model.addVisual(stateVisual);
-					}
-					else
-						rootModel.addVisual(stateVisual);
-
-					_stateVisuals.put(state._name, stateVisual);
-
-					if (!state._states.isEmpty())
-					{
-						String modelName = state._name;
-						if (state instanceof PseudoRoot pseudoRoot && pseudoRoot._fsmName != null)
-						{
-							modelName = pseudoRoot._fsmName;
-						}
-						VisualModel subModel = new VisualModel(modelName);
-						ModelPrimitive modelPrimitive = new ModelPrimitive(0, 0, stateInnerStyles._configuration, stateInnerStyles._style, VisualFlags.ALWAYS);
-						modelPrimitive.setAlignment(Alignment.Center);
-						modelPrimitive.setInsets(stateInnerStyles._configuration._innerModelBoxInsets);
-						modelPrimitive.setChildModel(subModel);
-						_stateVisuals.get(state._name)
-									 .addDrawingPrimitive(modelPrimitive);
-						statePosition = new Rectangle2D.Float(3 * fh, fh, 0, 0);
-						statePositions.put(state._name, statePosition);
-						states.addAll(state._states);
-
-					}
-					for (Transition t : state._transitions)
-					{
-						states.addAll(t._target);
-						transitions.put(t._docId, t);
-					}
+					stateVisual.setDisplayName(pseudoRoot._fsmName);
 				}
-			}
 
-			// We have now all information to create draw-primitives in the states-visuals.
-			for (var visualEntry : _stateVisuals.entrySet())
-			{
-				StateVisual visual = visualEntry.getValue();
-
-				State state = statesByName.get(visualEntry.getKey());
 				if (state._parent != null)
 				{
-					statePosition = statePositions.get(state._parent._name);
-					visual.createStatePrimitives(statePosition.x, statePosition.y, g2, _graphExtension._bounds.get(state._docId));
-
-					Rectangle2D.Float bounds = visual.getAbsoluteBounds2D(g2);
-					if (bounds != null)
-					{
-						statePosition.y += bounds.height + gapY;
-						if (bounds.width > statePosition.width)
-							statePosition.width = bounds.width;
-						if (statePosition.y > 600)
-						{
-							statePosition.x += statePosition.width + fh;
-							statePosition.y = fh;
-							statePosition.width = 0;
-						}
-					}
+					VisualModel model = _stateVisuals.get(state._parent._name)
+													 .getChildModel();
+					model.addVisual(stateVisual);
 				}
-			}
+				else
+					rootModel.addVisual(stateVisual);
 
-			List<AbstractMap.SimpleEntry<StateVisual, StateVisual>> targetVisuals = new ArrayList<>();
+				_stateVisuals.put(state._name, stateVisual);
 
-			// Create edges
-			for (Transition t : transitions.values())
-			{
-				MultiTargetEdgeVisual edgeVisual = createEdge(t._xmlId, t, g2, edgeStyles);
-
-				if (edgeVisual != null)
-				{
-					TransitionDescription td = _graphExtension.getTransitionDescriptor(t._docId);
-
-					getModelForState(t._source).addVisual(edgeVisual);
-					ConnectorVisual sourceConnector = edgeVisual.getSourceConnector();
-
-					if (td._relativeSourceConnectorPosition != null)
-					{
-						sourceConnector.setRelativePosition(td._relativeSourceConnectorPosition.x, td._relativeSourceConnectorPosition.y);
-					}
-
-					getModelForVisual((StateVisual) sourceConnector.getParentVisual()).getVisuals()
-																					  .add(sourceConnector);
-
-					final List<ConnectorVisual> targetConnectorVisuals = edgeVisual.getTargetConnectors();
-
-					if (td._relativeTargetConnectorPosition != null)
-					{
-						int tCN = td._relativeTargetConnectorPosition.size();
-						if (targetConnectorVisuals.size() == tCN)
-						{
-							for (int i = 0; i < tCN; ++i)
-							{
-								Point2D.Float pt = td._relativeTargetConnectorPosition.get(i);
-								targetConnectorVisuals.get(i).setRelativePosition(pt.x, pt.y);
-							}
-						}
-					}
-					targetConnectorVisuals.forEach(targetConnector ->
-							getModelForVisual((StateVisual) targetConnector.getParentVisual()).getVisuals()
-																							  .add(targetConnector));
-				}
-			}
-
-			// Create start-visuals for all sub-models.
-			for (State state : statesByName.values())
-			{
 				if (!state._states.isEmpty())
 				{
-					StateVisual stateVisual = _stateVisuals.get(state._name);
-					Visual startVisual = createStartVisual(stateVisual, fh / 2, fh, fh / 2, startStyles);
-
-					VisualModel innerModel = ModelPrimitive.getChildModel(stateVisual);
-					innerModel.addVisual(startVisual);
-
-					List<State> initialStates = new ArrayList<>();
-
-					String id;
-					// Add initial transitions.
-					if (state._initial != null)
+					String modelName = state._name;
+					if (state instanceof PseudoRoot pseudoRoot && pseudoRoot._fsmName != null)
 					{
-						initialStates.addAll(state._initial._target);
-						id = state._initial._xmlId;
+						modelName = pseudoRoot._fsmName;
 					}
-					else
-					{
-						initialStates.add(state.getInnerStatesInDocumentOrder()
-											   .get(0));
-						id = null;
-					}
-					targetVisuals.clear();
-					for (State initialState : initialStates)
-					{
-						boolean toInnerModel = false;
-						StateVisual targetedVisual = _stateVisuals.get(initialState._name);
-						while (initialState != null && !state._states.contains(initialState))
-						{
-							initialState = initialState._parent;
-							toInnerModel = true;
-						}
-						StateVisual targetVisual = null;
-						if (initialState != null)
-						{
-							targetVisual = _stateVisuals.get(initialState._name);
-						}
-						if (targetVisual == null)
-							log.warning(String.format("Target state %s of initial transition not found", initialState == null ? "null" : initialState._name));
-						else
-						{
-							targetVisuals.add(new AbstractMap.SimpleEntry<>(targetVisual, toInnerModel ? targetedVisual : null));
-						}
-					}
-					innerModel.addVisual(createEdge(id, startVisual, null, targetVisuals, g2, edgeStyles));
+					VisualModel subModel = new VisualModel(modelName);
+					ModelPrimitive modelPrimitive = new ModelPrimitive(0, 0, stateInnerStyles._configuration, stateInnerStyles._style, VisualFlags.ALWAYS);
+					modelPrimitive.setAlignment(Alignment.Center);
+					modelPrimitive.setInsets(stateInnerStyles._configuration._innerModelBoxInsets);
+					modelPrimitive.setChildModel(subModel);
+					_stateVisuals.get(state._name)
+								 .addDrawingPrimitive(modelPrimitive);
+					statePosition = new Rectangle2D.Float(3 * fh, fh, 0, 0);
+					statePositions.put(state._name, statePosition);
+					states.addAll(state._states);
+
+				}
+				for (Transition t : state._transitions)
+				{
+					states.addAll(t._target);
+					transitions.put(t._docId, t);
 				}
 			}
+		}
 
-			// Place all connectors
-			// "Start" connectors are placed at default relative position and doesn't need
-			// to be updated.
-			for (StateVisual stateVisual : _stateVisuals.values())
+		// We have now all information to create draw-primitives in the states-visuals.
+		for (var visualEntry : _stateVisuals.entrySet())
+		{
+			StateVisual visual = visualEntry.getValue();
+
+			State state = statesByName.get(visualEntry.getKey());
+			if (state != null && state._parent != null)
+			{
+				statePosition = statePositions.get(state._parent._name);
+				if (statePosition == null)
+				{
+					// Creates not in this call
+					StateVisual parentVisual = _stateVisuals.get(state._parent._name);
+					statePosition = parentVisual.getAbsoluteBounds2D(g2);
+				}
+				visual.createStatePrimitives(statePosition.x, statePosition.y, g2, _graphExtension._bounds.get(state._docId));
+
+				Rectangle2D.Float bounds = visual.getAbsoluteBounds2D(g2);
+				if (bounds != null)
+				{
+					statePosition.y += bounds.height + gapY;
+					if (bounds.width > statePosition.width)
+						statePosition.width = bounds.width;
+					if (statePosition.y > 600)
+					{
+						statePosition.x += statePosition.width + fh;
+						statePosition.y = fh;
+						statePosition.width = 0;
+					}
+				}
+			}
+		}
+
+		List<AbstractMap.SimpleEntry<StateVisual, StateVisual>> targetVisuals = new ArrayList<>();
+
+		// Create edges
+		for (Transition t : transitions.values())
+		{
+			MultiTargetEdgeVisual edgeVisual = createEdge(t._xmlId, t, g2, edgeStyles);
+
+			if (edgeVisual != null)
+			{
+				TransitionDescription td = _graphExtension.getTransitionDescriptor(t._docId);
+
+				getModelForState(t._source).addVisual(edgeVisual);
+				ConnectorVisual sourceConnector = edgeVisual.getSourceConnector();
+
+				if (td._relativeSourceConnectorPosition != null)
+				{
+					sourceConnector.setRelativePosition(td._relativeSourceConnectorPosition.x, td._relativeSourceConnectorPosition.y);
+				}
+
+				getModelForVisual((StateVisual) sourceConnector.getParentVisual()).getVisuals()
+																				  .add(sourceConnector);
+
+				final List<ConnectorVisual> targetConnectorVisuals = edgeVisual.getTargetConnectors();
+
+				if (td._relativeTargetConnectorPosition != null)
+				{
+					int tCN = td._relativeTargetConnectorPosition.size();
+					if (targetConnectorVisuals.size() == tCN)
+					{
+						for (int i = 0; i < tCN; ++i)
+						{
+							Point2D.Float pt = td._relativeTargetConnectorPosition.get(i);
+							targetConnectorVisuals.get(i)
+												  .setRelativePosition(pt.x, pt.y);
+						}
+					}
+				}
+				targetConnectorVisuals.forEach(targetConnector ->
+						getModelForVisual((StateVisual) targetConnector.getParentVisual()).getVisuals()
+																						  .add(targetConnector));
+			}
+		}
+
+		// Create start-visuals for all sub-models.
+		for (State state : statesByName.values())
+		{
+			if (!state._states.isEmpty())
+			{
+				StateVisual stateVisual = _stateVisuals.get(state._name);
+				Visual startVisual = createStartVisual(stateVisual, fh / 2, fh, fh / 2, startStyles);
+
+				VisualModel innerModel = ModelPrimitive.getChildModel(stateVisual);
+				innerModel.addVisual(startVisual);
+
+				List<State> initialStates = new ArrayList<>();
+
+				String id;
+				// Add initial transitions.
+				if (state._initial != null)
+				{
+					initialStates.addAll(state._initial._target);
+					id = state._initial._xmlId;
+				}
+				else
+				{
+					initialStates.add(state.getInnerStatesInDocumentOrder()
+										   .get(0));
+					id = null;
+				}
+				targetVisuals.clear();
+				for (State initialState : initialStates)
+				{
+					boolean toInnerModel = false;
+					StateVisual targetedVisual = _stateVisuals.get(initialState._name);
+					while (initialState != null && !state._states.contains(initialState))
+					{
+						initialState = initialState._parent;
+						toInnerModel = true;
+					}
+					StateVisual targetVisual = null;
+					if (initialState != null)
+					{
+						targetVisual = _stateVisuals.get(initialState._name);
+					}
+					if (targetVisual == null)
+						log.warning(String.format("Target state %s of initial transition not found", initialState == null ? "null" : initialState._name));
+					else
+					{
+						targetVisuals.add(new AbstractMap.SimpleEntry<>(targetVisual, toInnerModel ? targetedVisual : null));
+					}
+				}
+				innerModel.addVisual(createEdge(id, startVisual, null, targetVisuals, g2, edgeStyles));
+			}
+		}
+
+		// Place all connectors
+		// "Start" connectors are placed at default relative position and doesn't need
+		// to be updated.
+		for (StateVisual stateVisual : _stateVisuals.values())
+		{
+			if (statesByName.containsKey(stateVisual._state._name))
 			{
 				VisualModel model;
 				if (stateVisual._state._parent == null)
@@ -375,9 +399,8 @@ public class FsmGraphBuilder
 				stateVisual.placeConnectors(model.getEdgesAt(stateVisual), g2);
 			}
 		}
-		rootModel.clearFlags(VisualFlags.MODIFIED);
-		return rootModel;
 	}
+
 
 	private VisualModel getModelForVisual(StateVisual visual)
 	{

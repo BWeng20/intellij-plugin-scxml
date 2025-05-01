@@ -117,4 +117,12 @@ public class State extends FsmElement
 		return Arrays.asList(statesArray);
 	}
 
+	public void addState(State state)
+	{
+		state._parent = this;
+		if (!_states.contains(state))
+		{
+			_states.add(state);
+		}
+	}
 }

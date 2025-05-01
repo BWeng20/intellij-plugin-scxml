@@ -71,6 +71,8 @@ public class FiniteStateMachine
 	 */
 	public Timer _timer;
 
+	private int docIdCounter = 0;
+
 	/**
 	 * Removes a state.
 	 *
@@ -152,5 +154,15 @@ public class FiniteStateMachine
 	public void dispose()
 	{
 		// @TODO: anything?
+	}
+
+	public int createDocId()
+	{
+		return ++docIdCounter;
+	}
+
+	public void setMaxDocId(int maxDocId)
+	{
+		docIdCounter = maxDocId;
 	}
 }

@@ -8,6 +8,8 @@ import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.visual.Visual;
 import com.bw.graph.visual.VisualFlags;
+import com.bw.modelthings.fsm.model.State;
+import com.bw.modelthings.fsm.ui.StateVisual;
 import com.bw.svg.SVGAttribute;
 import com.bw.svg.SVGWriter;
 
@@ -33,6 +35,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.StringWriter;
 import java.util.ArrayDeque;
@@ -372,6 +375,21 @@ public class GraphPane extends JComponent
 	}
 
 	/**
+	 * Gets the model coordinates for a point in the graph component.
+	 */
+	public Point2D.Float toModelCoordinates(float x, float y)
+	{
+		x -= _offsetX;
+		y -= _offsetY;
+
+		x /= _configuration._scale;
+		y /= _configuration._scale;
+
+		return new Point2D.Float(x, y);
+	}
+
+
+	/**
 	 * Gets the visual at the coordinates (x,y).
 	 *
 	 * @param x The component local X-ordinate (unscaled).
@@ -380,17 +398,13 @@ public class GraphPane extends JComponent
 	 */
 	protected Visual getVisualAt(float x, float y)
 	{
-		x -= _offsetX;
-		y -= _offsetY;
-
-		x /= _configuration._scale;
-		y /= _configuration._scale;
+		var p = toModelCoordinates(x, y);
 
 		var visuals = _model.getVisuals();
 		for (var it = visuals.listIterator(visuals.size()); it.hasPrevious(); )
 		{
 			final Visual v = it.previous();
-			if (v.containsPoint(x, y))
+			if (v.containsPoint(p.x, p.y))
 			{
 				return v;
 			}
@@ -1018,5 +1032,15 @@ public class GraphPane extends JComponent
 	{
 		_actionStack.clear();
 		getModel().clearFlags(VisualFlags.MODIFIED);
+	}
+
+	public StateVisual getStateVisual(State state)
+	{
+		var f = getModel()
+				.getVisuals()
+				.stream()
+				.filter(visual -> (visual instanceof StateVisual stateVisual && stateVisual.getState() == state))
+				.findFirst();
+		return (StateVisual) f.orElse(null);
 	}
 }
