@@ -7,7 +7,7 @@ import com.bw.modelthings.fsm.model.FiniteStateMachine;
 /**
  * Assignment.
  */
-public class Assign implements ExecutableContent
+public class Assign extends ExecutableContent
 {
 	/**
 	 * Creates a new empty assign operation.

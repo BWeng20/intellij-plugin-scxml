@@ -8,7 +8,7 @@ import com.bw.modelthings.fsm.model.FiniteStateMachine;
  * <strong>W3C says:</strong><br>
  * &lt;log&gt; allows an application to generate a logging or debug message.
  */
-public class Log implements ExecutableContent
+public class Log extends ExecutableContent
 {
 
 	/**

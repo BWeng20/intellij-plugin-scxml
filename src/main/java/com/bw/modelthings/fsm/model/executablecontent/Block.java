@@ -9,7 +9,7 @@ import java.util.ArrayList;
 /**
  * List of executable content.
  */
-public class Block implements ExecutableContent
+public class Block extends ExecutableContent
 {
 	/**
 	 * The list of operations

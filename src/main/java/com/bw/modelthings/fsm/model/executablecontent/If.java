@@ -7,7 +7,7 @@ import com.bw.modelthings.fsm.model.FiniteStateMachine;
 /**
  * A container for conditionally executed elements.
  */
-public class If implements ExecutableContent
+public class If extends ExecutableContent
 {
 
 	/**

@@ -4,13 +4,8 @@ package com.bw.modelthings.fsm.model;
  * <b>W3C says:</b><br>
  * The &lt;invoke&gt; element is used to create an instance of an external service.
  */
-public class Invoke implements FsmElement
+public class Invoke extends FsmElement
 {
-	/**
-	 * The unique id, counting in document order.<br>
-	 */
-	public int _docId;
-
 	/**
 	 * W3c says:<br>
 	 * Attribute 'id':<br>
