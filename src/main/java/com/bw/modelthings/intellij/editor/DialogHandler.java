@@ -54,7 +54,8 @@ public class DialogHandler implements com.bw.graph.editor.DialogHandler
 		_wrapper.setModal(false);
 		_wrapper.dialogPanel.add(editor, BorderLayout.CENTER);
 
-		_wrapper.setOnDeactivationAction(() -> {
+		_wrapper.setOnDeactivationAction(() ->
+		{
 			// Will possibly be called multiple times during processing.
 			if (_wrapper != null)
 			{

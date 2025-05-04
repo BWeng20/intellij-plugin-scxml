@@ -49,6 +49,7 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 		super(id, configuration, style);
 		_source = source;
 		targets.forEach(this::addTarget);
+
 	}
 
 	/**

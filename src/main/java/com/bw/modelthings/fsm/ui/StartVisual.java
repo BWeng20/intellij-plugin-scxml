@@ -55,4 +55,5 @@ public class StartVisual extends GenericPrimitiveVisual
 			setAbsolutePosition(bounds.position, bounds.bounds);
 		}
 	}
+
 }

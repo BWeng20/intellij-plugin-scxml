@@ -48,7 +48,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 		if (_editorComponent == null)
 		{
 			_antialiasing = new JBCheckBox(ScXmlSdkBundle.message("settings.antialiasing"));
-			_fractionalMetrics= new JBCheckBox("Fractional Metrics");
+			_fractionalMetrics = new JBCheckBox("Fractional Metrics");
 			_buffered = new JBCheckBox(ScXmlSdkBundle.message("settings.states.buffered"));
 			_zoomByMouseWheel = new JBCheckBox(ScXmlSdkBundle.message("settings.zoomByCtrlKey"));
 			_editorLayout = new ComboBox<>(EditorLayout.values());
@@ -94,7 +94,7 @@ public class ProjectSettingsConfigurable implements com.intellij.openapi.options
 			Configuration configuration = service.getState();
 			configuration._buffered = _buffered.isSelected();
 			configuration._antialiasing = _antialiasing.isSelected();
-			configuration._fractionalMetrics= _fractionalMetrics.isSelected();
+			configuration._fractionalMetrics = _fractionalMetrics.isSelected();
 			configuration._zoomByMetaMouseWheelEnabled = _zoomByMouseWheel.isSelected();
 			configuration._editorLayout = (EditorLayout) _editorLayout.getSelectedItem();
 

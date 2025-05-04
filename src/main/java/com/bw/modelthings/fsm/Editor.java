@@ -8,7 +8,6 @@ import com.bw.modelthings.fsm.ui.FsmGraphPanel;
 import com.bw.modelthings.fsm.ui.ScxmlGraphExtension;
 import com.bw.modelthings.fsm.ui.StateVisual;
 
-
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JCheckBoxMenuItem;
