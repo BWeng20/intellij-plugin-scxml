@@ -1,6 +1,7 @@
 package com.bw.graph.visual;
 
-import com.bw.graph.DrawContext;
+import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphConfiguration;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.primitive.Path;
 import com.bw.svg.SVGWriter;
@@ -41,17 +42,16 @@ public class SingleTargetEdgeVisual extends EdgeVisual
 	/**
 	 * Creates a new EdgeVisual.
 	 *
-	 * @param id      The Identification, can be null.
-	 * @param source  The start connector.
-	 * @param target  The end connector.
-	 * @param context The  context. Must not be null.
+	 * @param id     The Identification, can be null.
+	 * @param source The start connector.
+	 * @param target The end connector.
 	 */
 	public SingleTargetEdgeVisual(Object id, ConnectorVisual source, ConnectorVisual target,
-								  DrawContext context)
+								  GraphConfiguration configuration, DrawStyle style)
 	{
-		super(id, context);
+		super(id, configuration, style);
 
-		this._path = new Path(context._configuration, context._style, VisualFlags.ALWAYS);
+		this._path = new Path(_configuration, _style, VisualFlags.ALWAYS);
 		this._sourceConnector = source;
 		this._targetConnector = target;
 
@@ -132,7 +132,7 @@ public class SingleTargetEdgeVisual extends EdgeVisual
 	 */
 	public boolean containsPoint(float x, float y)
 	{
-		return _path.getDistanceTo(x, y) < _context._configuration._selectMaxDistance;
+		return _path.getDistanceTo(x, y) < _configuration._selectMaxDistance;
 	}
 
 

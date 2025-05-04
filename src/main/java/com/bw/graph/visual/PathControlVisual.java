@@ -1,6 +1,7 @@
 package com.bw.graph.visual;
 
-import com.bw.graph.DrawContext;
+import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphConfiguration;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.primitive.PathControlPoint;
 import com.bw.graph.primitive.Rectangle;
@@ -42,13 +43,11 @@ public class PathControlVisual extends Visual implements PathControlPoint
 
 	/**
 	 * Creates a new Primitive.
-	 *
-	 * @param context The draw context. Must not be null.
 	 */
-	public PathControlVisual(DrawContext context)
+	public PathControlVisual(GraphConfiguration configuration, DrawStyle style)
 	{
-		super(null, context);
-		this._primitive = new Rectangle(-_radius, -_radius, 2 * _radius, 2 * _radius, 0, context._configuration, context._style, VisualFlags.ALWAYS);
+		super(null, configuration, style);
+		this._primitive = new Rectangle(-_radius, -_radius, 2 * _radius, 2 * _radius, 0, _configuration, _style, VisualFlags.ALWAYS);
 	}
 
 	/**

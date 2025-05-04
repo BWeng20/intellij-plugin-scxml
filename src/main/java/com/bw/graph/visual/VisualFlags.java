@@ -30,4 +30,9 @@ public interface VisualFlags
 	 * Has effect only if also {@link #EDITABLE} is set.
 	 */
 	int DRAGGABLE = 16;
+
+	/**
+	 * Flag to indicate that cursor is over this visual.
+	 */
+	int HOVER = 32;
 }

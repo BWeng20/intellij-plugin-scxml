@@ -36,7 +36,8 @@ public class TransitionEditor extends JPanel implements TransitionEditorUI<JComp
 	JTextArea _content;
 
 
-	public TransitionEditor() {
+	public TransitionEditor()
+	{
 		super(new GridBagLayout());
 
 		_type = new JComboBox<>(TransitionType.values());
@@ -60,43 +61,44 @@ public class TransitionEditor extends JPanel implements TransitionEditorUI<JComp
 
 		gc.gridy = 0;
 		gc.gridx = 0;
-		add( new JLabel("Type"), gc );
+		add(new JLabel("Type"), gc);
 		gc.gridy++;
-		add( new JLabel("Events"), gc);
-		gc.gridy+=2;
-		add( new JLabel("Condition"), gc);
+		add(new JLabel("Events"), gc);
+		gc.gridy += 2;
+		add(new JLabel("Condition"), gc);
 		gc.gridy++;
-		add( new JLabel("Targets"), gc);
+		add(new JLabel("Targets"), gc);
 
 		gc.gridy = 0;
-		gc.insets = new Insets(0,5,5,5);
+		gc.insets = new Insets(0, 5, 5, 5);
 		gc.weightx = 1;
 		gc.weighty = 0;
 		gc.fill = GridBagConstraints.HORIZONTAL;
 		gc.gridx = 1;
-		add( _type, gc);
+		add(_type, gc);
 		gc.gridy++;
 		gc.weighty = 1;
 		gc.fill = GridBagConstraints.BOTH;
 		gc.insets.bottom = 0;
-		add( new JScrollPane(_events), gc);
-		gc.gridy+=2;
+		add(new JScrollPane(_events), gc);
+		gc.gridy += 2;
 		gc.insets.bottom = 5;
-		add( new JScrollPane(_condition), gc);
+		add(new JScrollPane(_condition), gc);
 		gc.gridy++;
 		gc.insets.bottom = 0;
-		add( new JScrollPane(_targets), gc);
+		add(new JScrollPane(_targets), gc);
 
 		gc.insets.bottom = 5;
 		gc.gridy = 2;
 		gc.weighty = 0;
 		gc.fill = GridBagConstraints.HORIZONTAL;
-		add( createListCtrl( _addEvent, _removeEvent ), gc );
+		add(createListCtrl(_addEvent, _removeEvent), gc);
 		gc.gridy = 5;
-		add( createListCtrl( _addTarget, _removeTarget ), gc );
+		add(createListCtrl(_addTarget, _removeTarget), gc);
 	}
 
-	private JPanel createListCtrl( JButton add, JButton remove) {
+	private JPanel createListCtrl(JButton add, JButton remove)
+	{
 		JPanel p = new JPanel(new GridBagLayout());
 		GridBagConstraints gc = new GridBagConstraints();
 
@@ -116,7 +118,7 @@ public class TransitionEditor extends JPanel implements TransitionEditorUI<JComp
 	public void setTransitionVisual(TransitionVisual transition)
 	{
 		final Transition t = transition.getTransition();
-		if ( t != null )
+		if (t != null)
 		{
 			_type.setSelectedItem(t._transitionType);
 

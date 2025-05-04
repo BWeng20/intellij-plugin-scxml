@@ -285,7 +285,11 @@ public class GraphPane extends JComponent
 				Rectangle2D.Float update = null;
 				if (_mouseOverVisual != null)
 				{
-					update = _mouseOverVisual.getAbsoluteBounds2D(null);
+					if (_mouseOverVisual.isFlagSet(VisualFlags.HOVER))
+					{
+						_mouseOverVisual.clearFlags(VisualFlags.HOVER);
+						update = _mouseOverVisual.getAbsoluteBounds2D(null);
+					}
 				}
 
 				_mouseOverVisual = over;
@@ -293,11 +297,15 @@ public class GraphPane extends JComponent
 
 				if (_mouseOverVisual != null)
 				{
-					Rectangle2D.Float rt = _mouseOverVisual.getAbsoluteBounds2D(null);
-					if (update == null)
-						update = rt;
-					else
-						Rectangle2D.union(update, rt, update);
+					if (!_mouseOverVisual.isFlagSet(VisualFlags.HOVER))
+					{
+						_mouseOverVisual.setFlags(VisualFlags.HOVER);
+						Rectangle2D.Float rt = _mouseOverVisual.getAbsoluteBounds2D(null);
+						if (update == null)
+							update = rt;
+						else
+							Rectangle2D.union(update, rt, update);
+					}
 				}
 				if (update != null)
 				{

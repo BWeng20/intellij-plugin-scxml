@@ -1,6 +1,7 @@
 package com.bw.graph.visual;
 
-import com.bw.graph.DrawContext;
+import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphConfiguration;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.svg.SVGWriter;
 
@@ -28,12 +29,11 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	/**
 	 * Constructur to be used by inheritances.
 	 *
-	 * @param id      The Identification, can be null.
-	 * @param context The  context. Must not be null.
+	 * @param id The Identification, can be null.
 	 */
-	protected MultiTargetEdgeVisual(Object id, DrawContext context)
+	protected MultiTargetEdgeVisual(Object id, GraphConfiguration configuration, DrawStyle style)
 	{
-		super(id, context);
+		super(id, configuration, style);
 	}
 
 	/**
@@ -42,12 +42,11 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	 * @param id      The Identification, can be null.
 	 * @param source  The start connector.
 	 * @param targets The end connectors.
-	 * @param context The  context. Must not be null.
 	 */
 	public MultiTargetEdgeVisual(Object id, ConnectorVisual source, Collection<ConnectorVisual> targets,
-								 DrawContext context)
+								 GraphConfiguration configuration, DrawStyle style)
 	{
-		super(id, context);
+		super(id, configuration, style);
 		_source = source;
 		targets.forEach(this::addTarget);
 	}
@@ -59,8 +58,7 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	 */
 	public void addTarget(ConnectorVisual connectorVisual)
 	{
-		SingleTargetEdgeVisual singleEdgeVisual = new SingleTargetEdgeVisual(null, _source, connectorVisual,
-				_context);
+		SingleTargetEdgeVisual singleEdgeVisual = new SingleTargetEdgeVisual(null, _source, connectorVisual, _configuration, _style);
 		singleEdgeVisual.setParentEdge(this);
 		_edgeVisuals.add(singleEdgeVisual);
 	}
@@ -113,7 +111,8 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	 */
 	public boolean containsPoint(float x, float y)
 	{
-		return _edgeVisuals.stream().anyMatch(ev -> ev.containsPoint(x, y));
+		return _edgeVisuals.stream()
+						   .anyMatch(ev -> ev.containsPoint(x, y));
 	}
 
 	@Override
@@ -148,7 +147,8 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	 */
 	public Visual getSourceVisual()
 	{
-		return _edgeVisuals.isEmpty() ? null : _edgeVisuals.get(0).getSourceVisual();
+		return _edgeVisuals.isEmpty() ? null : _edgeVisuals.get(0)
+														   .getSourceVisual();
 	}
 
 	/**
@@ -178,7 +178,10 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	{
 		if (v != null && !_edgeVisuals.isEmpty())
 		{
-			return _edgeVisuals.get(0).getSourceVisual() == v || _edgeVisuals.stream().anyMatch(s -> s.getTargetVisuals().contains(v));
+			return _edgeVisuals.get(0)
+							   .getSourceVisual() == v || _edgeVisuals.stream()
+																	  .anyMatch(s -> s.getTargetVisuals()
+																					  .contains(v));
 		}
 		return false;
 	}
@@ -192,9 +195,11 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 	public ConnectorVisual getConnector(Visual v)
 	{
 		return _edgeVisuals.stream()
-						   .filter(ev -> ev.getTargetVisuals().contains(v))
+						   .filter(ev -> ev.getTargetVisuals()
+										   .contains(v))
 						   .map(ev -> ev._targetConnector)
-						   .findAny().orElse(null);
+						   .findAny()
+						   .orElse(null);
 	}
 
 	/**
@@ -221,7 +226,8 @@ public class MultiTargetEdgeVisual extends EdgeVisual
 		{
 			List<Visual> v = new ArrayList<>();
 			v.add(_edgeVisuals.get(0)._sourceConnector);
-			_edgeVisuals.forEach(ev -> {
+			_edgeVisuals.forEach(ev ->
+			{
 				if (ev._targetConnector != null)
 					v.add(ev._targetConnector);
 				v.addAll(ev._controlVisual);

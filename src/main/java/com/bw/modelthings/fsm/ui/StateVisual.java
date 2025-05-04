@@ -1,7 +1,8 @@
 package com.bw.modelthings.fsm.ui;
 
 import com.bw.graph.Alignment;
-import com.bw.graph.DrawContext;
+import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphConfiguration;
 import com.bw.graph.VisualModel;
 import com.bw.graph.primitive.Line;
 import com.bw.graph.primitive.ModelPrimitive;
@@ -41,12 +42,14 @@ public class StateVisual extends GenericPrimitiveVisual
 	/**
 	 * State outer draw context.
 	 */
-	private DrawContext _stateOuterContext;
+	private DrawStyle _stateOuterContext;
 
 	/**
 	 * The draw context for inner primitives.
 	 */
-	private DrawContext _stateInnerContext;
+	private DrawStyle _stateInnerContext;
+
+	private DrawStyle _stateFocusContext;
 
 	private StateNameEditor _nameEditor;
 
@@ -56,16 +59,16 @@ public class StateVisual extends GenericPrimitiveVisual
 	 * Create a state .
 	 *
 	 * @param state             The state.
-	 * @param stateNameEditorUI     The UI component to use for inplace-edit.
-	 * @param stateOuterContext The Drawing context to use for outline.
-	 * @param stateInnerContext The Drawing context to use for inner drawings.
+	 * @param stateNameEditorUI The UI component to use for inplace-edit.
 	 */
-	public StateVisual(State state, StateNameEditorUI stateNameEditorUI, DrawContext stateOuterContext, DrawContext stateInnerContext)
+	public StateVisual(State state, StateNameEditorUI stateNameEditorUI,
+					   GraphConfiguration configuration, DrawStyle stateOuterContext, DrawStyle stateInnerContext, DrawStyle stateFocusContext)
 	{
-		super(state._docId, stateOuterContext);
+		super(state._docId, configuration, stateOuterContext);
 		_state = state;
 		this._stateOuterContext = stateOuterContext;
 		this._stateInnerContext = stateInnerContext;
+		this._stateFocusContext = stateFocusContext;
 		this._nameEditor = new StateNameEditor(this, stateNameEditorUI);
 	}
 
@@ -89,7 +92,8 @@ public class StateVisual extends GenericPrimitiveVisual
 	 */
 	public void createStatePrimitives(float x, float y, Graphics2D g2, PosAndBounds bounds)
 	{
-		float fh = _stateInnerContext._style.getFontMetrics().getHeight();
+		float fh = _stateInnerContext.getFontMetrics()
+									 .getHeight();
 
 		ModelPrimitive modelPrimitive = getPrimitiveOf(ModelPrimitive.class);
 
@@ -100,18 +104,19 @@ public class StateVisual extends GenericPrimitiveVisual
 		removeAllDrawingPrimitives();
 		if (bounds == null)
 		{
-			Rectangle2D stringBounds = _stateInnerContext._style.getFontMetrics().getStringBounds(this._displayName, g2);
+			Rectangle2D stringBounds = _stateInnerContext.getFontMetrics()
+														 .getStringBounds(this._displayName, g2);
 
 			float height = 5 * fh;
 			float width = (float) Math.max(stringBounds.getWidth() + 10,
-					((FsmGraphConfiguration) _stateInnerContext._configuration)._stateMinimalWidth);
+					((FsmGraphConfiguration) _configuration)._stateMinimalWidth);
 
 			if (modelPrimitive != null)
 			{
 				// For a state with internal states (a sub fsm in this context)
 				// we need space for the small image of the inner fsm.
-				Dimension2DFloat dim = _stateInnerContext._configuration._innerModelBoxMinDimension;
-				InsetsFloat insets = _stateInnerContext._configuration._innerModelBoxInsets;
+				Dimension2DFloat dim = _configuration._innerModelBoxMinDimension;
+				InsetsFloat insets = _configuration._innerModelBoxInsets;
 
 				float w = dim._width + insets._right + insets._left;
 				float h = dim._height + insets._top + insets._bottom;
@@ -124,11 +129,17 @@ public class StateVisual extends GenericPrimitiveVisual
 		setAbsolutePosition(bounds.position, bounds.bounds);
 
 		_connectorFrame = new Rectangle(
-				0, 0, bounds.bounds.width, bounds.bounds.height, _stateOuterContext._configuration._stateCornerArcSize, _stateOuterContext._configuration,
-				_stateOuterContext._style, VisualFlags.ALWAYS);
+				0, 0, bounds.bounds.width, bounds.bounds.height, _configuration._stateCornerArcSize, _configuration,
+				_stateOuterContext, VisualFlags.ALWAYS);
 
 		_connectorFrame.setFill(true);
 		addDrawingPrimitive(_connectorFrame);
+
+		Rectangle focus = new Rectangle(
+				-3, -3, bounds.bounds.width + 6, bounds.bounds.height + 6,
+				_configuration._stateCornerArcSize*1.3f, _configuration, _stateFocusContext, 0);
+		focus.setDrawConditionFlags(VisualFlags.HOVER | VisualFlags.SELECTED, true);
+		addDrawingPrimitive(focus);
 
 		float px = d;
 		float py = d;
@@ -138,13 +149,13 @@ public class StateVisual extends GenericPrimitiveVisual
 		{
 			Rectangle innerFrame = new Rectangle(
 					px, py, bounds.bounds.width - 2 * d, ph,
-					_stateOuterContext._configuration._stateCornerArcSize - d, _stateOuterContext._configuration,
-					_stateOuterContext._style, VisualFlags.ALWAYS);
+					_configuration._stateCornerArcSize - d, _configuration,
+					_stateOuterContext, VisualFlags.ALWAYS);
 			addDrawingPrimitive(innerFrame);
 		}
 
 		Text label = new Text(0, py, _displayName,
-				_stateInnerContext._configuration, _stateInnerContext._style, VisualFlags.ALWAYS);
+				_configuration, _stateInnerContext, VisualFlags.ALWAYS);
 		label.setFlags(VisualFlags.EDITABLE);
 		label.setAlignment(Alignment.Center);
 		label.setInsets(fh * 0.25f, 0, 0, 0);
@@ -152,7 +163,7 @@ public class StateVisual extends GenericPrimitiveVisual
 		addDrawingPrimitive(label);
 
 		Line separator = new Line(px, py + fh * 1.5f, px + bounds.bounds.width - 2 * d, py + fh * 1.5f
-				, _stateInnerContext._configuration, _stateInnerContext._style, VisualFlags.ALWAYS);
+				, _configuration, _stateInnerContext, VisualFlags.ALWAYS);
 		addDrawingPrimitive(separator);
 
 		if (modelPrimitive != null)
@@ -165,7 +176,7 @@ public class StateVisual extends GenericPrimitiveVisual
 	public String toString()
 	{
 		return _state._name == null ? "Id:" + _state._docId
-									: _state._name;
+				: _state._name;
 	}
 
 	/**
@@ -194,11 +205,15 @@ public class StateVisual extends GenericPrimitiveVisual
 	{
 		if (ev.getSourceVisual() == StateVisual.this)
 		{
-			return (float) ev.getTargetVisuals().stream().collect(Collectors.summarizingDouble(cv -> cv.getAbsolutePosition().y)).getAverage();
+			return (float) ev.getTargetVisuals()
+							 .stream()
+							 .collect(Collectors.summarizingDouble(cv -> cv.getAbsolutePosition().y))
+							 .getAverage();
 		}
 		else
 		{
-			return ev.getSourceVisual().getAbsolutePosition().y;
+			return ev.getSourceVisual()
+					 .getAbsolutePosition().y;
 		}
 	}
 

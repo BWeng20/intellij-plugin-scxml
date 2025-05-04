@@ -41,8 +41,8 @@ public interface Geometry
 			switch (type)
 			{
 				case PathIterator.SEG_MOVETO:
-					p0.x = p1.x = p2.x = (float) seg[0];
-					p0.y = p1.y = p2.y = (float) seg[1];
+					p0.x = p2.x = (float) seg[0];
+					p0.y = p2.y = (float) seg[1];
 					continue;
 				case PathIterator.SEG_LINETO:
 					p1.x = p2.x;
@@ -232,7 +232,8 @@ public interface Geometry
 
 		Rectangle2D.Float union = new Rectangle2D.Float(Float.MAX_VALUE, Float.MAX_VALUE, 0, 0);
 
-		bounds.forEach(r -> {
+		bounds.forEach(r ->
+		{
 			if (r.width > 0 && r.height > 0)
 			{
 				final float x2 = r.x + r.width;
@@ -280,7 +281,8 @@ public interface Geometry
 	{
 
 		final Point2D.Double avg = new Point2D.Double(0, 0);
-		data.forEach(d -> {
+		data.forEach(d ->
+		{
 			avg.x += d.x / N;
 			avg.y += d.y / N;
 		});
@@ -309,7 +311,8 @@ public interface Geometry
 	static Point2D.Float averagePointFloat(Stream<Point2D.Float> data, int N)
 	{
 		final Point2D.Float avg = new Point2D.Float(0, 0);
-		data.forEach(d -> {
+		data.forEach(d ->
+		{
 			avg.x += d.x / N;
 			avg.y += d.y / N;
 		});

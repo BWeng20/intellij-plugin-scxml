@@ -57,7 +57,8 @@ class StateNameEditor<C> implements Editor
 	{
 		EditAction action;
 
-		String newName = _ui.getStateName().trim();
+		String newName = _ui.getStateName()
+							.trim();
 		if (!Objects.equals(newName, stateVisual._state._name))
 		{
 			action = new RenameStateAction(stateVisual._state._name, newName);

@@ -11,7 +11,8 @@ public class EditorUISwingManager implements EditorUIManager<JComponent>
 	private TransitionEditorUI<JComponent> _transitionEditor;
 	private StateNameEditorUI<JComponent> _stateNameEditor;
 
-	public EditorUISwingManager() {
+	public EditorUISwingManager()
+	{
 		this(new StateNameEditor(),
 				new TransitionEditor());
 	}

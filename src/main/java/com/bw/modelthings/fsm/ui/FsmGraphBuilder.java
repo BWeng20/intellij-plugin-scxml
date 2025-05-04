@@ -1,7 +1,8 @@
 package com.bw.modelthings.fsm.ui;
 
 import com.bw.graph.Alignment;
-import com.bw.graph.DrawContext;
+import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphConfiguration;
 import com.bw.graph.VisualModel;
 import com.bw.graph.primitive.ModelPrimitive;
 import com.bw.graph.util.InsetsFloat;
@@ -20,11 +21,9 @@ import java.awt.geom.Rectangle2D;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -75,10 +74,10 @@ public class FsmGraphBuilder
 	 * @param style  The style to use.
 	 * @return The visual
 	 */
-	public Visual createStartVisual(StateVisual parent, float x, float y, float radius, DrawContext style)
+	public Visual createStartVisual(StateVisual parent, float x, float y, float radius, GraphConfiguration configuration, DrawStyle style)
 	{
-		StartVisual startNode = new StartVisual(parent, style);
-		startNode.createPrimitives(x, y, radius, _graphExtension._startBounds.get(parent._state._docId), style);
+		StartVisual startNode = new StartVisual(parent, configuration, style);
+		startNode.createPrimitives(x, y, radius, _graphExtension._startBounds.get(parent._state._docId), configuration, style);
 		return startNode;
 	}
 
@@ -92,7 +91,7 @@ public class FsmGraphBuilder
 	 * @param style      The style to use.
 	 * @return The edge visual created.
 	 */
-	public MultiTargetEdgeVisual createEdge(String id, Transition transition, Graphics2D g2, DrawContext style)
+	public MultiTargetEdgeVisual createEdge(String id, Transition transition, Graphics2D g2, GraphConfiguration configuration, DrawStyle style)
 	{
 		if (transition._source != null && transition._target != null && !transition._target.isEmpty())
 		{
@@ -118,7 +117,7 @@ public class FsmGraphBuilder
 			}
 			if (!targets.isEmpty())
 			{
-				return createEdge(id, sourceVisual, transition, targets, g2, style);
+				return createEdge(id, sourceVisual, transition, targets, g2, configuration, style);
 			}
 		}
 		return null;
@@ -136,12 +135,13 @@ public class FsmGraphBuilder
 	 * @param style      The style to use.
 	 * @return The edge visual created.
 	 */
-	public TransitionVisual createEdge(String id, Visual source, Transition transition, List<AbstractMap.SimpleEntry<StateVisual, StateVisual>> targets, Graphics2D g2, DrawContext style)
+	public TransitionVisual createEdge(String id, Visual source, Transition transition, List<AbstractMap.SimpleEntry<StateVisual, StateVisual>> targets, Graphics2D g2,
+									   GraphConfiguration configuration, DrawStyle style)
 	{
 		TransitionVisual edgeVisual;
 		if (source != null && targets != null && !targets.isEmpty())
 		{
-			edgeVisual = new TransitionVisual(id, source, transition, targets, style, VisualFlags.ALWAYS);
+			edgeVisual = new TransitionVisual(id, source, transition, targets, configuration, style, VisualFlags.ALWAYS);
 			edgeVisual.setEditor(new TransitionEditor(_editorManager.getTransitionEditorUI(), edgeVisual));
 		}
 		else
@@ -162,15 +162,17 @@ public class FsmGraphBuilder
 	 * @return The model.
 	 */
 	public VisualModel createVisualModel(FiniteStateMachine fsm, Graphics2D g2,
-										 DrawContext startStyles,
-										 DrawContext stateOutlineStyles,
-										 DrawContext stateInnerStyles,
-										 DrawContext edgeStyles)
+										 GraphConfiguration configuration,
+										 DrawStyle startStyles,
+										 DrawStyle stateOutlineStyles,
+										 DrawStyle stateInnerStyles,
+										 DrawStyle stateFocusContext,
+										 DrawStyle edgeStyles)
 	{
 		VisualModel rootModel = new VisualModel(fsm == null ? "none" : fsm._name);
 		if (fsm != null && fsm._pseudoRoot != null)
 		{
-			createVisuals(rootModel, fsm._pseudoRoot, g2, startStyles, stateOutlineStyles, stateInnerStyles, edgeStyles);
+			createVisuals(rootModel, fsm._pseudoRoot, g2, configuration, startStyles, stateOutlineStyles, stateInnerStyles, stateFocusContext, edgeStyles);
 		}
 		rootModel.clearFlags(VisualFlags.MODIFIED);
 		return rootModel;
@@ -178,19 +180,21 @@ public class FsmGraphBuilder
 
 	public void createVisuals(VisualModel rootModel,
 							  State root, Graphics2D g2,
-							  DrawContext startStyles,
-							  DrawContext stateOutlineStyles,
-							  DrawContext stateInnerStyles,
-							  DrawContext edgeStyles)
+							  GraphConfiguration configuration,
+							  DrawStyle startStyles,
+							  DrawStyle stateOutlineStyles,
+							  DrawStyle stateInnerStyles,
+							  DrawStyle stateFocusStyles,
+							  DrawStyle edgeStyles)
 	{
 		java.util.Queue<State> states = new LinkedList<>();
 		states.add(root);
 
 		final float gapY = 5;
-		float fh = stateOutlineStyles._style.getFontMetrics()
-											.getHeight();
+		float fh = stateOutlineStyles.getFontMetrics()
+									 .getHeight();
 
-		InsetsFloat insets = stateInnerStyles._configuration._innerModelBoxInsets;
+		InsetsFloat insets = configuration._innerModelBoxInsets;
 		insets._top = fh * 2.5f;
 		insets._bottom = fh;
 		insets._left = fh;
@@ -211,7 +215,9 @@ public class FsmGraphBuilder
 			{
 				statesByName.put(state._name, state);
 
-				StateVisual stateVisual = new StateVisual(state, _editorManager.getStateNameEditorUI(), stateOutlineStyles, stateInnerStyles);
+				StateVisual stateVisual = new StateVisual(state, _editorManager.getStateNameEditorUI(),
+						configuration,
+						stateOutlineStyles, stateInnerStyles, stateFocusStyles);
 				if (state instanceof PseudoRoot pseudoRoot)
 				{
 					stateVisual.setDisplayName(pseudoRoot._fsmName);
@@ -236,9 +242,9 @@ public class FsmGraphBuilder
 						modelName = pseudoRoot._fsmName;
 					}
 					VisualModel subModel = new VisualModel(modelName);
-					ModelPrimitive modelPrimitive = new ModelPrimitive(0, 0, stateInnerStyles._configuration, stateInnerStyles._style, VisualFlags.ALWAYS);
+					ModelPrimitive modelPrimitive = new ModelPrimitive(0, 0, configuration, stateInnerStyles, VisualFlags.ALWAYS);
 					modelPrimitive.setAlignment(Alignment.Center);
-					modelPrimitive.setInsets(stateInnerStyles._configuration._innerModelBoxInsets);
+					modelPrimitive.setInsets(configuration._innerModelBoxInsets);
 					modelPrimitive.setChildModel(subModel);
 					_stateVisuals.get(state._name)
 								 .addDrawingPrimitive(modelPrimitive);
@@ -293,7 +299,7 @@ public class FsmGraphBuilder
 		// Create edges
 		for (Transition t : transitions.values())
 		{
-			MultiTargetEdgeVisual edgeVisual = createEdge(t._xmlId, t, g2, edgeStyles);
+			MultiTargetEdgeVisual edgeVisual = createEdge(t._xmlId, t, g2, configuration, edgeStyles);
 
 			if (edgeVisual != null)
 			{
@@ -337,7 +343,7 @@ public class FsmGraphBuilder
 			if (!state._states.isEmpty())
 			{
 				StateVisual stateVisual = _stateVisuals.get(state._name);
-				Visual startVisual = createStartVisual(stateVisual, fh / 2, fh, fh / 2, startStyles);
+				Visual startVisual = createStartVisual(stateVisual, fh / 2, fh, fh / 2, configuration, startStyles);
 
 				VisualModel innerModel = ModelPrimitive.getChildModel(stateVisual);
 				innerModel.addVisual(startVisual);
@@ -379,7 +385,7 @@ public class FsmGraphBuilder
 						targetVisuals.add(new AbstractMap.SimpleEntry<>(targetVisual, toInnerModel ? targetedVisual : null));
 					}
 				}
-				innerModel.addVisual(createEdge(id, startVisual, null, targetVisuals, g2, edgeStyles));
+				innerModel.addVisual(createEdge(id, startVisual, null, targetVisuals, g2, configuration, edgeStyles));
 			}
 		}
 

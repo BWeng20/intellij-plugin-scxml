@@ -1,6 +1,6 @@
 package com.bw.graph.visual;
 
-import com.bw.graph.DrawContext;
+import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.primitive.DrawPrimitive;
 import com.bw.graph.util.Dimension2DFloat;
@@ -43,12 +43,11 @@ public class GenericPrimitiveVisual extends Visual
 	/**
 	 * Create a new empty visual.
 	 *
-	 * @param id      The identification. Can be null.
-	 * @param context The Drawing context to use.
+	 * @param id The identification. Can be null.
 	 */
-	public GenericPrimitiveVisual(Object id, DrawContext context)
+	public GenericPrimitiveVisual(Object id, GraphConfiguration configuration, DrawStyle style)
 	{
-		super(id, context);
+		super(id, configuration, style);
 	}
 
 	private PrimitiveConsumer _drawWithAlignment = (primitive, g2, offset) ->
@@ -72,7 +71,7 @@ public class GenericPrimitiveVisual extends Visual
 		if (_absoluteBounds.width < 0)
 			updateBounds(g2);
 
-		final GraphConfiguration graphConfiguration = _context._configuration;
+		final GraphConfiguration graphConfiguration = _configuration;
 		final GraphicsConfiguration graphicsConfiguration = g2.getDeviceConfiguration();
 
 		if (graphConfiguration._buffered && graphicsConfiguration.getDevice()
@@ -199,7 +198,8 @@ public class GenericPrimitiveVisual extends Visual
 		if (dim == null)
 		{
 			Rectangle2D.Float localBounds = Geometry.getUnion(
-					_primitives.stream().map(primitive -> primitive.getBounds2D(this._absolutePosition.x, this._absolutePosition.y, graphics)));
+					_primitives.stream()
+							   .map(primitive -> primitive.getBounds2D(this._absolutePosition.x, this._absolutePosition.y, graphics)));
 
 			this._absoluteBounds.x = localBounds.x;
 			this._absoluteBounds.y = localBounds.y;

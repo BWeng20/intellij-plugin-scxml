@@ -1,6 +1,7 @@
 package com.bw.modelthings.fsm.ui;
 
-import com.bw.graph.DrawContext;
+import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphConfiguration;
 import com.bw.graph.primitive.Circle;
 import com.bw.graph.visual.GenericPrimitiveVisual;
 import com.bw.graph.visual.VisualFlags;
@@ -18,12 +19,11 @@ public class StartVisual extends GenericPrimitiveVisual
 	/**
 	 * Create a new start node visual.
 	 *
-	 * @param parent  The parent state.
-	 * @param context The Drawing context to use.
+	 * @param parent The parent state.
 	 */
-	public StartVisual(StateVisual parent, DrawContext context)
+	public StartVisual(StateVisual parent, GraphConfiguration configuration, DrawStyle style)
 	{
-		super(parent._state._docId, context);
+		super(parent._state._docId, configuration, style);
 		_parent = parent;
 	}
 
@@ -36,12 +36,12 @@ public class StartVisual extends GenericPrimitiveVisual
 	 * @param style  The drawing style to use.
 	 * @param bounds Outer bounds. If null bounds will be calculated.
 	 */
-	public void createPrimitives(float x, float y, float radius, PosAndBounds bounds, DrawContext style)
+	public void createPrimitives(float x, float y, float radius, PosAndBounds bounds, GraphConfiguration configuration, DrawStyle style)
 	{
-		Circle circle = new Circle(0, 0, radius, style._configuration, style._style, VisualFlags.ALWAYS);
+		Circle circle = new Circle(0, 0, radius, configuration, style, VisualFlags.ALWAYS);
 		circle.setFill(true);
 		addDrawingPrimitive(circle);
-		Circle circleActive = new Circle(0, 0, radius + 5, style._configuration, style._style, VisualFlags.SELECTED);
+		Circle circleActive = new Circle(0, 0, radius + 5, configuration, style, VisualFlags.SELECTED);
 		addDrawingPrimitive(circleActive);
 		clearFlags(VisualFlags.MODIFIED);
 		setFlags(FsmVisualFlags.START_NODE_FLAG);

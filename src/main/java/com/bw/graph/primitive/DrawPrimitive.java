@@ -31,6 +31,8 @@ public abstract class DrawPrimitive<C>
 	private final Point2D.Float _tempPosition = new Point2D.Float();
 
 	private int _flags;
+	private int _drawFlags = 0;
+	private boolean _drawFlagsAny = false;
 
 	/**
 	 * Assigned Visual. Will be set temporary during event handling.
@@ -92,6 +94,18 @@ public abstract class DrawPrimitive<C>
 		this._relativePosition = new Point2D.Float(x, y);
 		this._config = config;
 		this._flags = flags;
+	}
+
+	/**
+	 * Sets conditional flags that control when the primitive draw itself.
+	 * Will override any other flags that were set before.
+	 *
+	 * @param flags The combination of flags that must be set to draw this primitive.
+	 */
+	public void setDrawConditionFlags(int flags, boolean any)
+	{
+		this._drawFlags = flags;
+		this._drawFlagsAny = (flags == 0) ? false : any;
 	}
 
 	/**
@@ -165,18 +179,22 @@ public abstract class DrawPrimitive<C>
 	 */
 	public void draw(Graphics2D g2)
 	{
-		_tempPosition.x = _relativePosition.x + _insets._left;
-		_tempPosition.y = _relativePosition.y + _insets._top;
+		final int cf = _drawFlags & _flags;
+		if (_drawFlagsAny ? cf != 0 : cf == _drawFlags)
+		{
+			_tempPosition.x = _relativePosition.x + _insets._left;
+			_tempPosition.y = _relativePosition.y + _insets._top;
 
-		AffineTransform orgTransform = g2.getTransform();
-		try
-		{
-			g2.translate(_tempPosition.x, _tempPosition.y);
-			drawRelative(g2);
-		}
-		finally
-		{
-			g2.setTransform(orgTransform);
+			AffineTransform orgTransform = g2.getTransform();
+			try
+			{
+				g2.translate(_tempPosition.x, _tempPosition.y);
+				drawRelative(g2);
+			}
+			finally
+			{
+				g2.setTransform(orgTransform);
+			}
 		}
 	}
 

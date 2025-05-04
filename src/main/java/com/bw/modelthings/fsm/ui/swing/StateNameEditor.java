@@ -3,8 +3,8 @@ package com.bw.modelthings.fsm.ui.swing;
 import com.bw.modelthings.fsm.ui.StateNameEditorUI;
 import com.bw.modelthings.fsm.ui.StateVisual;
 
-import javax.swing.JTextField;
 import javax.swing.JComponent;
+import javax.swing.JTextField;
 
 public class StateNameEditor extends JTextField implements StateNameEditorUI<JComponent>
 {

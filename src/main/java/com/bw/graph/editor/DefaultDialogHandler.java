@@ -46,13 +46,15 @@ public class DefaultDialogHandler implements DialogHandler
 		buttons.add(ok);
 		buttons.add(cancel);
 
-		ok.addActionListener(e -> {
+		ok.addActionListener(e ->
+		{
 			_handled = true;
 			System.err.println("OK selected");
 			endEdit.run();
 		});
 
-		cancel.addActionListener(e -> {
+		cancel.addActionListener(e ->
+		{
 			_handled = true;
 			System.err.println("CANCEL selected");
 			cancelEdit.run();

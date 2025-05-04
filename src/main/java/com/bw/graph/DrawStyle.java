@@ -9,8 +9,6 @@ import java.awt.Stroke;
 /**
  * Visual style information to use for drawing operations.<br>
  * Primitives shall share instances if possible.<br>
- *
- * @see DrawContext
  */
 public interface DrawStyle
 {

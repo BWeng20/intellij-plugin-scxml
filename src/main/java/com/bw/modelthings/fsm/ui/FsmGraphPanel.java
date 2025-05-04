@@ -1,6 +1,6 @@
 package com.bw.modelthings.fsm.ui;
 
-import com.bw.graph.DrawContext;
+import com.bw.graph.DrawStyle;
 import com.bw.graph.SimpleDrawStyle;
 import com.bw.graph.VisualModel;
 import com.bw.graph.editor.GraphPane;
@@ -18,17 +18,16 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Panel to show the FSM as Graphical State Machine.
@@ -77,6 +76,8 @@ public class FsmGraphPanel extends JPanel
 	 */
 	protected SimpleDrawStyle _stateInnerStyle = new SimpleDrawStyle();
 
+	protected SimpleDrawStyle _stateFocusStyle = new SimpleDrawStyle();
+
 	/**
 	 * Style for start nodes.
 	 * Needs to be configured by platform-specific inheritance.
@@ -86,22 +87,19 @@ public class FsmGraphPanel extends JPanel
 	/**
 	 * Context for state outline.
 	 */
-	protected DrawContext _stateOutlineContext = new DrawContext(_pane.getGraphConfiguration(), _stateOutlineStyle);
+	protected DrawStyle _stateOutlineContext = _stateOutlineStyle;
 
 	/**
 	 * The context for inner drawing for states.
 	 */
-	protected DrawContext _stateInnerContext = new DrawContext(_pane.getGraphConfiguration(), _stateInnerStyle);
+	protected DrawStyle _stateInnerContext = _stateInnerStyle;
+
+	protected DrawStyle _stateFocusContext = _stateFocusStyle;
 
 	/**
 	 * Context for edges.
 	 */
-	protected DrawContext _edgeContext = new DrawContext(_pane.getGraphConfiguration(), _stateInnerStyle);
-
-	/**
-	 * Context for start node.
-	 */
-	protected DrawContext _startContext = new DrawContext(_pane.getGraphConfiguration(), _startStyle);
+	protected DrawStyle _edgeContext = _stateInnerStyle;
 
 	protected FsmGraphBuilder _factory;
 
@@ -146,6 +144,12 @@ public class FsmGraphPanel extends JPanel
 		_stateInnerStyle._background = background;
 		_stateInnerStyle._font = font;
 		_stateInnerStyle._fontMetrics = fontMetrics;
+
+		// TODO: configuration!
+		_stateFocusStyle._linePaint = Color.GRAY;
+		_stateFocusStyle._fillPaint = _stateOutlineStyle.getFillPaint();
+		_stateFocusStyle._lineStroke = new BasicStroke(2.0f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 10.0f, new float[]{5}, 0.0f);
+		_stateFocusStyle._textPaint = _stateOutlineStyle.getTextPaint();
 	}
 
 
@@ -240,7 +244,7 @@ public class FsmGraphPanel extends JPanel
 
 			_fsm._states.put(stateName, state);
 			_factory.createVisuals(null, state, (Graphics2D) _pane.getGraphics(),
-					_startContext, _stateOutlineContext, _stateInnerContext, _edgeContext);
+					_graphConfiguration, _startStyle, _stateOutlineStyle, _stateInnerStyle, _stateFocusStyle, _edgeContext);
 
 			StateVisual visual = _pane.getStateVisual(state);
 			if (visual != null)
@@ -372,7 +376,7 @@ public class FsmGraphPanel extends JPanel
 		this._graphExtension = graphExtension;
 		VisualModel rootModel =
 				_factory.createVisualModel(fsm, (Graphics2D) _pane.getGraphics(),
-						_startContext, _stateOutlineContext, _stateInnerContext, _edgeContext);
+						_graphConfiguration, _startStyle, _stateOutlineContext, _stateInnerContext, _stateFocusContext, _edgeContext);
 
 		if (!rootModel.getVisuals()
 					  .isEmpty())

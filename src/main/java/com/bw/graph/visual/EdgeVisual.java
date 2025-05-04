@@ -1,6 +1,7 @@
 package com.bw.graph.visual;
 
-import com.bw.graph.DrawContext;
+import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphConfiguration;
 
 import java.awt.Graphics2D;
 import java.util.List;
@@ -13,12 +14,11 @@ public abstract class EdgeVisual extends VisualContainer
 	/**
 	 * Initializes the new Edge Visual.
 	 *
-	 * @param id      The id or null.
-	 * @param context The Draw Context to use.
+	 * @param id The id or null.
 	 */
-	public EdgeVisual(Object id, DrawContext context)
+	public EdgeVisual(Object id, GraphConfiguration configuration, DrawStyle style)
 	{
-		super(id, context);
+		super(id, configuration, style);
 	}
 
 	@Override

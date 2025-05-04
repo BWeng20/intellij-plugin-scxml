@@ -58,7 +58,8 @@ public class EditorChanges
 		{
 			_transitionDescriptionMap.put(id, transitionDescription);
 			transitionDescription = new TransitionDescription();
-			transitionDescription._relativeTargetConnectorPosition = new ArrayList<>(Collections.nCopies(edgeVisual.getTargetConnectors().size(), null));
+			transitionDescription._relativeTargetConnectorPosition = new ArrayList<>(Collections.nCopies(edgeVisual.getTargetConnectors()
+																												   .size(), null));
 
 			_transitionDescriptionMap.put(id, transitionDescription);
 		}
@@ -122,7 +123,8 @@ public class EditorChanges
 						edgeVisual = edgeVisual.getParentEdge();
 
 					TransitionDescription td = getTransitionDescriptor(edgeVisual);
-					int idx = edgeVisual.getTargetConnectors().indexOf(connectorVisual);
+					int idx = edgeVisual.getTargetConnectors()
+										.indexOf(connectorVisual);
 					if (idx >= 0)
 					{
 						td._relativeTargetConnectorPosition.set(idx, moveAction._to);

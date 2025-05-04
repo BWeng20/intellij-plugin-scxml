@@ -1,6 +1,7 @@
 package com.bw.modelthings.fsm.ui;
 
-import com.bw.graph.DrawContext;
+import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphConfiguration;
 import com.bw.graph.util.Geometry;
 import com.bw.graph.visual.ConnectorVisual;
 import com.bw.graph.visual.MultiTargetEdgeVisual;
@@ -35,20 +36,20 @@ public class TransitionVisual extends MultiTargetEdgeVisual
 	 * @param sourceState The source visual.
 	 * @param transition  The transition to represent with the visual.
 	 * @param targets     The list of targets.
-	 * @param context     The draw context. Must not be null.
 	 * @param flags       The initial flags. @see {@link VisualFlags}
 	 */
 	public TransitionVisual(String id, Visual sourceState, Transition transition,
 							List<AbstractMap.SimpleEntry<StateVisual, StateVisual>> targets,
-							DrawContext context, int flags)
+							GraphConfiguration configuration, DrawStyle style, int flags)
 	{
-		super(id, context);
+		super(id, configuration, style);
 		_transition = transition;
 		setFlags(flags);
-		_source = new ConnectorVisual(sourceState, context, VisualFlags.ALWAYS);
+		_source = new ConnectorVisual(sourceState, configuration, style, VisualFlags.ALWAYS);
 
-		targets.forEach(targetPair -> {
-			ConnectorVisual cv = new ConnectorVisual(targetPair.getKey(), context, VisualFlags.ALWAYS);
+		targets.forEach(targetPair ->
+		{
+			ConnectorVisual cv = new ConnectorVisual(targetPair.getKey(), configuration, style, VisualFlags.ALWAYS);
 			cv.setTargetedParentChild(targetPair.getValue());
 			addTarget(cv);
 		});
@@ -73,9 +74,11 @@ public class TransitionVisual extends MultiTargetEdgeVisual
 
 	/**
 	 * Gets the model transition.
+	 *
 	 * @return The transition.
 	 */
-	public Transition getTransition() {
+	public Transition getTransition()
+	{
 		return _transition;
 	}
 
@@ -96,11 +99,13 @@ public class TransitionVisual extends MultiTargetEdgeVisual
 
 			var tc = getTargetConnectors();
 			Point2D.Float avgTarget = Geometry.averagePointFloat(
-					tc.stream().map(c -> {
-						Point2D.Float pt = new Point2D.Float();
-						c.getControlPosition(pt);
-						return pt;
-					}), tc.size());
+					tc.stream()
+					  .map(c ->
+					  {
+						  Point2D.Float pt = new Point2D.Float();
+						  c.getControlPosition(pt);
+						  return pt;
+					  }), tc.size());
 			float radAngle = Geometry.getAngle(source, avgTarget);
 
 			g2 = (Graphics2D) g2.create();
@@ -111,9 +116,9 @@ public class TransitionVisual extends MultiTargetEdgeVisual
 				g2.translate(15, 0);
 				g2.rotate(-radAngle);
 
-				g2.setPaint(_context._style.getTextPaint());
+				g2.setPaint(_style.getTextPaint());
 
-				FontMetrics fm = _context._style.getFontMetrics();
+				FontMetrics fm = _style.getFontMetrics();
 				int y = 0;
 				if (_events != null)
 				{

@@ -1,6 +1,5 @@
 package com.bw.graph.visual;
 
-import com.bw.graph.DrawContext;
 import com.bw.graph.DrawStyle;
 import com.bw.graph.GraphConfiguration;
 import com.bw.graph.editor.Editor;
@@ -64,9 +63,14 @@ public abstract class Visual
 	protected Rectangle2D.Float _absoluteBounds = new Rectangle2D.Float(0, 0, -1, -1);
 
 	/**
-	 * The drawing context to use for painting and size calculations.
+	 * The drawing configuration to use for painting and size calculations.
 	 */
-	protected DrawContext _context;
+	protected GraphConfiguration _configuration;
+
+	/**
+	 * The drawing style to use for painting and size calculations.
+	 */
+	protected DrawStyle _style;
 
 	/**
 	 * The main editor for this visual.
@@ -86,14 +90,14 @@ public abstract class Visual
 	/**
 	 * Create a new empty visual.
 	 *
-	 * @param id      The identification. Can be null.
-	 * @param context The Drawing context to use.
+	 * @param id The identification. Can be null.
 	 */
-	protected Visual(Object id, DrawContext context)
+	protected Visual(Object id, GraphConfiguration configuration, DrawStyle style)
 	{
-		Objects.requireNonNull(context);
+		Objects.requireNonNull(configuration);
 		this._id = id;
-		this._context = context;
+		this._configuration = configuration;
+		this._style = style;
 		this._flags = VisualFlags.ALWAYS;
 	}
 
@@ -281,6 +285,7 @@ public abstract class Visual
 		return (this._flags & flags) == flags;
 	}
 
+
 	/**
 	 * Clears some (combination of) flag(s).
 	 *
@@ -312,7 +317,7 @@ public abstract class Visual
 	 */
 	public DrawStyle getStyle()
 	{
-		return _context == null ? null : _context._style;
+		return _style;
 	}
 
 	/**
@@ -328,8 +333,7 @@ public abstract class Visual
 	}
 
 	/**
-	 * Sets the base position.<br>
-	 * Doesn't set dirty as this method is used to set up the visual.
+	 * Sets the base position.
 	 *
 	 * @param x      The new X ordinate.
 	 * @param y      The new Y ordinate.
@@ -430,7 +434,7 @@ public abstract class Visual
 	}
 
 	/**
-	 * Helper to get a aligned position according to alignment mode.
+	 * Helper to get an aligned position according to alignment mode.
 	 *
 	 * @param g2        The graphics context to use for dimension calculations.
 	 * @param primitive The primitive.
@@ -510,7 +514,8 @@ public abstract class Visual
 	public void dispose()
 	{
 		_id = null;
-		_context = null;
+		_configuration = null;
+		_style = null;
 	}
 
 	/**
@@ -562,24 +567,23 @@ public abstract class Visual
 	}
 
 	/**
-	 * Get the GraphConfiguration from current context.<br>
-	 * Same as {@link #getDrawContext()}.configuration.
+	 * Get the GraphConfiguration.
 	 *
 	 * @return the GraphConfiguration
 	 */
 	public GraphConfiguration getConfiguration()
 	{
-		return _context._configuration;
+		return _configuration;
 	}
 
 	/**
-	 * Get DrawContext
+	 * Get DrawStyle
 	 *
-	 * @return The context.
+	 * @return The style.
 	 */
-	public DrawContext getDrawContext()
+	public DrawStyle getDrawStyle()
 	{
-		return _context;
+		return _style;
 	}
 
 

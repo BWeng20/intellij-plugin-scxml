@@ -3,7 +3,6 @@ package com.bw.graph.editor;
 import com.bw.graph.VisualModel;
 import com.bw.graph.editor.action.EditAction;
 
-import javax.swing.JComponent;
 import java.awt.Graphics2D;
 
 /**

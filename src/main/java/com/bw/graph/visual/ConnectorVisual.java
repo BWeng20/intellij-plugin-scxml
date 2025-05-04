@@ -1,6 +1,7 @@
 package com.bw.graph.visual;
 
-import com.bw.graph.DrawContext;
+import com.bw.graph.DrawStyle;
+import com.bw.graph.GraphConfiguration;
 import com.bw.graph.editor.action.EditAction;
 import com.bw.graph.editor.action.MoveAction;
 import com.bw.graph.primitive.Circle;
@@ -51,16 +52,15 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 	/**
 	 * Creates a new Primitive.
 	 *
-	 * @param parent  The connected visual (not the edge itself!).
-	 * @param context The draw context. Must not be null.
-	 * @param flags   The initial flags. @see {@link VisualFlags}
+	 * @param parent The connected visual (not the edge itself!).
+	 * @param flags  The initial flags. @see {@link VisualFlags}
 	 */
-	public ConnectorVisual(Visual parent, DrawContext context, int flags)
+	public ConnectorVisual(Visual parent, GraphConfiguration configuration, DrawStyle style, int flags)
 	{
-		super(null, context);
+		super(null, configuration, style);
 		this._parent = parent;
-		this._radius = context._configuration._connectorSize;
-		this._primitives.add(new Circle(0, 0, _radius, context._configuration, context._style, flags));
+		this._radius = _configuration._connectorSize;
+		this._primitives.add(new Circle(0, 0, _radius, _configuration, _style, flags));
 	}
 
 	/**
@@ -266,7 +266,8 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 		else
 		{
 			localBounds = Geometry.getUnion(
-					_primitives.stream().map(primitive -> primitive.getBounds2D(_absolutePosition, graphics)));
+					_primitives.stream()
+							   .map(primitive -> primitive.getBounds2D(_absolutePosition, graphics)));
 		}
 		_absoluteBounds.x = localBounds.x;
 		_absoluteBounds.y = localBounds.y;
