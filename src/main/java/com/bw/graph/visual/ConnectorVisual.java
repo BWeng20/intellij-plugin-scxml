@@ -61,6 +61,7 @@ public class ConnectorVisual extends Visual implements PathControlPoint
 		this._parent = parent;
 		this._radius = _configuration._connectorSize;
 		this._primitives.add(new Circle(0, 0, _radius, _configuration, _style, flags));
+		this._vPriority = 3;
 	}
 
 	/**

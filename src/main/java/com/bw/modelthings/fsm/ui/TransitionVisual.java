@@ -46,6 +46,7 @@ public class TransitionVisual extends MultiTargetEdgeVisual
 		_transition = transition;
 		setFlags(flags);
 		_source = new ConnectorVisual(sourceState, configuration, style, VisualFlags.ALWAYS);
+		_vPriority = 2;
 
 		targets.forEach(targetPair ->
 		{

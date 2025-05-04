@@ -27,4 +27,21 @@ public abstract class VisualContainer extends Visual
 	 * @return Collection of visuals.
 	 */
 	public abstract List<Visual> getVisuals();
+
+	@Override
+	public Visual getVisualAt(float x, float y)
+	{
+		Visual match = this;
+		int bestZ = -1;
+		for (Visual v : getVisuals())
+		{
+			if (v._vPriority >= bestZ && v.containsPoint(x, y))
+			{
+				match = v;
+				bestZ = v._vPriority;
+			}
+		}
+		return match;
+	}
+
 }

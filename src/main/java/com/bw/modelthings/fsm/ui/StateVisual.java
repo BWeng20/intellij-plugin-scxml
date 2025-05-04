@@ -13,6 +13,7 @@ import com.bw.graph.util.InsetsFloat;
 import com.bw.graph.visual.ConnectorVisual;
 import com.bw.graph.visual.EdgeVisual;
 import com.bw.graph.visual.GenericPrimitiveVisual;
+import com.bw.graph.visual.Visual;
 import com.bw.graph.visual.VisualFlags;
 import com.bw.modelthings.fsm.model.State;
 
@@ -70,6 +71,7 @@ public class StateVisual extends GenericPrimitiveVisual
 		this._stateInnerContext = stateInnerContext;
 		this._stateFocusContext = stateFocusContext;
 		this._nameEditor = new StateNameEditor(this, stateNameEditorUI);
+		this._vPriority = 1;
 	}
 
 	/**
@@ -137,7 +139,7 @@ public class StateVisual extends GenericPrimitiveVisual
 
 		Rectangle focus = new Rectangle(
 				-3, -3, bounds.bounds.width + 6, bounds.bounds.height + 6,
-				_configuration._stateCornerArcSize*1.3f, _configuration, _stateFocusContext, 0);
+				_configuration._stateCornerArcSize * 1.3f, _configuration, _stateFocusContext, 0);
 		focus.setDrawConditionFlags(VisualFlags.HOVER | VisualFlags.SELECTED, true);
 		addDrawingPrimitive(focus);
 
@@ -279,5 +281,12 @@ public class StateVisual extends GenericPrimitiveVisual
 	public Shape getConnectorShape()
 	{
 		return _connectorFrame.getShape();
+	}
+
+
+	@Override
+	public Visual getVisualAt(float x, float y)
+	{
+		return this;
 	}
 }

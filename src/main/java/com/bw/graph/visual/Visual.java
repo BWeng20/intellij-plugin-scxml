@@ -88,6 +88,11 @@ public abstract class Visual
 	protected Visual _parent;
 
 	/**
+	 * Visual priority (higher values: nearer to user).
+	 */
+	protected int _vPriority;
+
+	/**
 	 * Create a new empty visual.
 	 *
 	 * @param id The identification. Can be null.
@@ -657,5 +662,26 @@ public abstract class Visual
 	public Shape getConnectorShape()
 	{
 		return null;
+	}
+
+	/**
+	 * Get the sub-visual at the absolute point. Returns this visual if no better match was found.
+	 *
+	 * @param x Model absolut x
+	 * @param y Model absolut y
+	 * @return The visual.
+	 */
+	public Visual getVisualAt(float x, float y)
+	{
+		return this;
+	}
+
+	/**
+	 * Gets the visual order priority as seen from user.
+	 * @return the value. Higher values means nearer to user.
+	 */
+	public int getVisualPriority()
+	{
+		return _vPriority;
 	}
 }

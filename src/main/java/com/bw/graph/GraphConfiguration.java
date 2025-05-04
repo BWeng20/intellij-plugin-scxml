@@ -31,7 +31,8 @@ public class GraphConfiguration
 	/**
 	 * Maximum distance to a visual.
 	 */
-	public float _selectMaxDistance = 5;
+	// TODO: Needs to be adapted to screen resolution.
+	public float _selectMaxDistance = 10;
 
 	/**
 	 * Maximal quadratic distance that a visual "snaps" into position during dragging.

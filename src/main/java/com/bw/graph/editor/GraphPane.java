@@ -77,6 +77,11 @@ public class GraphPane extends JComponent
 	private long _lastPaintMS;
 
 	/**
+	 * Draw counter
+	 */
+	private long _paintCount = 0;
+
+	/**
 	 * If true {@link #_lastPaintMS} is shown on screen for debugging.
 	 */
 	private boolean _showDrawSpeed = true;
@@ -293,7 +298,6 @@ public class GraphPane extends JComponent
 				}
 
 				_mouseOverVisual = over;
-				fireMouseOver(_mouseOverVisual);
 
 				if (_mouseOverVisual != null)
 				{
@@ -307,13 +311,15 @@ public class GraphPane extends JComponent
 							Rectangle2D.union(update, rt, update);
 					}
 				}
+				fireMouseOver(_mouseOverVisual);
+
 				if (update != null)
 				{
-					update.x -= 2;
-					update.y -= 2;
-					update.width += 2 * 2;
-					update.height += 2 * 2;
-					update.height += 2 * 2;
+					update.x = (update.x + _offsetX - 2) * _configuration._scale;
+					update.y = (update.y + _offsetY - 2) * _configuration._scale;
+					update.width = (update.width + 4) * _configuration._scale;
+					update.height = (update.height + 4) * _configuration._scale;
+
 					repaint(update.getBounds());
 				}
 
@@ -408,16 +414,20 @@ public class GraphPane extends JComponent
 	{
 		var p = toModelCoordinates(x, y);
 
+		int bestZ = -1;
 		var visuals = _model.getVisuals();
+		Visual match = null;
 		for (var it = visuals.listIterator(visuals.size()); it.hasPrevious(); )
 		{
 			final Visual v = it.previous();
-			if (v.containsPoint(p.x, p.y))
+			int z = v.getVisualPriority();
+			if (z > bestZ && v.containsPoint(p.x, p.y))
 			{
-				return v;
+				match = v.getVisualAt(p.x, p.y);
+				bestZ = v.getVisualPriority();
 			}
 		}
-		return null;
+		return match;
 	}
 
 	/**
@@ -502,12 +512,12 @@ public class GraphPane extends JComponent
 
 			final long end = System.currentTimeMillis();
 			_lastPaintMS = end - start;
-
+			++_paintCount;
 			if (_showDrawSpeed)
 			{
 				g.setColor(getForeground());
 				g.setFont(getFont());
-				char[] text = (Long.toString(_lastPaintMS) + "ms").toCharArray();
+				char[] text = (_paintCount + " / " + _lastPaintMS + "ms").toCharArray();
 				g.drawChars(text, 0, text.length, 0, 20);
 			}
 		}
